@@ -1,0 +1,16 @@
+/* src/styles/index.css */
+
+/* Tailwind directives (CDN will still read these for JIT) */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Ensure Google font as default */
+body {
+  font-family: "Spline Sans", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+}
+
+/* small custom classes used by components */
+.gold-rank { color: #ffd700; }
+.silver-rank { color: #c0c0c0; }
+.bronze-rank { color: #cd7f32; }
