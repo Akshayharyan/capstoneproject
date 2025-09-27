@@ -1,5 +1,7 @@
 /* src/styles/index.css */
 
+
+
 /* Tailwind directives (CDN will still read these for JIT) */
 @tailwind base;
 @tailwind components;
@@ -7,7 +9,10 @@
 
 /* Ensure Google font as default */
 body {
-  font-family: "Spline Sans", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+  margin: 0;
+  background-color: #0f172a; /* Dark background */
+  color: white;
+  font-family: 'Arial', sans-serif;
 }
 
 /* small custom classes used by components */
