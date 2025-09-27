@@ -1,4 +1,6 @@
 import React from "react";
+import Footer from "../components/Footer";
+
 
 function Home() {
   return (
@@ -163,6 +165,10 @@ function Home() {
           Join SkillQuest Today
         </button>
       </section>
+     
+     <Footer />
+
+     
     </div>
   );
 }

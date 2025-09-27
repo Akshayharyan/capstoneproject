@@ -2,7 +2,7 @@ import React from "react";
 import { Link } from "react-router-dom";
 import Footer from "../components/Footer";
 
-function Login() {
+function Signup() {
   return (
     <div style={{ backgroundColor: "#0f172a", color: "white", minHeight: "100vh" }}>
       {/* Centered Card */}
@@ -24,9 +24,21 @@ function Login() {
             textAlign: "center",
           }}
         >
-          <h2 style={{ marginBottom: "20px", color: "#22c55e" }}>Login to SkillQuest</h2>
-          
+          <h2 style={{ marginBottom: "20px", color: "#22c55e" }}>Create an Account</h2>
+
           <form>
+            <input
+              type="text"
+              placeholder="Full Name"
+              style={{
+                width: "100%",
+                padding: "12px",
+                marginBottom: "15px",
+                borderRadius: "8px",
+                border: "none",
+                outline: "none",
+              }}
+            />
             <input
               type="email"
               placeholder="Email"
@@ -51,6 +63,18 @@ function Login() {
                 outline: "none",
               }}
             />
+            <input
+              type="password"
+              placeholder="Confirm Password"
+              style={{
+                width: "100%",
+                padding: "12px",
+                marginBottom: "15px",
+                borderRadius: "8px",
+                border: "none",
+                outline: "none",
+              }}
+            />
             <button
               type="submit"
               style={{
@@ -64,14 +88,14 @@ function Login() {
                 cursor: "pointer",
               }}
             >
-              Login
+              Sign Up
             </button>
           </form>
 
           <p style={{ marginTop: "15px", fontSize: "14px" }}>
-            Don’t have an account?{" "}
-            <Link to="/signup" style={{ color: "#22c55e", textDecoration: "none" }}>
-              Sign up
+            Already have an account?{" "}
+            <Link to="/login" style={{ color: "#22c55e", textDecoration: "none" }}>
+              Login
             </Link>
           </p>
         </div>
@@ -82,4 +106,4 @@ function Login() {
   );
 }
 
-export default Login;
+export default Signup;

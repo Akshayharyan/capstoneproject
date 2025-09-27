@@ -7,6 +7,7 @@ import Navbar from "./components/Header"; // <-- your navbar file
 // Import pages
 import Home from "./pages/home";
 import Login from "./pages/login";
+import Signup from "./pages/signup";
 import Dashboard from "./pages/dashboard";
 import Quests from "./pages/quests";
 import Leaderboard from "./pages/leaderboard";
@@ -24,6 +25,7 @@ function App() {
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/login" element={<Login />} />
+            <Route path="/signup" element={<Signup />} />
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/quests" element={<Quests />} />
             <Route path="/leaderboard" element={<Leaderboard />} />
