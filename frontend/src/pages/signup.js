@@ -37,6 +37,8 @@ function Signup() {
                 borderRadius: "8px",
                 border: "none",
                 outline: "none",
+                backgroundColor: "white", // white background
+                color: "black",           // black typed text
               }}
             />
             <input
@@ -49,6 +51,8 @@ function Signup() {
                 borderRadius: "8px",
                 border: "none",
                 outline: "none",
+                backgroundColor: "white",
+                color: "black",
               }}
             />
             <input
@@ -61,6 +65,8 @@ function Signup() {
                 borderRadius: "8px",
                 border: "none",
                 outline: "none",
+                backgroundColor: "white",
+                color: "black",
               }}
             />
             <input
@@ -73,6 +79,8 @@ function Signup() {
                 borderRadius: "8px",
                 border: "none",
                 outline: "none",
+                backgroundColor: "white",
+                color: "black",
               }}
             />
             <button

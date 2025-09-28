@@ -3,34 +3,13 @@ import Footer from "../components/Footer";
 import LeaderboardPreview from "../components/LeaderboardPreview";
 import HowItWorks from "../components/HowItWorks";
 import CallToAction from "../components/CallToAction";
+import HeroSection from "../components/HeroSection";
 
 function Home() {
   return (
     <div style={{ backgroundColor: "#0f172a", color: "white", minHeight: "100vh" }}>
       {/* Hero Section */}
-      <section style={{ textAlign: "center", padding: "80px 20px" }}>
-        <h1 style={{ fontSize: "2.5rem", fontWeight: "bold" }}>
-          Level Up Your Skills. <br />
-          <span style={{ color: "#22c55e" }}>Train Like a Pro, Play Like a Game.</span>
-        </h1>
-        <p style={{ marginTop: "15px", fontSize: "18px", color: "#cbd5e1" }}>
-          Instead of boring lectures, experience gamified technical learning.
-        </p>
-        <button
-          style={{
-            marginTop: "20px",
-            padding: "12px 24px",
-            backgroundColor: "#22c55e",
-            color: "white",
-            border: "none",
-            borderRadius: "8px",
-            fontSize: "16px",
-            cursor: "pointer",
-          }}
-        >
-          Get Started
-        </button>
-      </section>
+     <HeroSection />
 
       {/* Unlock Your Potential Section */}
       <section style={{ padding: "60px 20px", textAlign: "center" }}>

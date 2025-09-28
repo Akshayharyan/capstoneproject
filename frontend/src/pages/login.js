@@ -27,30 +27,36 @@ function Login() {
           <h2 style={{ marginBottom: "20px", color: "#22c55e" }}>Login to SkillQuest</h2>
           
           <form>
-            <input
-              type="email"
-              placeholder="Email"
-              style={{
-                width: "100%",
-                padding: "12px",
-                marginBottom: "15px",
-                borderRadius: "8px",
-                border: "none",
-                outline: "none",
-              }}
-            />
-            <input
-              type="password"
-              placeholder="Password"
-              style={{
-                width: "100%",
-                padding: "12px",
-                marginBottom: "15px",
-                borderRadius: "8px",
-                border: "none",
-                outline: "none",
-              }}
-            />
+           <input
+  type="email"
+  placeholder="Email"
+  style={{
+    width: "100%",
+    padding: "12px",
+    marginBottom: "15px",
+    borderRadius: "8px",
+    border: "none",
+    outline: "none",
+    backgroundColor: "white", // white input background
+    color: "black",           // black typed text
+  }}
+/>
+
+<input
+  type="password"
+  placeholder="Password"
+  style={{
+    width: "100%",
+    padding: "12px",
+    marginBottom: "15px",
+    borderRadius: "8px",
+    border: "none",
+    outline: "none",
+    backgroundColor: "white",
+    color: "black",
+  }}
+/>
+
             <button
               type="submit"
               style={{
