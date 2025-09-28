@@ -1,6 +1,8 @@
 import React from "react";
 import Footer from "../components/Footer";
-
+import LeaderboardPreview from "../components/LeaderboardPreview";
+import HowItWorks from "../components/HowItWorks";
+import CallToAction from "../components/CallToAction";
 
 function Home() {
   return (
@@ -72,100 +74,18 @@ function Home() {
         </div>
       </section>
 
-      {/* How It Works Section */}
-      <section style={{ padding: "60px 20px", textAlign: "center" }}>
-        <h2 style={{ fontSize: "2rem", marginBottom: "30px" }}>How It Works</h2>
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))",
-            gap: "20px",
-            maxWidth: "900px",
-            margin: "0 auto",
-          }}
-        >
-          <div style={{ background: "#1e293b", padding: "20px", borderRadius: "10px" }}>
-            <h3 style={{ color: "#22c55e", marginBottom: "10px" }}>📝 Step 1</h3>
-            <p style={{ fontSize: "14px", color: "#cbd5e1" }}>
-              Sign up and create your profile to start your gamified learning journey.
-            </p>
-          </div>
+      {/* ===== How It Works Section ===== */}
+<HowItWorks />
 
-          <div style={{ background: "#1e293b", padding: "20px", borderRadius: "10px" }}>
-            <h3 style={{ color: "#22c55e", marginBottom: "10px" }}>🚀 Step 2</h3>
-            <p style={{ fontSize: "14px", color: "#cbd5e1" }}>
-              Choose a quest, complete coding challenges, and earn points & badges.
-            </p>
-          </div>
 
-          <div style={{ background: "#1e293b", padding: "20px", borderRadius: "10px" }}>
-            <h3 style={{ color: "#22c55e", marginBottom: "10px" }}>🏆 Step 3</h3>
-            <p style={{ fontSize: "14px", color: "#cbd5e1" }}>
-              Track your progress, climb leaderboards, and showcase your skills.
-            </p>
-          </div>
-        </div>
-      </section>
+     
+{/* Leaderboard Preview Section */}
+<LeaderboardPreview />
 
-      {/* Leaderboard Preview */}
-      <section style={{ padding: "60px 20px", textAlign: "center" }}>
-        <h2 style={{ fontSize: "2rem", marginBottom: "20px" }}>Leaderboard Preview</h2>
-        <table
-          style={{
-            margin: "0 auto",
-            borderCollapse: "collapse",
-            width: "70%",
-            background: "#1e293b",
-            borderRadius: "8px",
-            overflow: "hidden",
-          }}
-        >
-          <thead>
-            <tr style={{ background: "#22c55e" }}>
-              <th style={{ padding: "10px" }}>Rank</th>
-              <th style={{ padding: "10px" }}>Name</th>
-              <th style={{ padding: "10px" }}>Points</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td style={{ padding: "10px", textAlign: "center" }}>1</td>
-              <td style={{ padding: "10px" }}>Alice</td>
-              <td style={{ padding: "10px", textAlign: "center" }}>1200</td>
-            </tr>
-            <tr>
-              <td style={{ padding: "10px", textAlign: "center" }}>2</td>
-              <td style={{ padding: "10px" }}>John</td>
-              <td style={{ padding: "10px", textAlign: "center" }}>1100</td>
-            </tr>
-            <tr>
-              <td style={{ padding: "10px", textAlign: "center" }}>3</td>
-              <td style={{ padding: "10px" }}>Taylor</td>
-              <td style={{ padding: "10px", textAlign: "center" }}>1000</td>
-            </tr>
-          </tbody>
-        </table>
-      </section>
+
 
       {/* Call to Action Section */}
-      <section style={{ textAlign: "center", padding: "60px 20px" }}>
-        <h2 style={{ fontSize: "2rem" }}>Ready to Level Up?</h2>
-        <button
-          style={{
-            marginTop: "20px",
-            padding: "12px 24px",
-            backgroundColor: "#22c55e",
-            color: "white",
-            border: "none",
-            borderRadius: "8px",
-            fontSize: "16px",
-            cursor: "pointer",
-          }}
-        >
-          Join SkillQuest Today
-        </button>
-      </section>
-     
+     <CallToAction />
      <Footer />
 
      
