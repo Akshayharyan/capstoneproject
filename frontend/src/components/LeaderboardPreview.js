@@ -2,9 +2,9 @@ import React from "react";
 
 export default function LeaderboardPreview() {
   const leaderboard = [
-    { rank: 1, name: "Alex", points: 1500, avatar: "https://i.pravatar.cc/40?img=1" },
-    { rank: 2, name: "Jordan", points: 1200, avatar: "https://i.pravatar.cc/40?img=2" },
-    { rank: 3, name: "Taylor", points: 1000, avatar: "https://i.pravatar.cc/40?img=3" },
+    { rank: 1, name: "Akshay", points: 1500, avatar: "https://i.pravatar.cc/40?img=11" },
+    { rank: 2, name: "Anand", points: 1200, avatar: "https://i.pravatar.cc/40?img=6" },
+    { rank: 3, name: "Mayuresh", points: 1000, avatar: "https://i.pravatar.cc/40?img=7" },
   ];
 
   return (

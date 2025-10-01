@@ -12,6 +12,10 @@ import Dashboard from "./pages/dashboard";
 import Quests from "./pages/quests";
 import Leaderboard from "./pages/leaderboard";
 import AdminDashboard from "./pages/admindashboard";
+import Profile from "./pages/Profile"
+import Achievements from "./pages/achievements";
+
+
 
 function App() {
   return (
@@ -30,6 +34,8 @@ function App() {
             <Route path="/quests" element={<Quests />} />
             <Route path="/leaderboard" element={<Leaderboard />} />
             <Route path="/admin" element={<AdminDashboard />} />
+            <Route path="/profile" element={<Profile />} />
+            <Route path="/achievements" element={<Achievements />} />
           </Routes>
         </div>
       </div>
