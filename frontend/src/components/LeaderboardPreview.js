@@ -8,17 +8,20 @@ export default function LeaderboardPreview() {
   ];
 
   return (
-    <section id="leaderboard-preview" className="py-20 md:py-28 bg-gray-900 text-white">
+    <section
+      id="leaderboard-preview"
+      className="py-8 md:py-16 bg-[#0f172a] text-white"
+    >
       <div className="container mx-auto px-6 text-center">
-        <h2 className="text-3xl md:text-4xl font-bold mb-12">Leaderboard Preview</h2>
+        <h2 className="text-2xl md:text-3xl font-bold mb-8">Leaderboard Preview</h2>
 
         <div className="max-w-2xl mx-auto bg-gray-800 rounded-lg overflow-hidden shadow-lg">
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="bg-gray-700 text-gray-300">
-                <th className="py-3 px-4">Rank</th>
-                <th className="py-3 px-4">User</th>
-                <th className="py-3 px-4 text-right">Points</th>
+                <th className="py-2 px-4">Rank</th>
+                <th className="py-2 px-4">User</th>
+                <th className="py-2 px-4 text-right">Points</th>
               </tr>
             </thead>
             <tbody>
@@ -35,12 +38,16 @@ export default function LeaderboardPreview() {
                       : "bg-gray-800"
                   } border-b border-gray-700`}
                 >
-                  <td className="py-4 px-4 font-bold text-yellow-400">{player.rank}</td>
-                  <td className="py-4 px-4 flex items-center space-x-3">
-                    <img src={player.avatar} alt={player.name} className="w-8 h-8 rounded-full" />
+                  <td className="py-3 px-4 font-bold text-yellow-400">{player.rank}</td>
+                  <td className="py-3 px-4 flex items-center space-x-3">
+                    <img
+                      src={player.avatar}
+                      alt={player.name}
+                      className="w-8 h-8 rounded-full"
+                    />
                     <span className="font-medium">{player.name}</span>
                   </td>
-                  <td className="py-4 px-4 text-right font-medium">{player.points}</td>
+                  <td className="py-3 px-4 text-right font-medium">{player.points}</td>
                 </tr>
               ))}
             </tbody>
