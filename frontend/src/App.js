@@ -9,12 +9,13 @@ import Home from "./pages/home";
 import Login from "./pages/login";
 import Signup from "./pages/signup";
 import Dashboard from "./pages/dashboard";
-import Quests from "./pages/quests";
+
 import Leaderboard from "./pages/leaderboard";
 import AdminDashboard from "./pages/admindashboard";
 import Profile from "./pages/Profile"
 import Achievements from "./pages/achievements";
-
+import Modules from "./pages/Modules";
+import QuestMap from "./pages/QuestMap";
 
 
 function App() {
@@ -31,10 +32,12 @@ function App() {
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<Signup />} />
             <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/quests" element={<Quests />} />
+        
             <Route path="/leaderboard" element={<Leaderboard />} />
             <Route path="/admin" element={<AdminDashboard />} />
             <Route path="/profile" element={<Profile />} />
+             <Route path="/Modules" element={<Modules />} />
+             <Route path="/modules/:id/quests" element={<QuestMap />} />
             <Route path="/achievements" element={<Achievements />} />
           </Routes>
         </div>
