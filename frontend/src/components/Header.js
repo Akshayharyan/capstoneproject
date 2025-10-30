@@ -21,9 +21,6 @@ function Header() {
         <Link to="/dashboard" className="hover:text-blue-400 transition-colors">
           Dashboard
         </Link>
-        <Link to="/quests" className="hover:text-blue-400 transition-colors">
-          Quests
-        </Link>
         <Link to="/leaderboard" className="hover:text-blue-400 transition-colors">
           Leaderboard
         </Link>
