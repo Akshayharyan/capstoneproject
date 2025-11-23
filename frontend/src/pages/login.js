@@ -1,8 +1,37 @@
-import React from "react";
-import { Link } from "react-router-dom";
+import React, { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import Footer from "../components/Footer";
+import { useAuth } from "../context/AuthContext";
 
 function Login() {
+  const navigate = useNavigate();
+  const { login, loading, authError } = useAuth();
+
+  // Store input values
+  const [form, setForm] = useState({
+    email: "",
+    password: "",
+  });
+
+  // Update state on inputs
+  const handleChange = (e) => {
+    setForm({
+      ...form,
+      [e.target.name]: e.target.value,
+    });
+  };
+
+  // Submit handler
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    const res = await login(form.email, form.password);
+
+    if (res.success) {
+      navigate("/dashboard");
+    }
+  };
+
   return (
     <div style={{ backgroundColor: "#0f172a", color: "white", minHeight: "100vh" }}>
       {/* Centered Card */}
@@ -24,41 +53,59 @@ function Login() {
             textAlign: "center",
           }}
         >
-          <h2 style={{ marginBottom: "20px", color: "#22c55e" }}>Login to SkillQuest</h2>
-          
-          <form>
-           <input
-  type="email"
-  placeholder="Email"
-  style={{
-    width: "100%",
-    padding: "12px",
-    marginBottom: "15px",
-    borderRadius: "8px",
-    border: "none",
-    outline: "none",
-    backgroundColor: "white", // white input background
-    color: "black",           // black typed text
-  }}
-/>
+          <h2 style={{ marginBottom: "20px", color: "#22c55e" }}>
+            Login to SkillQuest
+          </h2>
 
-<input
-  type="password"
-  placeholder="Password"
-  style={{
-    width: "100%",
-    padding: "12px",
-    marginBottom: "15px",
-    borderRadius: "8px",
-    border: "none",
-    outline: "none",
-    backgroundColor: "white",
-    color: "black",
-  }}
-/>
+          {/* Error message */}
+          {authError && (
+            <p style={{ color: "red", marginBottom: "10px", fontSize: "14px" }}>
+              {authError}
+            </p>
+          )}
+
+          <form onSubmit={handleSubmit}>
+            <input
+              type="email"
+              name="email"
+              placeholder="Email"
+              value={form.email}
+              onChange={handleChange}
+              style={{
+                width: "100%",
+                padding: "12px",
+                marginBottom: "15px",
+                borderRadius: "8px",
+                border: "none",
+                outline: "none",
+                backgroundColor: "white",
+                color: "black",
+              }}
+              required
+            />
+
+            <input
+              type="password"
+              name="password"
+              placeholder="Password"
+              value={form.password}
+              onChange={handleChange}
+              style={{
+                width: "100%",
+                padding: "12px",
+                marginBottom: "15px",
+                borderRadius: "8px",
+                border: "none",
+                outline: "none",
+                backgroundColor: "white",
+                color: "black",
+              }}
+              required
+            />
 
             <button
               type="submit"
+              disabled={loading}
               style={{
                 width: "100%",
                 padding: "12px",
@@ -70,7 +117,7 @@ function Login() {
                 cursor: "pointer",
               }}
             >
-              Login
+              {loading ? "Logging in..." : "Login"}
             </button>
           </form>
 

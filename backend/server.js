@@ -1,27 +1,34 @@
-import express from "express";
-import mongoose from "mongoose";
-import dotenv from "dotenv";
-import authRoutes from "./routes/authRoutes.js";
-
-
-
-dotenv.config();
+// backend/server.js
+require('dotenv').config();
+const express = require('express');
+const cors = require('cors');
+const cookieParser = require('cookie-parser');
+const connectDB = require('./config/db'); // your existing db connection file
+const authRoutes = require('./routes/authRoutes');
+const dashboardRoutes = require('./routes/dashboardRoutes');
 
 const app = express();
+connectDB();
+
+app.use(cors({
+  origin: process.env.CLIENT_ORIGIN || 'http://localhost:3000',
+  credentials: true,
+}));
 app.use(express.json());
+app.use(cookieParser());
 
+// Routes
+app.use('/api/auth', authRoutes);
+app.use('/api/dashboard', dashboardRoutes);
 
-app.use("/api/auth", authRoutes);
-// ✅ Connect to MongoDB
-mongoose.connect(process.env.MONGO_URI)
-  .then(() => console.log("✅ MongoDB Connected"))
-  .catch(err => console.error("❌ MongoDB Connection Error:", err));
+// health
+app.get('/', (req, res) => res.send('API running'));
 
-// Sample route
-app.get("/", (req, res) => {
-  res.send("rohit hits a century");
+// error handler fallback
+app.use((err, req, res, next) => {
+  console.error(err);
+  res.status(500).json({ message: 'Server Error' });
 });
 
-// Start the server
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
+app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
