@@ -1,14 +1,9 @@
-import express from "express";
-import { getUserProfile } from "../controllers/userController.js";
-import { protect } from "../middleware/authMiddleware.js";
-
+const express = require("express");
 const router = express.Router();
+const protect = require("../middleware/authMiddleware");
+const { getMe, updateUser } = require("../controllers/userController");
 
-router.get("/profile", protect, getUserProfile);
+router.get("/me", protect, getMe);
+router.put("/update", protect, updateUser);
 
-router.get("/test", (req, res) => {
-  res.json({ message: "Backend Connected Successfully" });
-});
-
-
-export default router;
+module.exports = router;

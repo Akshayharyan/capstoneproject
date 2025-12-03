@@ -1,28 +1,50 @@
-// src/pages/Profile.js
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 
 const TABS = ["Overview", "Achievements", "Settings"];
 
 const Profile = () => {
   const [activeTab, setActiveTab] = useState("Overview");
+  const [user, setUser] = useState(null);
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        const res = await fetch("http://localhost:5000/api/user/me", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
+        const data = await res.json();
+        setUser(data);
+      } catch (err) {
+        console.log("Error loading profile:", err);
+      }
+    };
+
+    fetchUser();
+  }, []);
+
+  if (!user)
+    return <p className="text-center mt-32 text-white text-xl">Loading profile…</p>;
+
+  // SAME PFP AS DASHBOARD
+  const avatarSeed = user?.name?.replace(/\s+/g, "") || "User";
+  const avatarUrl = `https://api.dicebear.com/9.x/pixel-art/svg?seed=${avatarSeed}`;
 
   return (
     <div className="min-h-screen bg-[#0f172a] text-white px-6 py-10">
-      {/* Profile Header */}
+      {/* HEADER */}
       <div className="bg-[#1e293b] rounded-xl p-8 text-center shadow-lg">
         <img
-          src="https://i.pravatar.cc/150?img=47"
+          src={avatarUrl}
           alt="profile"
-          className="w-28 h-28 rounded-full mx-auto mb-4 border-4 border-blue-600"
+          className="w-28 h-28 rounded-full mx-auto mb-4 border-4 border-blue-600 shadow-md"
         />
-        <h2 className="text-2xl font-bold">Sophia Bennett</h2>
-        <p className="text-gray-400">Senior Marketing Manager</p>
-        <button className="mt-4 px-6 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg font-semibold">
-          Edit Profile
-        </button>
+        <h2 className="text-2xl font-bold">{user.name}</h2>
+        <p className="text-gray-400">{user.email}</p>
       </div>
 
-      {/* Tabs */}
+      {/* TABS */}
       <div className="flex justify-center mt-8 space-x-8 border-b border-gray-700 pb-3">
         {TABS.map((tab) => (
           <button
@@ -30,8 +52,8 @@ const Profile = () => {
             onClick={() => setActiveTab(tab)}
             className={`pb-1 ${
               activeTab === tab
-                ? "text-blue-500 border-b-2 border-blue-500"
-                : "text-gray-400 hover:text-blue-400"
+                ? "text-blue-400 border-b-2 border-blue-400"
+                : "text-gray-400 hover:text-blue-300"
             }`}
           >
             {tab}
@@ -39,105 +61,70 @@ const Profile = () => {
         ))}
       </div>
 
-      {/* Tab Content */}
+      {/* TAB CONTENT */}
       <div className="mt-10">
+        {/* OVERVIEW TAB */}
         {activeTab === "Overview" && (
           <>
-            {/* Profile Summary */}
-            <section>
-              <h3 className="text-lg font-semibold mb-4">Profile Summary</h3>
-              <div className="bg-[#1e293b] rounded-xl p-6 space-y-3">
-                <p>
-                  <span className="font-semibold">Name:</span> Sophia Bennett
-                </p>
-                <p>
-                  <span className="font-semibold">Email:</span>{" "}
-                  sophia.bennett@example.com
-                </p>
-                <p>
-                  <span className="font-semibold">Skills:</span> Marketing,
-                  Strategy, Leadership
-                </p>
-              </div>
-            </section>
+            <h3 className="text-lg font-semibold mb-4">Profile Summary</h3>
 
-            {/* Skill Progress */}
-            <section className="mt-10">
-              <h3 className="text-lg font-semibold mb-4">Skill Progress</h3>
-              <div className="bg-[#1e293b] rounded-xl p-6 space-y-4">
-                {[
-                  { skill: "Marketing Skills", percent: 75 },
-                  { skill: "Strategy Skills", percent: 50 },
-                  { skill: "Leadership Skills", percent: 90 },
-                ].map((item, idx) => (
-                  <div key={idx}>
-                    <div className="flex justify-between text-sm mb-1">
-                      <span>{item.skill}</span>
-                      <span>{item.percent}%</span>
-                    </div>
-                    <div className="w-full bg-gray-700 rounded-full h-2">
-                      <div
-                        className="bg-blue-600 h-2 rounded-full"
-                        style={{ width: `${item.percent}%` }}
-                      ></div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </section>
+            <div className="bg-[#1e293b] rounded-xl p-6 space-y-4 shadow-md">
+              <p>
+                <span className="font-semibold">XP:</span> {user.xp}
+              </p>
+              <p>
+                <span className="font-semibold">Level:</span> {user.level}
+              </p>
+              <p>
+                <span className="font-semibold">Badges:</span>{" "}
+                {user.badges.length}
+              </p>
+            </div>
 
-            {/* Learning Recommendations */}
-            <section className="mt-10">
-              <h3 className="text-lg font-semibold mb-4">
-                Learning Recommendations
-              </h3>
-              <div className="grid md:grid-cols-3 gap-6">
-                {[
-                  {
-                    img: "https://placehold.co/300x200?text=Marketing+Course",
-                    title: "Advanced Marketing Techniques",
-                    desc: "Enhance your marketing skills with advanced techniques.",
-                  },
-                  {
-                    img: "https://placehold.co/300x200?text=Strategy+Course",
-                    title: "Strategic Planning for Growth",
-                    desc: "Develop strategic planning skills for business growth.",
-                  },
-                  {
-                    img: "https://placehold.co/300x200?text=Leadership+Course",
-                    title: "Leading High-Performance Teams",
-                    desc: "Learn to lead and motivate high-performance teams.",
-                  },
-                ].map((course, idx) => (
-                  <div
-                    key={idx}
-                    className="bg-[#1e293b] rounded-xl p-4 hover:scale-105 transition"
-                  >
-                    <img
-                      src={course.img}
-                      alt={course.title}
-                      className="rounded-lg mb-3"
-                    />
-                    <h4 className="font-semibold">{course.title}</h4>
-                    <p className="text-gray-400 text-sm">{course.desc}</p>
-                  </div>
-                ))}
+            {/* XP PROGRESS BAR */}
+            <div className="bg-[#1e293b] rounded-xl p-6 space-y-4 mt-8 shadow-md">
+              <p className="font-semibold">Progress to next level</p>
+              <div className="w-full bg-gray-700 h-3 rounded-full overflow-hidden">
+                <div
+                  className="bg-blue-500 h-full"
+                  style={{
+                    width: `${Math.min(
+                      (user.xp / ((user.level + 1) * (user.level + 2) * 25)) *
+                        100,
+                      100
+                    )}%`,
+                  }}
+                ></div>
               </div>
-            </section>
+            </div>
           </>
         )}
 
+        {/* ACHIEVEMENTS TAB */}
         {activeTab === "Achievements" && (
-          <div className="bg-[#1e293b] rounded-xl p-6">
+          <div className="bg-[#1e293b] rounded-xl p-6 shadow-md">
             <h3 className="text-lg font-semibold mb-4">Achievements</h3>
-            <p className="text-gray-400">🏆 Coming soon…</p>
+            {user.badges.length === 0 ? (
+              <p className="text-gray-400">🏆 No badges yet — keep learning!</p>
+            ) : (
+              <ul className="space-y-2">
+                {user.badges.map((b, index) => (
+                  <li key={index} className="bg-blue-700/40 p-3 rounded-lg">
+                    🏅 {b}
+                  </li>
+                ))}
+              </ul>
+            )}
           </div>
         )}
 
+        {/* SETTINGS TAB */}
         {activeTab === "Settings" && (
-          <div className="bg-[#1e293b] rounded-xl p-6">
-            <h3 className="text-lg font-semibold mb-4">Account Settings</h3>
-            <p className="text-gray-400">⚙️ Settings panel placeholder…</p>
+          <div className="bg-[#1e293b] rounded-xl p-6 shadow-md">
+            <h3 className="text-lg font-semibold mb-4">Settings</h3>
+            <p className="text-gray-400">
+              ⚙️ More customization features coming soon…
+            </p>
           </div>
         )}
       </div>

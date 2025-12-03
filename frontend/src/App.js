@@ -2,6 +2,7 @@ import React from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 
 import { AuthProvider } from "./context/AuthContext";
+import GuestRoute from "./components/GuestRoute";
 import ProtectedRoute from "./components/ProtectedRoute";
 
 // Import Navbar
@@ -17,7 +18,9 @@ import AdminDashboard from "./pages/admindashboard";
 import Profile from "./pages/Profile";
 import Achievements from "./pages/achievements";
 import Modules from "./pages/Modules";
-import QuestMap from "./pages/QuestMap";
+
+import QuestList from "./pages/QuestList";
+
 
 function App() {
   return (
@@ -29,76 +32,104 @@ function App() {
 
           {/* Page Content */}
           <div style={{ marginTop: "60px" }}>
-            <Routes>
-              {/* Public Routes */}
-              <Route path="/" element={<Home />} />
-              <Route path="/login" element={<Login />} />
-              <Route path="/signup" element={<Signup />} />
+           <Routes>
 
-              {/* Protected Routes */}
-              <Route
-                path="/dashboard"
-                element={
-                  <ProtectedRoute>
-                    <Dashboard />
-                  </ProtectedRoute>
-                }
-              />
+  {/* ==== GUEST ONLY ROUTES (Blocked if logged in) ==== */}
+  <Route
+    path="/"
+    element={
+      <GuestRoute>
+        <Home />
+      </GuestRoute>
+    }
+  />
 
-              <Route
-                path="/leaderboard"
-                element={
-                  <ProtectedRoute>
-                    <Leaderboard />
-                  </ProtectedRoute>
-                }
-              />
+  <Route
+    path="/login"
+    element={
+      <GuestRoute>
+        <Login />
+      </GuestRoute>
+    }
+  />
 
-              <Route
-                path="/admin"
-                element={
-                  <ProtectedRoute>
-                    <AdminDashboard />
-                  </ProtectedRoute>
-                }
-              />
+  <Route
+    path="/signup"
+    element={
+      <GuestRoute>
+        <Signup />
+      </GuestRoute>
+    }
+  />
 
-              <Route
-                path="/profile"
-                element={
-                  <ProtectedRoute>
-                    <Profile />
-                  </ProtectedRoute>
-                }
-              />
+  {/* ==== PROTECTED ROUTES (Login required) ==== */}
+  
+  <Route
+    path="/dashboard"
+    element={
+      <ProtectedRoute>
+        <Dashboard />
+      </ProtectedRoute>
+    }
+  />
 
-              <Route
-                path="/Modules"
-                element={
-                  <ProtectedRoute>
-                    <Modules />
-                  </ProtectedRoute>
-                }
-              />
+  <Route
+    path="/leaderboard"
+    element={
+      <ProtectedRoute>
+        <Leaderboard />
+      </ProtectedRoute>
+    }
+  />
 
-              <Route
-                path="/modules/:id/quests"
-                element={
-                  <ProtectedRoute>
-                    <QuestMap />
-                  </ProtectedRoute>
-                }
-              />
+  <Route
+    path="/admin"
+    element={
+      <ProtectedRoute>
+        <AdminDashboard />
+      </ProtectedRoute>
+    }
+  />
 
-              <Route
-                path="/achievements"
-                element={
-                  <ProtectedRoute>
-                    <Achievements />
-                  </ProtectedRoute>
-                }
-              />
-            </Routes>
+  <Route
+    path="/profile"
+    element={
+      <ProtectedRoute>
+        <Profile />
+      </ProtectedRoute>
+    }
+  />
+
+  <Route
+    path="/modules"
+    element={
+      <ProtectedRoute>
+        <Modules />
+      </ProtectedRoute>
+    }
+  />
+
+  {/* Only one valid Quest Route */}
+  <Route
+    path="/modules/:moduleId/quests"
+    element={
+      <ProtectedRoute>
+        <QuestList />
+      </ProtectedRoute>
+    }
+  />
+
+  <Route
+    path="/achievements"
+    element={
+      <ProtectedRoute>
+        <Achievements />
+      </ProtectedRoute>
+    }
+  />
+
+</Routes>
+
           </div>
         </div>
       </Router>

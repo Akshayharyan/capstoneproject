@@ -1,4 +1,3 @@
-// backend/models/user.js
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 
@@ -20,9 +19,24 @@ const userSchema = new mongoose.Schema({
     required: [true, 'Please add a password'],
     minlength: 6,
   },
-  // Optional future fields for gamification:
+
+  // OPTIONAL USER PROFILE FIELDS
+  avatar: {
+    type: String,
+    default: "https://avatar.iran.liara.run/public", // placeholder avatar
+  },
+  title: {
+    type: String,
+    default: "Learner",
+  },
+
+  // GAMIFICATION DATA
   xp: { type: Number, default: 0 },
+  level: { type: Number, default: 1 },
   badges: { type: [String], default: [] },
+  
+  gender: { type: String, enum: ["male", "female"], default: "male" },
+
 }, { timestamps: true });
 
 // Hash password before save if modified or new
@@ -33,12 +47,12 @@ userSchema.pre('save', async function (next) {
   next();
 });
 
-// Instance method to compare password
+// Compare password
 userSchema.methods.matchPassword = async function (enteredPassword) {
   return await bcrypt.compare(enteredPassword, this.password);
 };
 
-// Remove password when converting to JSON
+// Hide password in JSON output
 userSchema.methods.toJSON = function () {
   const obj = this.toObject();
   delete obj.password;

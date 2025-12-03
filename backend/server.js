@@ -1,33 +1,44 @@
-// backend/server.js
-require('dotenv').config();
-const express = require('express');
-const cors = require('cors');
-const cookieParser = require('cookie-parser');
-const connectDB = require('./config/db'); // your existing db connection file
-const authRoutes = require('./routes/authRoutes');
-const dashboardRoutes = require('./routes/dashboardRoutes');
+require("dotenv").config();
+const express = require("express");
+const cors = require("cors");
+const cookieParser = require("cookie-parser");
+const connectDB = require("./config/db");
+
+// ROUTES
+const authRoutes = require("./routes/authRoutes");
+const dashboardRoutes = require("./routes/dashboardRoutes");
+const questRoutes = require("./routes/questRoutes");
+const moduleRoutes = require("./routes/moduleRoutes");
+const activityRoutes = require("./routes/activityRoutes");
+const userRoutes = require("./routes/userRoutes");
 
 const app = express();
 connectDB();
 
+// CORS
 app.use(cors({
-  origin: process.env.CLIENT_ORIGIN || 'http://localhost:3000',
+  origin: process.env.CLIENT_ORIGIN || "http://localhost:3000",
   credentials: true,
 }));
+
 app.use(express.json());
 app.use(cookieParser());
 
-// Routes
-app.use('/api/auth', authRoutes);
-app.use('/api/dashboard', dashboardRoutes);
+// REGISTER ROUTES
+app.use("/api/auth", authRoutes);
+app.use("/api/user", userRoutes);          // ⭐ Profile / User
+app.use("/api/dashboard", dashboardRoutes);
+app.use("/api/quests", questRoutes);
+app.use("/api/modules", moduleRoutes);
+app.use("/api/activity", activityRoutes);
 
-// health
-app.get('/', (req, res) => res.send('API running'));
+// API health check
+app.get("/", (req, res) => res.send("API running"));
 
-// error handler fallback
+// ERROR HANDLER
 app.use((err, req, res, next) => {
-  console.error(err);
-  res.status(500).json({ message: 'Server Error' });
+  console.error("SERVER ERROR:", err);
+  res.status(500).json({ message: "Server Error" });
 });
 
 const PORT = process.env.PORT || 5000;
