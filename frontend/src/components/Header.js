@@ -89,7 +89,7 @@ function Header() {
         )}
 
         {/* LOGGED-IN BUTTONS */}
-        {isAuthenticated && (
+        {isAuthenticated && (           
           <>
             <span className="text-blue-300 text-sm">Hi, {user?.name}</span>
             <button
