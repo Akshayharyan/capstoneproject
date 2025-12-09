@@ -1,4 +1,5 @@
-const User = require("../models/user");
+const User = require("../models/User");
+
 const Module = require("../models/module");
 const Progress = require("../models/progress");
 const Activity = require("../models/activity");

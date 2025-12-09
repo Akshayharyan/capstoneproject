@@ -51,7 +51,7 @@ function QuestList() {
       <div className="fixed inset-0 bg-gradient-to-b from-transparent via-black/40 to-black/85 z-[-1]" />
 
       {/* MAIN CONTENT */}
-      <div className="relative z-10 flex flex-col items-center pt-6 pb-20">
+      <div className="relative z-10 flex flex-col items-center pt-0 pb-20">
 
         <h1 className="text-4xl md:text-5xl font-extrabold text-yellow-300 drop-shadow-[0_0_15px_rgba(255,255,0,0.45)] mb-12 text-center">
           {moduleTitle} Quest Path ⚔️
