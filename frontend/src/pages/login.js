@@ -7,13 +7,11 @@ function Login() {
   const navigate = useNavigate();
   const { login, loading, authError } = useAuth();
 
-  // Store input values
   const [form, setForm] = useState({
     email: "",
     password: "",
   });
 
-  // Update state on inputs
   const handleChange = (e) => {
     setForm({
       ...form,
@@ -21,20 +19,23 @@ function Login() {
     });
   };
 
-  // Submit handler
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    const res = await login(form.email, form.password);
+    const res = await login(form.email, form.password); // returns role
 
     if (res.success) {
-      navigate("/dashboard");
+      const role = res.role?.toLowerCase();
+      if (role === "admin") {
+        navigate("/admin");
+      } else {
+        navigate("/dashboard");
+      }
     }
   };
 
   return (
     <div style={{ backgroundColor: "#0f172a", color: "white", minHeight: "100vh" }}>
-      {/* Centered Card */}
       <div
         style={{
           display: "flex",
@@ -57,7 +58,6 @@ function Login() {
             Login to SkillQuest
           </h2>
 
-          {/* Error message */}
           {authError && (
             <p style={{ color: "red", marginBottom: "10px", fontSize: "14px" }}>
               {authError}
@@ -71,16 +71,7 @@ function Login() {
               placeholder="Email"
               value={form.email}
               onChange={handleChange}
-              style={{
-                width: "100%",
-                padding: "12px",
-                marginBottom: "15px",
-                borderRadius: "8px",
-                border: "none",
-                outline: "none",
-                backgroundColor: "white",
-                color: "black",
-              }}
+              style={inputStyle}
               required
             />
 
@@ -90,32 +81,14 @@ function Login() {
               placeholder="Password"
               value={form.password}
               onChange={handleChange}
-              style={{
-                width: "100%",
-                padding: "12px",
-                marginBottom: "15px",
-                borderRadius: "8px",
-                border: "none",
-                outline: "none",
-                backgroundColor: "white",
-                color: "black",
-              }}
+              style={inputStyle}
               required
             />
 
             <button
               type="submit"
               disabled={loading}
-              style={{
-                width: "100%",
-                padding: "12px",
-                background: "#22c55e",
-                color: "white",
-                fontWeight: "bold",
-                border: "none",
-                borderRadius: "8px",
-                cursor: "pointer",
-              }}
+              style={buttonStyle}
             >
               {loading ? "Logging in..." : "Login"}
             </button>
@@ -134,5 +107,27 @@ function Login() {
     </div>
   );
 }
+
+const inputStyle = {
+  width: "100%",
+  padding: "12px",
+  marginBottom: "15px",
+  borderRadius: "8px",
+  border: "none",
+  outline: "none",
+  backgroundColor: "white",
+  color: "black",
+};
+
+const buttonStyle = {
+  width: "100%",
+  padding: "12px",
+  background: "#22c55e",
+  color: "white",
+  fontWeight: "bold",
+  border: "none",
+  borderRadius: "8px",
+  cursor: "pointer",
+};
 
 export default Login;

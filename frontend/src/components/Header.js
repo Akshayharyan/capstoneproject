@@ -1,10 +1,16 @@
-// src/components/Header.js
 import React from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import { useLocation } from "react-router-dom";
 
 function Header() {
   const { isAuthenticated, logout, user } = useAuth();
+  const location = useLocation();
+
+  // 🔥 Hide navbar on any admin route (case-insensitive)
+  if (location.pathname.toLowerCase().startsWith("/admin")) {
+    return null;
+  }
 
   return (
     <nav
@@ -32,36 +38,20 @@ function Header() {
         {/* PUBLIC NAVIGATION */}
         {!isAuthenticated && (
           <>
-            <Link to="/" className="hover:text-blue-300 transition">
-              Home
-            </Link>
-            <Link to="/about" className="hover:text-blue-300 transition">
-              About
-            </Link>
-            <Link to="/features" className="hover:text-blue-300 transition">
-              Features
-            </Link>
+            <Link to="/" className="hover:text-blue-300 transition">Home</Link>
+            <Link to="/about" className="hover:text-blue-300 transition">About</Link>
+            <Link to="/features" className="hover:text-blue-300 transition">Features</Link>
           </>
         )}
 
         {/* LOGGED-IN NAVIGATION */}
         {isAuthenticated && (
           <>
-            <Link to="/dashboard" className="hover:text-blue-300 transition">
-              Dashboard
-            </Link>
-            <Link to="/Modules" className="hover:text-blue-300 transition">
-              Modules
-            </Link>
-            <Link to="/leaderboard" className="hover:text-blue-300 transition">
-              Leaderboard
-            </Link>
-            <Link to="/achievements" className="hover:text-blue-300 transition">
-              Achievements
-            </Link>
-            <Link to="/profile" className="hover:text-blue-300 transition">
-              Profile
-            </Link>
+            <Link to="/dashboard" className="hover:text-blue-300 transition">Dashboard</Link>
+            <Link to="/modules" className="hover:text-blue-300 transition">Modules</Link>
+            <Link to="/leaderboard" className="hover:text-blue-300 transition">Leaderboard</Link>
+            <Link to="/achievements" className="hover:text-blue-300 transition">Achievements</Link>
+            <Link to="/profile" className="hover:text-blue-300 transition">Profile</Link>
           </>
         )}
       </div>
@@ -89,7 +79,7 @@ function Header() {
         )}
 
         {/* LOGGED-IN BUTTONS */}
-        {isAuthenticated && (           
+        {isAuthenticated && (
           <>
             <span className="text-blue-300 text-sm">Hi, {user?.name}</span>
             <button

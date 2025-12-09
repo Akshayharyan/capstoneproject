@@ -55,7 +55,7 @@ function Dashboard() {
     <div className="flex min-h-screen">
       <Sidebar />
 
-      <main className="flex-1 p-8 ml-64">
+      <main className="flex-1 p-0 ml-64">
         <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-6">
           Welcome back, {user?.name}!
         </h1>

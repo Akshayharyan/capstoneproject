@@ -5,133 +5,59 @@ import { AuthProvider } from "./context/AuthContext";
 import GuestRoute from "./components/GuestRoute";
 import ProtectedRoute from "./components/ProtectedRoute";
 
-// Import Navbar
-import Navbar from "./components/Header";
+import Header from "./components/Header";
 
-// Import pages
+// user pages
 import Home from "./pages/home";
 import Login from "./pages/login";
 import Signup from "./pages/signup";
 import Dashboard from "./pages/dashboard";
 import Leaderboard from "./pages/leaderboard";
-import AdminDashboard from "./pages/admindashboard";
 import Profile from "./pages/Profile";
 import Achievements from "./pages/achievements";
 import Modules from "./pages/Modules";
+import TopicRoadmap from "./pages/TopicRoadmap";
 
-import QuestList from "./pages/QuestList";
-
+// admin pages
+import AdminDashboard from "./pages/admin/AdminDashboard";
+import UsersPage from "./pages/admin/UsersPage";
+import AssignModulePage from "./pages/admin/AssignModulePage";
+import AnalyticsPage from "./pages/admin/AnalyticsPage";
 
 function App() {
   return (
     <AuthProvider>
       <Router>
-        <div>
-          {/* Navbar always visible */}
-          <Navbar />
+        <Header />
 
-          {/* Page Content */}
-          <div style={{ marginTop: "60px" }}>
-           <Routes>
+        <Routes>
+          {/* GUEST ROUTES */}
+          <Route path="/" element={<GuestRoute><Home /></GuestRoute>} />
+          <Route path="/login" element={<GuestRoute><Login /></GuestRoute>} />
+          <Route path="/signup" element={<GuestRoute><Signup /></GuestRoute>} />
 
-  {/* ==== GUEST ONLY ROUTES (Blocked if logged in) ==== */}
-  <Route
-    path="/"
-    element={
-      <GuestRoute>
-        <Home />
-      </GuestRoute>
-    }
-  />
+          {/* USER AUTH ROUTES */}
+          <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+          <Route path="/leaderboard" element={<ProtectedRoute><Leaderboard /></ProtectedRoute>} />
+          <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+          <Route path="/achievements" element={<ProtectedRoute><Achievements /></ProtectedRoute>} />
+          <Route path="/modules" element={<ProtectedRoute><Modules /></ProtectedRoute>} />
+          <Route path="/modules/:moduleId/topics" element={<ProtectedRoute><TopicRoadmap /></ProtectedRoute>} />
 
-  <Route
-    path="/login"
-    element={
-      <GuestRoute>
-        <Login />
-      </GuestRoute>
-    }
-  />
-
-  <Route
-    path="/signup"
-    element={
-      <GuestRoute>
-        <Signup />
-      </GuestRoute>
-    }
-  />
-
-  {/* ==== PROTECTED ROUTES (Login required) ==== */}
-  
-  <Route
-    path="/dashboard"
-    element={
-      <ProtectedRoute>
-        <Dashboard />
-      </ProtectedRoute>
-    }
-  />
-
-  <Route
-    path="/leaderboard"
-    element={
-      <ProtectedRoute>
-        <Leaderboard />
-      </ProtectedRoute>
-    }
-  />
-
-  <Route
-    path="/admin"
-    element={
-      <ProtectedRoute>
-        <AdminDashboard />
-      </ProtectedRoute>
-    }
-  />
-
-  <Route
-    path="/profile"
-    element={
-      <ProtectedRoute>
-        <Profile />
-      </ProtectedRoute>
-    }
-  />
-
-  <Route
-    path="/modules"
-    element={
-      <ProtectedRoute>
-        <Modules />
-      </ProtectedRoute>
-    }
-  />
-
-  {/* Only one valid Quest Route */}
-  <Route
-    path="/modules/:moduleId/quests"
-    element={
-      <ProtectedRoute>
-        <QuestList />
-      </ProtectedRoute>
-    }
-  />
-
-  <Route
-    path="/achievements"
-    element={
-      <ProtectedRoute>
-        <Achievements />
-      </ProtectedRoute>
-    }
-  />
-
-</Routes>
-
-          </div>
-        </div>
+          {/* 🔐 ADMIN ROUTES */}
+          <Route
+            path="/admin/*"
+            element={
+              <ProtectedRoute adminOnly={true}>
+                <AdminDashboard />
+              </ProtectedRoute>
+            }
+          >
+            <Route path="users" element={<UsersPage />} />
+            <Route path="assign" element={<AssignModulePage />} />
+            <Route path="analytics" element={<AnalyticsPage />} />
+          </Route>
+        </Routes>
       </Router>
     </AuthProvider>
   );
