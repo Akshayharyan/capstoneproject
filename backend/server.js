@@ -1,8 +1,5 @@
-
-
 require("dotenv").config();
 const express = require("express");
-
 
 const TestUserModel = require("./models/User");
 console.log("🧪 Testing model import =", TestUserModel);
@@ -11,14 +8,17 @@ const cors = require("cors");
 const cookieParser = require("cookie-parser");
 const connectDB = require("./config/db");
 
-// ROUTES
+// ROUTES (CommonJS)
 const authRoutes = require("./routes/authRoutes");
 const dashboardRoutes = require("./routes/dashboardRoutes");
 const questRoutes = require("./routes/questRoutes");
 const moduleRoutes = require("./routes/moduleRoutes");
 const activityRoutes = require("./routes/activityRoutes");
 const userRoutes = require("./routes/userRoutes");
-const adminRoutes = require("./routes/adminRoutes"); // ⭐ NEW
+const traineeRoutes = require("./routes/traineeRoutes");
+
+// ⚠️ FIX — import admin routes using CommonJS, NOT import
+const adminRoutes = require("./routes/adminRoutes.js");
 
 const app = express();
 connectDB();
@@ -39,10 +39,16 @@ app.use("/api/auth", authRoutes);
 app.use("/api/user", userRoutes);
 app.use("/api/dashboard", dashboardRoutes);
 app.use("/api/quests", questRoutes);
+
+app.use("/api/trainee", traineeRoutes);
+app.use("/api/trainee", require("./routes/traineeRoutes"));
+
+
 app.use("/api/modules", moduleRoutes);
 app.use("/api/activity", activityRoutes);
-app.use("/api/admin", require("./routes/adminRoutes"));
 
+// ⚠️ FIX — use adminRoutes ONCE
+app.use("/api/admin", adminRoutes);
 
 // API health check
 app.get("/", (req, res) => res.send("API running"));

@@ -21,4 +21,5 @@ const ModuleSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-module.exports = mongoose.model("Module", ModuleSchema);
+module.exports = mongoose.models.Module || mongoose.model("Module", ModuleSchema);
+

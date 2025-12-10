@@ -1,4 +1,3 @@
-// frontend/src/context/AuthContext.js
 import React, { createContext, useContext, useEffect, useState } from "react";
 
 const AuthContext = createContext(null);
@@ -16,7 +15,6 @@ export const AuthProvider = ({ children }) => {
 
   const isAuthenticated = !!token;
 
-  // Sync LocalStorage when user/token updates
   useEffect(() => {
     if (token) localStorage.setItem("token", token);
     else localStorage.removeItem("token");
@@ -26,64 +24,26 @@ export const AuthProvider = ({ children }) => {
   }, [user, token]);
 
   // 🔐 LOGIN
-
-
   const login = async (email, password) => {
-  setLoading(true);
-  setAuthError(null);
-
-  try {
-    const res = await fetch(`${API_BASE_URL}/api/auth/login`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, password }),
-    });
-
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.message || "Login failed");
-
-    // Save user + token
-    setUser(data.user);
-    setToken(data.token);
-
-    console.log("🔐 Login Successful — Role:", data.user.role);
-
-    return { success: true, role: data.user.role };  // ⬅ RETURN ROLE HERE
-
-  } catch (err) {
-    setAuthError(err.message);
-    return { success: false, message: err.message };
-  } finally {
-    setLoading(false);
-  }
-};
-
-
-
-  // 📝 REGISTER (fixed to save role properly)
-  const register = async (name, email, password, role = "learner") => {
     setLoading(true);
     setAuthError(null);
 
     try {
-      const res = await fetch(`${API_BASE_URL}/api/auth/register`, {
+      const res = await fetch(`${API_BASE_URL}/api/auth/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, email, password, role }),
+        body: JSON.stringify({ email, password }),
       });
 
       const data = await res.json();
-      if (!res.ok) throw new Error(data.message || "Registration failed");
+      if (!res.ok) throw new Error(data.message || "Login failed");
 
-      // Save role in state + storage
-      setUser({
-        ...data.user,
-        role: data.user.role,
-      });
-
+      setUser(data.user);
       setToken(data.token);
-      return { success: true };
 
+      console.log("🔐 Login — Role:", data.user.role);
+
+      return { success: true, role: data.user.role };
     } catch (err) {
       setAuthError(err.message);
       return { success: false, message: err.message };
@@ -92,7 +52,32 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  // 🚪 LOGOUT
+  // 📝 REGISTER — Everyone becomes EMPLOYEE by default
+  const register = async (name, email, password) => {
+    setLoading(true);
+    setAuthError(null);
+
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/auth/register`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, email, password, role: "employee" }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || "Registration failed");
+
+      setUser(data.user);
+      setToken(data.token);
+      return { success: true };
+    } catch (err) {
+      setAuthError(err.message);
+      return { success: false, message: err.message };
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const logout = () => {
     setUser(null);
     setToken(null);

@@ -1,5 +1,5 @@
 import React from "react";
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, Outlet } from "react-router-dom";
 
 import { AuthProvider } from "./context/AuthContext";
 import GuestRoute from "./components/GuestRoute";
@@ -23,6 +23,12 @@ import AdminDashboard from "./pages/admin/AdminDashboard";
 import UsersPage from "./pages/admin/UsersPage";
 import AssignModulePage from "./pages/admin/AssignModulePage";
 import AnalyticsPage from "./pages/admin/AnalyticsPage";
+import CreateModulePage from "./pages/admin/CreateModulePage";
+
+// trainee pages
+import TraineeSidebar from "./components/TraineeSidebar";
+import TraineeModulesPage from "./pages/trainee/TraineeModulesPage";
+import TraineeEditTopicsPage from "./pages/trainee/TraineeEditTopicsPage";
 
 function App() {
   return (
@@ -31,12 +37,12 @@ function App() {
         <Header />
 
         <Routes>
-          {/* GUEST ROUTES */}
+          {/* ----- GUEST ROUTES ----- */}
           <Route path="/" element={<GuestRoute><Home /></GuestRoute>} />
           <Route path="/login" element={<GuestRoute><Login /></GuestRoute>} />
           <Route path="/signup" element={<GuestRoute><Signup /></GuestRoute>} />
 
-          {/* USER AUTH ROUTES */}
+          {/* ----- EMPLOYEE ROUTES ----- */}
           <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
           <Route path="/leaderboard" element={<ProtectedRoute><Leaderboard /></ProtectedRoute>} />
           <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
@@ -44,7 +50,7 @@ function App() {
           <Route path="/modules" element={<ProtectedRoute><Modules /></ProtectedRoute>} />
           <Route path="/modules/:moduleId/topics" element={<ProtectedRoute><TopicRoadmap /></ProtectedRoute>} />
 
-          {/* 🔐 ADMIN ROUTES */}
+          {/* ----- ADMIN ROUTES ----- */}
           <Route
             path="/admin/*"
             element={
@@ -53,9 +59,30 @@ function App() {
               </ProtectedRoute>
             }
           >
+            <Route path="create-module" element={<CreateModulePage />} />
             <Route path="users" element={<UsersPage />} />
             <Route path="assign" element={<AssignModulePage />} />
             <Route path="analytics" element={<AnalyticsPage />} />
+          </Route>
+
+          {/* ----- TRAINEE ROUTES ----- */}
+          <Route
+            path="/trainee/*"
+            element={
+              <ProtectedRoute>
+                <div className="flex min-h-screen">
+                  <TraineeSidebar />
+                  <main className="flex-1 p-10">
+                    <Outlet />
+                  </main>
+                </div>
+              </ProtectedRoute>
+            }
+          >
+            <Route path="modules/:moduleId/edit" element={<TraineeEditTopicsPage />} />
+
+            {/* ⭐ default trainee landing page */}
+            <Route index element={<TraineeModulesPage />} />
           </Route>
         </Routes>
       </Router>

@@ -1,4 +1,4 @@
-import mongoose from "mongoose";
+const mongoose = require("mongoose");
 
 const assignmentSchema = new mongoose.Schema({
   trainee: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
@@ -7,4 +7,4 @@ const assignmentSchema = new mongoose.Schema({
   trainer: { type: mongoose.Schema.Types.ObjectId, ref: "User" } // optional
 }, { timestamps: true });
 
-export default mongoose.model("Assignment", assignmentSchema);
+module.exports = mongoose.models.Assignment || mongoose.model("Assignment", assignmentSchema);
