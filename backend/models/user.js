@@ -19,7 +19,12 @@ const userSchema = new mongoose.Schema(
     gender: { type: String, enum: ["male", "female"], default: "male" },
 
     // 🔥 This is what admin access depends on
-    role: { type: String, enum: ["Employee", "Admin"], default: "Employee" }
+  role: {
+  type: String,
+  enum: ["admin", "trainer", "employee"], // 🔥 future-ready
+  default: "employee",
+},
+
   },
   { timestamps: true }
 );

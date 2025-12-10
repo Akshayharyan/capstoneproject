@@ -1,8 +1,14 @@
 const express = require("express");
 const router = express.Router();
 const protect = require("../middleware/authMiddleware");
+const verifyAdmin = require("../middleware/verifyAdmin");
+const { createModule } = require("../controllers/moduleController");
 const Module = require("../models/module");
 
+// ===============================
+// 📌 CREATE MODULE (Admin Only)
+// ===============================
+router.post("/create", protect, verifyAdmin, createModule);
 
 // ===============================
 // 📌 GET ALL MODULES
@@ -17,11 +23,9 @@ router.get("/", protect, async (req, res) => {
   }
 });
 
-
 // ===============================
 // 📌 GET TOPICS OF A MODULE
 // ===============================
-// GET /api/modules/:moduleId/topics
 router.get("/:moduleId/topics", protect, async (req, res) => {
   try {
     const module = await Module.findById(req.params.moduleId);
@@ -41,11 +45,9 @@ router.get("/:moduleId/topics", protect, async (req, res) => {
   }
 });
 
-
 // ===============================
 // 📌 GET LEVELS OF A TOPIC
 // ===============================
-// GET /api/modules/:moduleId/topics/:topicIndex/levels
 router.get("/:moduleId/topics/:topicIndex/levels", protect, async (req, res) => {
   try {
     const { moduleId, topicIndex } = req.params;
@@ -71,12 +73,9 @@ router.get("/:moduleId/topics/:topicIndex/levels", protect, async (req, res) => 
   }
 });
 
-
 // ===============================
-// 📌 GET FULL LEVEL DATA
-// (for future — reading + quiz/coding)
+// 📌 FULL LEVEL DETAILS
 // ===============================
-// GET /api/levels/:levelId
 router.get("/level/:levelId", protect, async (req, res) => {
   try {
     const levelId = req.params.levelId;
@@ -84,7 +83,6 @@ router.get("/level/:levelId", protect, async (req, res) => {
 
     if (!module) return res.status(404).json({ message: "Level not found" });
 
-    // Locate level inside nested structure
     for (const topic of module.topics) {
       const level = topic.levels.id(levelId);
       if (level) return res.json(level);
@@ -97,5 +95,5 @@ router.get("/level/:levelId", protect, async (req, res) => {
   }
 });
 
-
+// ⬅️ MOST IMPORTANT LINE
 module.exports = router;

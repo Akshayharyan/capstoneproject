@@ -27,12 +27,12 @@ exports.registerUser = async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, 10);
 
     const user = await User.create({
-      name,
-      email: email.toLowerCase(),
-      password: hashedPassword,
-      // default Employee, or use provided role
-      role: role || "Employee",
-    });
+  name,
+  email: email.toLowerCase(),
+  password: hashedPassword,
+  role: "employee",  // ✔ default employee
+});
+
 
     const token = generateToken(user);
     const userSafe = user.toJSON(); // toJSON removes password

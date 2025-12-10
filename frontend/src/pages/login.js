@@ -26,11 +26,10 @@ function Login() {
 
     if (res.success) {
       const role = res.role?.toLowerCase();
-      if (role === "admin") {
-        navigate("/admin");
-      } else {
-        navigate("/dashboard");
-      }
+
+      if (role === "admin") navigate("/admin");
+      else if (role === "trainee") navigate("/trainee");
+      else navigate("/dashboard"); // employee
     }
   };
 
@@ -85,11 +84,7 @@ function Login() {
               required
             />
 
-            <button
-              type="submit"
-              disabled={loading}
-              style={buttonStyle}
-            >
+            <button type="submit" disabled={loading} style={buttonStyle}>
               {loading ? "Logging in..." : "Login"}
             </button>
           </form>

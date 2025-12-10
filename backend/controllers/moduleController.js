@@ -1,7 +1,34 @@
-
 const Module = require("../models/module");
 const Progress = require("../models/progress");
 
+
+// ===============================
+// 📌 CREATE NEW MODULE (Admin)
+// ===============================
+exports.createModule = async (req, res) => {
+  try {
+    const { title, description } = req.body;
+
+    if (!title || title.trim() === "")
+      return res.status(400).json({ message: "Module title is required" });
+
+    const module = await Module.create({
+      title,
+      description: description || "",
+      topics: [] // trainee will add topics + levels later
+    });
+
+    res.json({ success: true, message: "Module created", module });
+  } catch (err) {
+    console.error("Create module error:", err);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+
+// ===============================
+// 📌 GET QUESTS OF MODULE (Existing)
+// ===============================
 exports.getModuleQuests = async (req, res) => {
   try {
     const userId = req.user._id;
@@ -12,9 +39,10 @@ exports.getModuleQuests = async (req, res) => {
 
     const progress = await Progress.findOne({ userId }).lean();
 
-    const completedIds = progress?.completedQuests
-      .filter((cq) => String(cq.moduleId) === String(moduleId))
-      .map((cq) => String(cq.questId)) || [];
+    const completedIds =
+      progress?.completedQuests
+        .filter((cq) => String(cq.moduleId) === String(moduleId))
+        .map((cq) => String(cq.questId)) || [];
 
     const quests = module.quests
       .sort((a, b) => a.order - b.order)
