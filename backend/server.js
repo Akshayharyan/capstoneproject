@@ -1,14 +1,17 @@
 require("dotenv").config();
 const express = require("express");
-
-const TestUserModel = require("./models/User");
-console.log("🧪 Testing model import =", TestUserModel);
-
 const cors = require("cors");
 const cookieParser = require("cookie-parser");
 const connectDB = require("./config/db");
 
-// ROUTES (CommonJS)
+// Test model import
+const TestUserModel = require("./models/User");
+console.log("🧪 Testing model import =", TestUserModel);
+
+const app = express();
+connectDB();
+
+// ROUTES
 const authRoutes = require("./routes/authRoutes");
 const dashboardRoutes = require("./routes/dashboardRoutes");
 const questRoutes = require("./routes/questRoutes");
@@ -16,17 +19,13 @@ const moduleRoutes = require("./routes/moduleRoutes");
 const activityRoutes = require("./routes/activityRoutes");
 const userRoutes = require("./routes/userRoutes");
 const traineeRoutes = require("./routes/traineeRoutes");
+const employeeRoutes = require("./routes/employeeRoutes");
+const adminRoutes = require("./routes/adminRoutes");
 
-// ⚠️ FIX — import admin routes using CommonJS, NOT import
-const adminRoutes = require("./routes/adminRoutes.js");
-
-const app = express();
-connectDB();
-
-// CORS
+// MIDDLEWARE
 app.use(
   cors({
-    origin: process.env.CLIENT_ORIGIN || "http://localhost:3000",
+    origin: "http://localhost:3000",
     credentials: true,
   })
 );
@@ -39,21 +38,16 @@ app.use("/api/auth", authRoutes);
 app.use("/api/user", userRoutes);
 app.use("/api/dashboard", dashboardRoutes);
 app.use("/api/quests", questRoutes);
-
+app.use("/api/employee", employeeRoutes);
 app.use("/api/trainee", traineeRoutes);
-app.use("/api/trainee", require("./routes/traineeRoutes"));
-
-
 app.use("/api/modules", moduleRoutes);
 app.use("/api/activity", activityRoutes);
-
-// ⚠️ FIX — use adminRoutes ONCE
 app.use("/api/admin", adminRoutes);
 
-// API health check
+// Health check
 app.get("/", (req, res) => res.send("API running"));
 
-// ERROR HANDLER
+// Error handler
 app.use((err, req, res, next) => {
   console.error("SERVER ERROR:", err);
   res.status(500).json({ message: "Server Error" });

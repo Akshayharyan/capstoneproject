@@ -1,24 +1,15 @@
 import { Navigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 
-export default function ProtectedRoute({ children, adminOnly = false }) {
-  const { user, isAuthenticated } = useAuth();
+const ProtectedRoute = ({ children, adminOnly, traineeOnly }) => {
+  const { user, token } = useAuth();
 
-  if (!isAuthenticated) {
-    return <Navigate to="/login" replace />;
-  }
+  if (!token) return <Navigate to="/login" />;
 
-  const role = user?.role?.toLowerCase();
-
-  // Deny employees from accessing admin section
-  if (adminOnly && role !== "admin") {
-    return <Navigate to="/dashboard" replace />;
-  }
-
-  // Deny admins from accessing dashboard pages
-  if (!adminOnly && role === "admin") {
-    return <Navigate to="/admin" replace />;
-  }
+  if (adminOnly && user.role !== "admin") return <Navigate to="/dashboard" />;
+  if (traineeOnly && user.role !== "trainee") return <Navigate to="/dashboard" />;
 
   return children;
-}
+};
+
+export default ProtectedRoute;

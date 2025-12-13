@@ -7,26 +7,23 @@ const ProgressSchema = new mongoose.Schema({
     required: true,
   },
 
-  // NEW: modules user has started
+  completedLevels: [
+    {
+      moduleId: mongoose.Schema.Types.ObjectId,
+      topicIndex: Number,
+      levelNumber: Number,
+      xpEarned: Number,
+      completedAt: { type: Date, default: Date.now }
+    }
+  ],
+
   startedModules: [
     {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Module",
     }
-  ],
-
-  completedQuests: [
-    {
-      moduleId: mongoose.Schema.Types.ObjectId,
-      questId: mongoose.Schema.Types.ObjectId,
-    },
-  ],
-
-  completedModules: [
-    {
-      type: mongoose.Schema.Types.ObjectId,
-    }
-  ],
+  ]
 });
 
-module.exports = mongoose.model("Progress", ProgressSchema);
+module.exports =
+  mongoose.models.Progress || mongoose.model("Progress", ProgressSchema);
