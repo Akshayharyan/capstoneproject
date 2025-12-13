@@ -13,36 +13,26 @@ function Login() {
   });
 
   const handleChange = (e) => {
-    setForm({
-      ...form,
-      [e.target.name]: e.target.value,
-    });
+    setForm({ ...form, [e.target.name]: e.target.value });
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    const res = await login(form.email, form.password); // returns role
+    const res = await login(form.email, form.password);
 
     if (res.success) {
       const role = res.role?.toLowerCase();
 
       if (role === "admin") navigate("/admin");
       else if (role === "trainee") navigate("/trainee");
-      else navigate("/dashboard"); // employee
+      else navigate("/dashboard");
     }
   };
 
   return (
     <div style={{ backgroundColor: "#0f172a", color: "white", minHeight: "100vh" }}>
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-          minHeight: "80vh",
-        }}
-      >
+      <div style={{ display: "flex", justifyContent: "center", alignItems: "center", minHeight: "80vh" }}>
         <div
           style={{
             background: "#1e293b",
@@ -53,9 +43,7 @@ function Login() {
             textAlign: "center",
           }}
         >
-          <h2 style={{ marginBottom: "20px", color: "#22c55e" }}>
-            Login to SkillQuest
-          </h2>
+          <h2 style={{ marginBottom: "20px", color: "#22c55e" }}>Login to SkillQuest</h2>
 
           {authError && (
             <p style={{ color: "red", marginBottom: "10px", fontSize: "14px" }}>
@@ -91,9 +79,7 @@ function Login() {
 
           <p style={{ marginTop: "15px", fontSize: "14px" }}>
             Don’t have an account?{" "}
-            <Link to="/signup" style={{ color: "#22c55e", textDecoration: "none" }}>
-              Sign up
-            </Link>
+            <Link to="/signup" style={{ color: "#22c55e", textDecoration: "none" }}>Sign up</Link>
           </p>
         </div>
       </div>
