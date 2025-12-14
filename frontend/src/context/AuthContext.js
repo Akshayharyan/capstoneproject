@@ -9,7 +9,7 @@ export const AuthProvider = ({ children }) => {
     return stored ? JSON.parse(stored) : null;
   });
 
-  const [token, setToken] = useState(() => localStorage.getItem("token") || null);
+  const [token, setToken] = useState(() => localStorage.getItem("token"));
   const [loading, setLoading] = useState(false);
   const [authError, setAuthError] = useState(null);
 
@@ -23,7 +23,6 @@ export const AuthProvider = ({ children }) => {
     else localStorage.removeItem("user");
   }, [user, token]);
 
-  // 🔐 LOGIN
   const login = async (email, password) => {
     setLoading(true);
     setAuthError(null);
@@ -41,38 +40,10 @@ export const AuthProvider = ({ children }) => {
       setUser(data.user);
       setToken(data.token);
 
-      console.log("🔐 Login — Role:", data.user.role);
-
       return { success: true, role: data.user.role };
     } catch (err) {
       setAuthError(err.message);
-      return { success: false, message: err.message };
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // 📝 REGISTER — Everyone becomes EMPLOYEE by default
-  const register = async (name, email, password) => {
-    setLoading(true);
-    setAuthError(null);
-
-    try {
-      const res = await fetch(`${API_BASE_URL}/api/auth/register`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, email, password, role: "employee" }),
-      });
-
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.message || "Registration failed");
-
-      setUser(data.user);
-      setToken(data.token);
-      return { success: true };
-    } catch (err) {
-      setAuthError(err.message);
-      return { success: false, message: err.message };
+      return { success: false };
     } finally {
       setLoading(false);
     }
@@ -85,18 +56,20 @@ export const AuthProvider = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider
-      value={{
-        user,
-        token,
-        isAuthenticated,
-        loading,
-        authError,
-        login,
-        register,
-        logout,
-      }}
-    >
+   <AuthContext.Provider
+  value={{
+    user,
+    setUser, // ✅ ADD THIS
+    token,
+    isAuthenticated,
+    loading,
+    authError,
+    login,
+    // register,
+    logout,
+  }}
+>
+
       {children}
     </AuthContext.Provider>
   );
