@@ -13,16 +13,23 @@ const ProgressSchema = new mongoose.Schema({
       topicIndex: Number,
       levelNumber: Number,
       xpEarned: Number,
-      completedAt: { type: Date, default: Date.now }
-    }
+      completedAt: { type: Date, default: Date.now },
+    },
   ],
 
   startedModules: [
     {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Module",
-    }
-  ]
+    },
+  ],
+
+  completedModules: [
+    {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Module",
+    },
+  ],
 });
 
 module.exports =

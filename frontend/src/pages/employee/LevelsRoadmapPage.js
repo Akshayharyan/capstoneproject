@@ -10,66 +10,67 @@ const LevelsRoadmapPage = () => {
   const [topicTitle, setTopicTitle] = useState("");
   const [moduleTitle, setModuleTitle] = useState("");
   const [levels, setLevels] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     fetchLevels();
     // eslint-disable-next-line
   }, [moduleId, topicIndex]);
 
+  // =========================
+  // FETCH LEVELS (BACKEND TRUTH)
+  // =========================
   const fetchLevels = async () => {
     try {
+      setLoading(true);
+
       const res = await fetch(
         `http://localhost:5000/api/employee/module/${moduleId}/topics/${topicIndex}/levels`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
       const data = await res.json();
+      if (!res.ok) throw new Error(data.message || "Failed to load levels");
 
-      if (!res.ok) {
-        console.error(data);
-        return;
-      }
-
-      // 🔐 FIX: First level is ALWAYS unlocked
-      const normalizedLevels = (data.levels || []).map((lv, index) => ({
-        ...lv,
-        unlocked: index === 0 ? true : lv.unlocked,
-      }));
-
-      setLevels(normalizedLevels);
+      setLevels(Array.isArray(data.levels) ? data.levels : []);
       setTopicTitle(data.topicTitle || "");
       setModuleTitle(data.moduleTitle || "");
     } catch (err) {
-      console.error(err);
+      console.error("Fetch levels error:", err);
+    } finally {
+      setLoading(false);
     }
   };
 
-  const openLevel = (idx, lv) => {
-    if (!lv.unlocked) return;
-    navigate(`/modules/${moduleId}/topics/${topicIndex}/levels/${idx}`);
+  const openLevel = (index, level) => {
+    if (!level.unlocked && !level.completed) return;
+    navigate(`/modules/${moduleId}/topics/${topicIndex}/levels/${index}`);
   };
+
+  if (loading)
+    return <div className="text-white p-10">Loading levels...</div>;
 
   return (
     <div className="min-h-screen p-10 text-white">
-      <h1 className="text-3xl font-bold mb-4">{moduleTitle}</h1>
-      <h2 className="text-2xl text-purple-300 mb-8">{topicTitle}</h2>
+      <h1 className="text-3xl font-bold mb-2">{moduleTitle}</h1>
+      <h2 className="text-2xl text-purple-300 mb-10">{topicTitle}</h2>
 
-      <div className="flex items-start gap-6">
-        {/* vertical line */}
+      <div className="flex gap-8">
+        {/* Timeline */}
         <div className="relative">
           <div
             style={{
               width: 4,
+              height: levels.length * 110,
               background: "linear-gradient(#a78bfa,#7c3aed)",
-              height: levels.length * 120,
             }}
           />
         </div>
 
+        {/* Levels */}
         <div className="flex-1">
           {levels.map((lv, i) => (
-            <div key={i} className="flex items-center gap-6 mb-8">
-              {/* marker */}
+            <div key={i} className="flex items-center gap-6 mb-10">
               <div
                 style={{
                   width: 22,
@@ -84,14 +85,14 @@ const LevelsRoadmapPage = () => {
               />
 
               <div
-                className={`p-6 rounded-xl ${
+                className={`w-full p-6 rounded-xl ${
                   lv.completed
-                    ? "bg-green-900"
+                    ? "bg-green-900/70 hover:bg-green-900 cursor-pointer"
                     : lv.unlocked
-                    ? "bg-gray-800"
+                    ? "bg-gray-800 hover:bg-gray-700 cursor-pointer"
                     : "bg-gray-900/50"
                 }`}
-                style={{ width: "100%" }}
+                onClick={() => openLevel(i, lv)}
               >
                 <div className="flex justify-between items-center">
                   <div>
@@ -101,27 +102,22 @@ const LevelsRoadmapPage = () => {
                     <p className="text-sm text-gray-400">XP: {lv.xp}</p>
                   </div>
 
-                  <div>
-                    {lv.completed ? (
-                      <button className="px-4 py-2 bg-green-600 rounded">
-                        Completed
-                      </button>
-                    ) : lv.unlocked ? (
-                      <button
-                        onClick={() => openLevel(i, lv)}
-                        className="px-4 py-2 bg-purple-600 rounded"
-                      >
-                        Start
-                      </button>
-                    ) : (
-                      <button
-                        className="px-4 py-2 bg-gray-600 rounded cursor-not-allowed"
-                        disabled
-                      >
-                        Locked
-                      </button>
-                    )}
-                  </div>
+                  {lv.completed ? (
+                    <button className="px-4 py-2 bg-green-600 rounded">
+                      Revisit
+                    </button>
+                  ) : lv.unlocked ? (
+                    <button className="px-4 py-2 bg-purple-600 rounded">
+                      Start
+                    </button>
+                  ) : (
+                    <button
+                      disabled
+                      className="px-4 py-2 bg-gray-600 rounded"
+                    >
+                      Locked
+                    </button>
+                  )}
                 </div>
               </div>
             </div>

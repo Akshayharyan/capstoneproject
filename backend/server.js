@@ -11,7 +11,9 @@ console.log("🧪 Testing model import =", TestUserModel);
 const app = express();
 connectDB();
 
-// ROUTES
+// ===============================
+// ROUTES (EXISTING)
+// ===============================
 const authRoutes = require("./routes/authRoutes");
 const dashboardRoutes = require("./routes/dashboardRoutes");
 const questRoutes = require("./routes/questRoutes");
@@ -22,7 +24,12 @@ const traineeRoutes = require("./routes/traineeRoutes");
 const employeeRoutes = require("./routes/employeeRoutes");
 const adminRoutes = require("./routes/adminRoutes");
 
+// 🆕 NEW ROUTES (SAFE ADD)
+const moduleProgressRoutes = require("./routes/moduleProgressRoutes");
+
+// ===============================
 // MIDDLEWARE
+// ===============================
 app.use(
   cors({
     origin: "http://localhost:3000",
@@ -33,7 +40,9 @@ app.use(
 app.use(express.json());
 app.use(cookieParser());
 
+// ===============================
 // REGISTER ROUTES
+// ===============================
 app.use("/api/auth", authRoutes);
 app.use("/api/user", userRoutes);
 app.use("/api/dashboard", dashboardRoutes);
@@ -44,14 +53,22 @@ app.use("/api/modules", moduleRoutes);
 app.use("/api/activity", activityRoutes);
 app.use("/api/admin", adminRoutes);
 
-// Health check
+// 🆕 REGISTER MODULE PROGRESS ROUTES (NON-BREAKING)
+app.use("/api", moduleProgressRoutes);
+
+// ===============================
+// HEALTH CHECK
+// ===============================
 app.get("/", (req, res) => res.send("API running"));
 
-// Error handler
+// ===============================
+// GLOBAL ERROR HANDLER
+// ===============================
 app.use((err, req, res, next) => {
   console.error("SERVER ERROR:", err);
   res.status(500).json({ message: "Server Error" });
 });
 
+// ===============================
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));

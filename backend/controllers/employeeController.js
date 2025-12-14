@@ -8,6 +8,7 @@ const User = require("../models/User");
 const getLevelsForTopic = async (req, res) => {
   try {
     const { moduleId, topicIndex } = req.params;
+    const userId = req.user._id;
 
     const module = await Module.findById(moduleId);
     if (!module) return res.status(404).json({ message: "Module not found" });
@@ -15,14 +16,37 @@ const getLevelsForTopic = async (req, res) => {
     const topic = module.topics[topicIndex];
     if (!topic) return res.status(404).json({ message: "Topic not found" });
 
-    const levels = topic.levels.map((lv, idx) => ({
-      id: lv._id,
-      index: idx,
-      number: lv.number || idx + 1,
-      title: lv.title,
-      xp: lv.xp || 0,
-      taskCount: lv.tasks?.length || 0,
-    }));
+    let progress = await Progress.findOne({ userId });
+
+    const completedLevels = progress?.completedLevels || [];
+
+    const levels = topic.levels.map((lv, idx) => {
+      const completed = completedLevels.some(
+        (l) =>
+          String(l.moduleId) === String(moduleId) &&
+          l.topicIndex === Number(topicIndex) &&
+          l.levelNumber === idx
+      );
+
+      const unlocked =
+        idx === 0 ||
+        completedLevels.some(
+          (l) =>
+            String(l.moduleId) === String(moduleId) &&
+            l.topicIndex === Number(topicIndex) &&
+            l.levelNumber === idx - 1
+        );
+
+      return {
+        id: lv._id,
+        index: idx,
+        number: lv.number || idx + 1,
+        title: lv.title,
+        xp: lv.xp || 0,
+        completed,
+        unlocked,
+      };
+    });
 
     res.json({
       moduleTitle: module.title,
@@ -34,6 +58,8 @@ const getLevelsForTopic = async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 };
+
+
 
 // -----------------------------
 // GET SINGLE LEVEL
@@ -59,7 +85,7 @@ const getSingleLevel = async (req, res) => {
 };
 
 // -----------------------------
-// COMPLETE LEVEL (FINAL FIX)
+// COMPLETE LEVEL (IDEMPOTENT + SAFE)
 // -----------------------------
 const completeLevel = async (req, res) => {
   try {
@@ -77,38 +103,49 @@ const completeLevel = async (req, res) => {
 
     let progress = await Progress.findOne({ userId });
 
-    // 🔐 HARD SAFETY: initialize everything
+    // 🔐 SELF-HEAL OLD / MISSING DOCS
     if (!progress) {
       progress = new Progress({
         userId,
-        completedQuests: [],
+        completedLevels: [],
+        startedModules: [],
         completedModules: [],
       });
     }
 
-    // 🔐 CRITICAL FIX: ensure array exists (for old records)
-    if (!Array.isArray(progress.completedQuests)) {
-      progress.completedQuests = [];
+    // 🔐 HARD SAFETY
+    if (!Array.isArray(progress.completedLevels)) {
+      progress.completedLevels = [];
     }
 
-    const alreadyCompleted = progress.completedQuests.some(
-      (q) => q.questId?.toString() === level._id.toString()
+    // ✅ IDENTITY = module + topicIndex + levelIndex
+    const alreadyCompleted = progress.completedLevels.some(
+      (l) =>
+        String(l.moduleId) === String(moduleId) &&
+        l.topicIndex === Number(topicIndex) &&
+        l.levelNumber === Number(levelIndex)
     );
 
+    // 🚫 BLOCK DUPLICATE XP
     if (alreadyCompleted) {
       return res.json({
-        message: "Level already completed",
+        success: true,
+        alreadyCompleted: true,
         xpAwarded: 0,
       });
     }
 
-    progress.completedQuests.push({
+    // ✅ MARK LEVEL COMPLETE
+    progress.completedLevels.push({
       moduleId,
-      questId: level._id,
+      topicIndex: Number(topicIndex),
+      levelNumber: Number(levelIndex),
+      xpEarned: Number(level.xp) || 0,
     });
 
     await progress.save();
 
+    // ✅ AWARD XP ONCE
     const xpAwarded = Number(level.xp) || 0;
 
     await User.findByIdAndUpdate(userId, {
@@ -117,6 +154,7 @@ const completeLevel = async (req, res) => {
 
     res.json({
       success: true,
+      alreadyCompleted: false,
       xpAwarded,
     });
   } catch (err) {
