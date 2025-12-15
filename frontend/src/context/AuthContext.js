@@ -60,37 +60,30 @@ export const AuthProvider = ({ children }) => {
   // LOGIN
   // =========================
  const login = async (email, password) => {
-  console.log("🟡 login() called", email);
-
   setLoading(true);
   setAuthError(null);
 
   try {
-    console.log("🟡 sending login request...");
-
     const res = await fetch(`${API_BASE_URL}/api/auth/login`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email, password }),
     });
 
-    console.log("🟢 response received", res.status);
-
     const data = await res.json();
-    console.log("🟢 response data", data);
-
     if (!res.ok) throw new Error(data.message || "Login failed");
 
     setUser(data.user);
     setToken(data.token);
 
-    return { success: true };
+    return {
+      success: true,
+      role: data.user.role, // ✅ IMPORTANT
+    };
   } catch (err) {
-    console.error("🔴 login error", err);
     setAuthError(err.message);
     return { success: false };
   } finally {
-    console.log("🟡 login finished");
     setLoading(false);
   }
 };
