@@ -1,3 +1,4 @@
+// src/context/AuthContext.js
 import React, { createContext, useContext, useEffect, useState } from "react";
 
 const AuthContext = createContext(null);
@@ -15,6 +16,9 @@ export const AuthProvider = ({ children }) => {
 
   const isAuthenticated = !!token;
 
+  // =========================
+  // PERSIST AUTH
+  // =========================
   useEffect(() => {
     if (token) localStorage.setItem("token", token);
     else localStorage.removeItem("token");
@@ -23,24 +27,27 @@ export const AuthProvider = ({ children }) => {
     else localStorage.removeItem("user");
   }, [user, token]);
 
-  const login = async (email, password) => {
+  // =========================
+  // REGISTER
+  // =========================
+  const register = async (name, email, password) => {
     setLoading(true);
     setAuthError(null);
 
     try {
-      const res = await fetch(`${API_BASE_URL}/api/auth/login`, {
+      const res = await fetch(`${API_BASE_URL}/api/auth/register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ name, email, password }),
       });
 
       const data = await res.json();
-      if (!res.ok) throw new Error(data.message || "Login failed");
+      if (!res.ok) throw new Error(data.message || "Registration failed");
 
       setUser(data.user);
       setToken(data.token);
 
-      return { success: true, role: data.user.role };
+      return { success: true };
     } catch (err) {
       setAuthError(err.message);
       return { success: false };
@@ -49,6 +56,48 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  // =========================
+  // LOGIN
+  // =========================
+ const login = async (email, password) => {
+  console.log("🟡 login() called", email);
+
+  setLoading(true);
+  setAuthError(null);
+
+  try {
+    console.log("🟡 sending login request...");
+
+    const res = await fetch(`${API_BASE_URL}/api/auth/login`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, password }),
+    });
+
+    console.log("🟢 response received", res.status);
+
+    const data = await res.json();
+    console.log("🟢 response data", data);
+
+    if (!res.ok) throw new Error(data.message || "Login failed");
+
+    setUser(data.user);
+    setToken(data.token);
+
+    return { success: true };
+  } catch (err) {
+    console.error("🔴 login error", err);
+    setAuthError(err.message);
+    return { success: false };
+  } finally {
+    console.log("🟡 login finished");
+    setLoading(false);
+  }
+};
+
+  // =========================
+  // LOGOUT
+  // =========================
   const logout = () => {
     setUser(null);
     setToken(null);
@@ -56,20 +105,19 @@ export const AuthProvider = ({ children }) => {
   };
 
   return (
-   <AuthContext.Provider
-  value={{
-    user,
-    setUser, // ✅ ADD THIS
-    token,
-    isAuthenticated,
-    loading,
-    authError,
-    login,
-    // register,
-    logout,
-  }}
->
-
+    <AuthContext.Provider
+      value={{
+        user,
+        setUser,      // ✅ needed for XP refresh
+        token,
+        isAuthenticated,
+        loading,
+        authError,
+        register,     // ✅ FIXED
+        login,
+        logout,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );
