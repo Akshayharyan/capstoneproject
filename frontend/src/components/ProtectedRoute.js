@@ -1,13 +1,20 @@
 import { Navigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 
-const ProtectedRoute = ({ children, adminOnly, traineeOnly }) => {
+const ProtectedRoute = ({ children, allow }) => {
   const { user, token } = useAuth();
 
-  if (!token) return <Navigate to="/login" />;
+  if (!token || !user) {
+    return <Navigate to="/login" replace />;
+  }
 
-  if (adminOnly && user.role !== "admin") return <Navigate to="/dashboard" />;
-  if (traineeOnly && user.role !== "trainee") return <Navigate to="/dashboard" />;
+  // Role not allowed
+  if (allow && !allow.includes(user.role)) {
+    // Redirect user to THEIR home
+    if (user.role === "admin") return <Navigate to="/admin" replace />;
+    if (user.role === "trainee") return <Navigate to="/trainee" replace />;
+    return <Navigate to="/dashboard" replace />;
+  }
 
   return children;
 };
