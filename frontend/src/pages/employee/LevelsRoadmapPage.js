@@ -18,7 +18,7 @@ const LevelsRoadmapPage = () => {
   }, [moduleId, topicIndex]);
 
   // =========================
-  // FETCH LEVELS (BACKEND TRUTH)
+  // FETCH LEVELS
   // =========================
   const fetchLevels = async () => {
     try {
@@ -26,13 +26,33 @@ const LevelsRoadmapPage = () => {
 
       const res = await fetch(
         `http://localhost:5000/api/employee/module/${moduleId}/topics/${topicIndex}/levels`,
-        { headers: { Authorization: `Bearer ${token}` } }
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
       );
 
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || "Failed to load levels");
 
-      setLevels(Array.isArray(data.levels) ? data.levels : []);
+      let fetchedLevels = Array.isArray(data.levels) ? data.levels : [];
+
+      // 🔒 SORT BY LEVEL NUMBER
+      fetchedLevels.sort((a, b) => a.number - b.number);
+
+      // 🔓 UNLOCK LOGIC (frontend safety net)
+      fetchedLevels = fetchedLevels.map((lv, index, arr) => {
+        if (index === 0) {
+          return { ...lv, unlocked: true };
+        }
+
+        const prev = arr[index - 1];
+        return {
+          ...lv,
+          unlocked: prev?.completed === true,
+        };
+      });
+
+      setLevels(fetchedLevels);
       setTopicTitle(data.topicTitle || "");
       setModuleTitle(data.moduleTitle || "");
     } catch (err) {
@@ -44,11 +64,14 @@ const LevelsRoadmapPage = () => {
 
   const openLevel = (index, level) => {
     if (!level.unlocked && !level.completed) return;
-    navigate(`/modules/${moduleId}/topics/${topicIndex}/levels/${index}`);
+    navigate(
+      `/modules/${moduleId}/topics/${topicIndex}/levels/${index}`
+    );
   };
 
-  if (loading)
+  if (loading) {
     return <div className="text-white p-10">Loading levels...</div>;
+  }
 
   return (
     <div className="min-h-screen p-10 text-white">
@@ -71,6 +94,7 @@ const LevelsRoadmapPage = () => {
         <div className="flex-1">
           {levels.map((lv, i) => (
             <div key={i} className="flex items-center gap-6 mb-10">
+              {/* Marker */}
               <div
                 style={{
                   width: 22,
@@ -84,6 +108,7 @@ const LevelsRoadmapPage = () => {
                 }}
               />
 
+              {/* Card */}
               <div
                 className={`w-full p-6 rounded-xl ${
                   lv.completed
@@ -99,7 +124,9 @@ const LevelsRoadmapPage = () => {
                     <h3 className="text-xl font-semibold">
                       {lv.number}. {lv.title}
                     </h3>
-                    <p className="text-sm text-gray-400">XP: {lv.xp}</p>
+                    <p className="text-sm text-gray-400">
+                      XP: {lv.xp}
+                    </p>
                   </div>
 
                   {lv.completed ? (
@@ -122,6 +149,12 @@ const LevelsRoadmapPage = () => {
               </div>
             </div>
           ))}
+
+          {levels.length === 0 && (
+            <p className="text-gray-400">
+              No levels created yet.
+            </p>
+          )}
         </div>
       </div>
     </div>
