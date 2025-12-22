@@ -12,35 +12,31 @@
    ========================= */
 body {
   margin: 0;
-  background-color: #0f172a; /* Dark background */
+  background-color: #0f172a;
   color: white;
   font-family: 'Arial', sans-serif;
 }
 
 /* =========================
-   RANK COLORS (USED ELSEWHERE)
+   RANK COLORS
    ========================= */
 .gold-rank { color: #ffd700; }
 .silver-rank { color: #c0c0c0; }
 .bronze-rank { color: #cd7f32; }
 
 /* =========================
-   GAME ANIMATIONS
+   ANIMATIONS
    ========================= */
-
-/* Fade in page / sections */
 @keyframes fadeIn {
   from { opacity: 0; }
   to { opacity: 1; }
 }
 
-/* Slide task upward when unlocked */
 @keyframes slideUp {
-  from { transform: translateY(20px); opacity: 0; }
+  from { transform: translateY(30px); opacity: 0; }
   to { transform: translateY(0); opacity: 1; }
 }
 
-/* Shake on wrong answer */
 @keyframes shake {
   0% { transform: translateX(0); }
   25% { transform: translateX(-5px); }
@@ -49,85 +45,53 @@ body {
   100% { transform: translateX(0); }
 }
 
-/* Subtle pulse for active challenge */
 @keyframes pulseGlow {
-  0% {
-    box-shadow: 0 0 0 rgba(168, 85, 247, 0.0);
-  }
-  50% {
-    box-shadow: 0 0 12px rgba(168, 85, 247, 0.6);
-  }
-  100% {
-    box-shadow: 0 0 0 rgba(168, 85, 247, 0.0);
-  }
+  0% { box-shadow: 0 0 0 rgba(168,85,247,0.3); }
+  50% { box-shadow: 0 0 18px rgba(168,85,247,0.9); }
+  100% { box-shadow: 0 0 0 rgba(168,85,247,0.3); }
 }
 
-/* Correct answer glow */
-@keyframes successGlow {
-  from {
-    box-shadow: 0 0 0 rgba(34, 197, 94, 0.0);
-  }
-  to {
-    box-shadow: 0 0 15px rgba(34, 197, 94, 0.8);
-  }
+@keyframes popIn {
+  from { transform: scale(0.85); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
 }
 
 /* =========================
-   ANIMATION UTILITY CLASSES
+   UTILITY CLASSES
    ========================= */
-.animate-fade-in {
-  animation: fadeIn 0.4s ease-in-out;
-}
-
-.animate-slide-up {
-  animation: slideUp 0.4s ease-out;
-}
-
-.animate-shake {
-  animation: shake 0.35s ease-in-out;
-}
-
-.animate-pulse-glow {
-  animation: pulseGlow 1.8s infinite;
-}
-
-.animate-success {
-  animation: successGlow 0.5s ease-in-out;
-}
+.animate-fade-in { animation: fadeIn 0.5s ease-in-out; }
+.animate-slide-up { animation: slideUp 0.45s ease-out; }
+.animate-shake { animation: shake 0.35s ease-in-out; }
+.animate-pulse-glow { animation: pulseGlow 1.8s infinite; }
+.animate-pop { animation: popIn 0.35s ease-out; }
 
 /* =========================
    GAME UI HELPERS
    ========================= */
-
-/* Card hover = feels clickable */
 .game-card {
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
 }
 .game-card:hover {
-  transform: scale(1.02);
-  box-shadow: 0 0 18px rgba(168, 85, 247, 0.3);
+  transform: scale(1.04);
+  box-shadow: 0 0 22px rgba(168, 85, 247, 0.45);
 }
 
-/* Locked state */
 .locked {
   opacity: 0.45;
   pointer-events: none;
 }
 
-/* Smooth focus for editor */
 .code-editor:focus {
   outline: none;
   box-shadow: 0 0 0 2px rgba(168, 85, 247, 0.6);
 }
 
-/* Scrollbar (nice touch) */
-::-webkit-scrollbar {
-  width: 6px;
-}
+/* =========================
+   SCROLLBAR
+   ========================= */
+::-webkit-scrollbar { width: 6px; }
 ::-webkit-scrollbar-thumb {
   background-color: rgba(148, 163, 184, 0.4);
   border-radius: 6px;
 }
-::-webkit-scrollbar-track {
-  background: transparent;
-}
+::-webkit-scrollbar-track { background: transparent; }

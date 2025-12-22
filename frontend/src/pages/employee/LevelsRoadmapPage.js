@@ -7,158 +7,171 @@ const LevelsRoadmapPage = () => {
   const { token } = useAuth();
   const navigate = useNavigate();
 
+  const [levels, setLevels] = useState([]);
   const [topicTitle, setTopicTitle] = useState("");
   const [moduleTitle, setModuleTitle] = useState("");
-  const [levels, setLevels] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [activeIndex, setActiveIndex] = useState(null);
 
   useEffect(() => {
     fetchLevels();
     // eslint-disable-next-line
   }, [moduleId, topicIndex]);
 
-  // =========================
-  // FETCH LEVELS
-  // =========================
   const fetchLevels = async () => {
-    try {
-      setLoading(true);
+    const res = await fetch(
+      `http://localhost:5000/api/employee/module/${moduleId}/topics/${topicIndex}/levels`,
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
+    const data = await res.json();
 
-      const res = await fetch(
-        `http://localhost:5000/api/employee/module/${moduleId}/topics/${topicIndex}/levels`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
+    let lvls = data.levels || [];
+    lvls.sort((a, b) => a.number - b.number);
 
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.message || "Failed to load levels");
+    lvls = lvls.map((lv, i, arr) => ({
+      ...lv,
+      unlocked: i === 0 || arr[i - 1]?.completed,
+    }));
 
-      let fetchedLevels = Array.isArray(data.levels) ? data.levels : [];
-
-      // 🔒 SORT BY LEVEL NUMBER
-      fetchedLevels.sort((a, b) => a.number - b.number);
-
-      // 🔓 UNLOCK LOGIC (frontend safety net)
-      fetchedLevels = fetchedLevels.map((lv, index, arr) => {
-        if (index === 0) {
-          return { ...lv, unlocked: true };
-        }
-
-        const prev = arr[index - 1];
-        return {
-          ...lv,
-          unlocked: prev?.completed === true,
-        };
-      });
-
-      setLevels(fetchedLevels);
-      setTopicTitle(data.topicTitle || "");
-      setModuleTitle(data.moduleTitle || "");
-    } catch (err) {
-      console.error("Fetch levels error:", err);
-    } finally {
-      setLoading(false);
-    }
+    setLevels(lvls);
+    setTopicTitle(data.topicTitle);
+    setModuleTitle(data.moduleTitle);
   };
 
   const openLevel = (index, level) => {
     if (!level.unlocked && !level.completed) return;
-    navigate(
-      `/modules/${moduleId}/topics/${topicIndex}/levels/${index}`
-    );
+    navigate(`/modules/${moduleId}/topics/${topicIndex}/levels/${index}`);
   };
 
-  if (loading) {
-    return <div className="text-white p-10">Loading levels...</div>;
-  }
-
   return (
-    <div className="min-h-screen p-10 text-white">
-      <h1 className="text-3xl font-bold mb-2">{moduleTitle}</h1>
-      <h2 className="text-2xl text-purple-300 mb-10">{topicTitle}</h2>
+    <div className="min-h-screen p-10 text-white animate-fade-in">
+      <h1 className="text-3xl font-bold mb-1">{moduleTitle}</h1>
+      <h2 className="text-purple-400 mb-20">
+        🧭 Learning Path · {topicTitle}
+      </h2>
 
-      <div className="flex gap-8">
-        {/* Timeline */}
-        <div className="relative">
-          <div
-            style={{
-              width: 4,
-              height: levels.length * 110,
-              background: "linear-gradient(#a78bfa,#7c3aed)",
-            }}
-          />
-        </div>
+      {/* PATH WRAPPER */}
+      <div className="relative flex justify-center">
+        {/* CENTRAL VERTICAL PATH */}
+        <div className="absolute top-0 bottom-0 left-1/2 -translate-x-1/2 w-1 bg-gradient-to-b from-purple-500 to-purple-800 rounded-full" />
 
-        {/* Levels */}
-        <div className="flex-1">
-          {levels.map((lv, i) => (
-            <div key={i} className="flex items-center gap-6 mb-10">
-              {/* Marker */}
-              <div
-                style={{
-                  width: 22,
-                  height: 22,
-                  borderRadius: 6,
-                  background: lv.completed
-                    ? "#10b981"
-                    : lv.unlocked
-                    ? "#7c3aed"
-                    : "#374151",
-                }}
-              />
+        <div className="flex flex-col gap-28 w-full relative z-10">
+          {levels.map((lv, i) => {
+            const isLeft = i % 2 === 0;
+            const isCurrent = lv.unlocked && !lv.completed;
 
-              {/* Card */}
-              <div
-                className={`w-full p-6 rounded-xl ${
-                  lv.completed
-                    ? "bg-green-900/70 hover:bg-green-900 cursor-pointer"
-                    : lv.unlocked
-                    ? "bg-gray-800 hover:bg-gray-700 cursor-pointer"
-                    : "bg-gray-900/50"
-                }`}
-                onClick={() => openLevel(i, lv)}
-              >
-                <div className="flex justify-between items-center">
-                  <div>
-                    <h3 className="text-xl font-semibold">
-                      {lv.number}. {lv.title}
-                    </h3>
-                    <p className="text-sm text-gray-400">
-                      XP: {lv.xp}
-                    </p>
-                  </div>
+            return (
+              <div key={i} className="relative h-20">
+                {/* LEFT NODE */}
+                {isLeft && (
+                  <>
+                    {/* CONNECTOR */}
+                    <div className="absolute top-1/2 left-[calc(50%-96px)] w-24 h-1 bg-purple-600" />
 
-                  {lv.completed ? (
-                    <button className="px-4 py-2 bg-green-600 rounded">
-                      Revisit
-                    </button>
-                  ) : lv.unlocked ? (
-                    <button className="px-4 py-2 bg-purple-600 rounded">
-                      Start
-                    </button>
-                  ) : (
-                    <button
-                      disabled
-                      className="px-4 py-2 bg-gray-600 rounded"
+                    {/* NODE */}
+                    <div
+                      className="absolute top-1/2 left-[calc(50%-160px)] -translate-y-1/2"
+                      onMouseEnter={() => setActiveIndex(i)}
+                      onMouseLeave={() => setActiveIndex(null)}
                     >
-                      Locked
-                    </button>
-                  )}
-                </div>
-              </div>
-            </div>
-          ))}
+                      <HexNode
+                        level={lv}
+                        isCurrent={isCurrent}
+                        onClick={() => openLevel(i, lv)}
+                      />
 
-          {levels.length === 0 && (
-            <p className="text-gray-400">
-              No levels created yet.
-            </p>
-          )}
+                      {activeIndex === i && (
+                        <PopupCard
+                          title={lv.title}
+                          action={() => openLevel(i, lv)}
+                          completed={lv.completed}
+                          side="left"
+                        />
+                      )}
+                    </div>
+                  </>
+                )}
+
+                {/* RIGHT NODE */}
+                {!isLeft && (
+                  <>
+                    {/* CONNECTOR */}
+                    <div className="absolute top-1/2 left-1/2 w-24 h-1 bg-purple-600" />
+
+                    {/* NODE */}
+                    <div
+                      className="absolute top-1/2 left-[calc(50%+96px)] -translate-y-1/2"
+                      onMouseEnter={() => setActiveIndex(i)}
+                      onMouseLeave={() => setActiveIndex(null)}
+                    >
+                      <HexNode
+                        level={lv}
+                        isCurrent={isCurrent}
+                        onClick={() => openLevel(i, lv)}
+                      />
+
+                      {activeIndex === i && (
+                        <PopupCard
+                          title={lv.title}
+                          action={() => openLevel(i, lv)}
+                          completed={lv.completed}
+                          side="right"
+                        />
+                      )}
+                    </div>
+                  </>
+                )}
+              </div>
+            );
+          })}
         </div>
       </div>
     </div>
   );
 };
+
+/* =========================
+   HEX NODE COMPONENT
+   ========================= */
+const HexNode = ({ level, isCurrent, onClick }) => (
+  <div
+    onClick={onClick}
+    className={`w-20 h-20 flex items-center justify-center text-xl font-bold cursor-pointer transition-transform
+      ${
+        level.completed
+          ? "bg-green-600"
+          : isCurrent
+          ? "bg-purple-600 animate-pulse-glow"
+          : level.unlocked
+          ? "bg-gray-500"
+          : "bg-gray-800 opacity-50"
+      }
+    `}
+    style={{
+      clipPath:
+        "polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%)",
+    }}
+  >
+    {level.completed ? "⭐" : level.number}
+  </div>
+);
+
+/* =========================
+   POPUP CARD
+   ========================= */
+const PopupCard = ({ title, action, completed, side }) => (
+  <div
+    className={`absolute top-1/2 -translate-y-1/2 w-56 bg-gray-900 border border-purple-600 rounded-xl shadow-xl p-4 animate-pop
+      ${side === "left" ? "right-24" : "left-24"}
+    `}
+  >
+    <p className="font-semibold mb-3">{title}</p>
+    <button
+      onClick={action}
+      className="w-full bg-purple-600 hover:bg-purple-700 py-2 rounded-lg"
+    >
+      {completed ? "Revisit" : "Start"}
+    </button>
+  </div>
+);
 
 export default LevelsRoadmapPage;
