@@ -12,9 +12,14 @@ const LevelPlayerPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  // 🧠 Track answers per task
-  const [quizAnswers, setQuizAnswers] = useState({});
+  // GAME STATE
+  const [currentTaskIndex, setCurrentTaskIndex] = useState(0);
+  const [animateKey, setAnimateKey] = useState(0);
+
+  // ANSWERS
+  const [quizResults, setQuizResults] = useState({});
   const [codingAnswers, setCodingAnswers] = useState({});
+  const [codingResults, setCodingResults] = useState({});
 
   useEffect(() => {
     fetchLevel();
@@ -27,7 +32,6 @@ const LevelPlayerPage = () => {
   const fetchLevel = async () => {
     try {
       setLoading(true);
-
       const res = await fetch(
         `http://localhost:5000/api/employee/module/${moduleId}/topics/${topicIndex}/levels/${levelIndex}`,
         { headers: { Authorization: `Bearer ${token}` } }
@@ -45,31 +49,72 @@ const LevelPlayerPage = () => {
   };
 
   // =========================
-  // VALIDATE TASKS
+  // AUTO-GRADE CODING
   // =========================
-  const allTasksCompleted = () => {
-    if (!level?.tasks) return true;
+  const autoGradeCoding = (task, answer) => {
+    if (!task.expectedPatterns || task.expectedPatterns.length === 0) {
+      return { passed: true, message: "Accepted (no rules defined)" };
+    }
 
-    return level.tasks.every((task, index) => {
-      if (task.type === "quiz") {
-        return quizAnswers[index] !== undefined;
-      }
-      if (task.type === "coding") {
-        return codingAnswers[index]?.trim().length > 0;
-      }
-      return true;
-    });
+    const code = answer.toLowerCase();
+    const missing = task.expectedPatterns.filter(
+      (p) => !code.includes(p.toLowerCase())
+    );
+
+    if (missing.length === 0) {
+      return { passed: true, message: "✅ Correct solution" };
+    }
+
+    return {
+      passed: false,
+      message: `❌ Missing required elements: ${missing.join(", ")}`,
+    };
   };
 
   // =========================
-  // COMPLETE LEVEL
+  // MARK TASK COMPLETE (NON-FINAL)
   // =========================
-  const submitCompletion = async () => {
-    if (!allTasksCompleted()) {
-      alert("Please complete all tasks before finishing the level.");
-      return;
+  const markTaskComplete = () => {
+    const task = level.tasks[currentTaskIndex];
+
+    // QUIZ VALIDATION
+    if (task.type === "quiz") {
+      const result = quizResults[currentTaskIndex];
+      if (!result || !result.isCorrect) {
+        alert("Please select the correct answer to continue.");
+        return;
+      }
     }
 
+    // MOVE TO NEXT TASK
+    setCurrentTaskIndex((prev) => prev + 1);
+    setAnimateKey((k) => k + 1);
+  };
+
+  // =========================
+  // FINAL CODING CHECK + COMPLETE
+  // =========================
+  const handleFinalCompletion = async () => {
+    const task = level.tasks[currentTaskIndex];
+
+    // FINAL CODING VALIDATION
+    if (task.type === "coding") {
+      const result = autoGradeCoding(
+        task,
+        codingAnswers[currentTaskIndex] || ""
+      );
+
+      setCodingResults((prev) => ({
+        ...prev,
+        [currentTaskIndex]: result,
+      }));
+
+      if (!result.passed) {
+        return; // ❌ STOP HERE – backend NOT called
+      }
+    }
+
+    // ✅ ONLY NOW call backend
     try {
       const res = await fetch(
         `http://localhost:5000/api/employee/module/${moduleId}/topics/${topicIndex}/levels/${levelIndex}/complete`,
@@ -83,15 +128,15 @@ const LevelPlayerPage = () => {
       );
 
       const data = await res.json();
-      if (!res.ok) throw new Error(data.message || "Completion failed");
+      if (!res.ok) throw new Error(data.message);
 
       alert(
         data.alreadyCompleted
-          ? "Level already completed. No XP awarded."
-          : `Level completed! XP earned: ${data.xpAwarded}`
+          ? "Level already completed."
+          : `🎉 Level completed! +${data.xpAwarded} XP`
       );
 
-      // refresh user XP
+      // Refresh user XP
       const dashRes = await fetch(
         "http://localhost:5000/api/dashboard/me",
         { headers: { Authorization: `Bearer ${token}` } }
@@ -104,98 +149,130 @@ const LevelPlayerPage = () => {
 
       navigate(`/modules/${moduleId}/topics/${topicIndex}/levels`);
     } catch (err) {
-      alert(err.message || "Server error");
+      alert(err.message);
     }
   };
 
   if (loading) return <div className="text-white p-10">Loading...</div>;
   if (error) return <div className="text-red-400 p-10">{error}</div>;
-  if (!level) return <div className="text-white p-10">Level not found</div>;
+  if (!level) return null;
+
+  const task = level.tasks[currentTaskIndex];
+  const isLastTask = currentTaskIndex === level.tasks.length - 1;
 
   return (
-    <div className="p-10 text-white min-h-screen">
-      <h1 className="text-3xl font-bold mb-4">{level.title}</h1>
+    <div className="min-h-screen p-10 text-white animate-fade-in">
+      {/* HEADER */}
+      <h1 className="text-3xl font-bold mb-1">{level.title}</h1>
+      <p className="text-purple-400 mb-6">Reward: +{level.xp} XP</p>
 
-      {/* LEARNING */}
-      <section className="mb-6 bg-gray-900 p-5 rounded-xl">
-        <h3 className="text-purple-300 font-semibold mb-3">Learning</h3>
-        <ReactMarkdown>
-          {level.contentMarkdown || level.content || ""}
-        </ReactMarkdown>
-      </section>
+      {/* SPLIT SCREEN */}
+      <div className="grid grid-cols-2 gap-8 h-[70vh]">
+        {/* LEFT: LEARN */}
+        <div className="bg-gray-900 rounded-xl p-5 overflow-y-auto">
+          <h3 className="text-purple-300 font-semibold mb-3">📘 Learn</h3>
+          <ReactMarkdown>
+            {level.contentMarkdown || level.content || ""}
+          </ReactMarkdown>
+        </div>
 
-      {/* TASKS */}
-      {Array.isArray(level.tasks) && level.tasks.length > 0 ? (
-        level.tasks.map((task, index) => (
-          <section
-            key={index}
-            className="bg-gray-900 p-5 rounded-xl mb-6"
-          >
-            <h3 className="text-purple-300 font-semibold mb-4">
-              Task {index + 1}
-            </h3>
+        {/* RIGHT: TASK */}
+        <div
+          key={animateKey}
+          className="bg-gray-900 rounded-xl p-5 flex flex-col animate-slide-up"
+        >
+          <h3 className="text-purple-300 font-semibold mb-4 animate-pulse-glow">
+            🎮 Challenge {currentTaskIndex + 1} / {level.tasks.length}
+          </h3>
 
-            {/* QUIZ */}
-            {task.type === "quiz" && (
-              <>
-                <p className="mb-4">{task.question}</p>
-                {task.options.map((opt, i) => (
-                  <label
+          {/* QUIZ */}
+          {task.type === "quiz" && (
+            <>
+              <p className="mb-4 text-lg">{task.question}</p>
+
+              {task.options.map((opt, i) => {
+                const result = quizResults[currentTaskIndex];
+                const isCorrect = opt === task.correctAnswer;
+                const isSelected = result?.selected === opt;
+
+                let style = "bg-gray-800 hover:bg-gray-700";
+
+                if (result) {
+                  if (isCorrect) style = "bg-green-700 animate-success";
+                  else if (isSelected) style = "bg-red-700 animate-shake";
+                }
+
+                return (
+                  <div
                     key={i}
-                    className={`block mb-2 p-3 rounded bg-gray-800 cursor-pointer ${
-                      quizAnswers[index] === opt
-                        ? "ring-2 ring-purple-500"
-                        : "hover:bg-gray-700"
-                    }`}
+                    onClick={() =>
+                      setQuizResults((prev) => ({
+                        ...prev,
+                        [currentTaskIndex]: {
+                          selected: opt,
+                          isCorrect,
+                        },
+                      }))
+                    }
+                    className={`p-3 mb-2 rounded cursor-pointer transition-all ${style}`}
                   >
-                    <input
-                      type="radio"
-                      name={`quiz-${index}`}
-                      className="mr-2"
-                      checked={quizAnswers[index] === opt}
-                      onChange={() =>
-                        setQuizAnswers({
-                          ...quizAnswers,
-                          [index]: opt,
-                        })
-                      }
-                    />
                     {opt}
-                  </label>
-                ))}
-              </>
-            )}
+                  </div>
+                );
+              })}
+            </>
+          )}
 
-            {/* CODING */}
-            {task.type === "coding" && (
-              <>
-                <p className="mb-3">{task.codingPrompt}</p>
-                <textarea
-                  className="w-full h-40 p-3 bg-gray-800 rounded"
-                  value={codingAnswers[index] || ""}
-                  onChange={(e) =>
-                    setCodingAnswers({
-                      ...codingAnswers,
-                      [index]: e.target.value,
-                    })
-                  }
-                  placeholder="Write your code here..."
-                />
-              </>
-            )}
-          </section>
-        ))
-      ) : (
-        <p className="text-gray-400">No tasks attached to this level.</p>
-      )}
+          {/* CODING */}
+          {task.type === "coding" && (
+            <>
+              <p className="mb-3">{task.codingPrompt}</p>
+              <textarea
+                className="w-full h-40 p-3 bg-gray-800 rounded code-editor"
+                placeholder="Write your code here..."
+                value={codingAnswers[currentTaskIndex] || ""}
+                onChange={(e) =>
+                  setCodingAnswers((prev) => ({
+                    ...prev,
+                    [currentTaskIndex]: e.target.value,
+                  }))
+                }
+              />
 
-      {/* COMPLETE BUTTON */}
-      <button
-        onClick={submitCompletion}
-        className="mt-6 px-6 py-3 bg-purple-600 hover:bg-purple-700 rounded-lg"
-      >
-        Mark Level Complete
-      </button>
+              {codingResults[currentTaskIndex] && (
+                <p
+                  className={`mt-3 ${
+                    codingResults[currentTaskIndex].passed
+                      ? "text-green-400"
+                      : "text-red-400"
+                  }`}
+                >
+                  {codingResults[currentTaskIndex].message}
+                </p>
+              )}
+            </>
+          )}
+
+          {/* ACTION BUTTON */}
+          <div className="mt-auto">
+            {!isLastTask ? (
+              <button
+                onClick={markTaskComplete}
+                className="w-full mt-4 bg-purple-600 hover:bg-purple-700 py-3 rounded-lg transition-all hover:scale-105"
+              >
+                Mark Task Complete
+              </button>
+            ) : (
+              <button
+                onClick={handleFinalCompletion}
+                className="w-full mt-4 bg-green-600 hover:bg-green-700 py-3 rounded-lg transition-all hover:scale-105"
+              >
+                🏁 Mark Level Complete
+              </button>
+            )}
+          </div>
+        </div>
+      </div>
     </div>
   );
 };
