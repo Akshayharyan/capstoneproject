@@ -11,7 +11,7 @@ const TraineeSidebar = () => {
 
   return (
     <aside className="w-64 bg-[#11052a] border-r border-purple-700 p-6 flex flex-col gap-6">
-      <h2 className="text-2xl font-bold text-purple-300">Trainee Panel</h2>
+      <h2 className="text-2xl font-bold text-purple-300">Trainer Panel</h2>
 
       <NavLink
         to="/trainee"

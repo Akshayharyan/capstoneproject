@@ -17,6 +17,8 @@ import Modules from "./pages/Modules";
 import TopicRoadmap from "./pages/TopicRoadmap";
 import LevelsRoadmapPage from "./pages/employee/LevelsRoadmapPage";
 import LevelPlayerPage from "./pages/employee/LevelPlayerPage";
+import Profile from "./pages/Profile";
+
 
 /* ADMIN */
 import AdminDashboard from "./pages/admin/AdminDashboard";
@@ -61,6 +63,14 @@ function App() {
                 </ProtectedRoute>
               }
             />
+              <Route
+  path="/profile"
+  element={
+    <ProtectedRoute allow={["employee"]}>
+      <Profile />
+    </ProtectedRoute>
+  }
+/>
 
             <Route
               path="/modules"
