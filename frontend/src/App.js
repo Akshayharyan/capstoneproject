@@ -28,10 +28,10 @@ import AssignModulePage from "./pages/admin/AssignModulePage";
 import AnalyticsPage from "./pages/admin/AnalyticsPage";
 
 /* TRAINER */
-import TrainerrSidebar from "./components/TrainerSidebar";
+import TrainerSidebar from "./components/TrainerSidebar";
 import TrainerModulesPage from "./pages/trainer/TrainerModulesPage";
-import TrainerEdirtTopicsPage from "./pages/trainer/TrainerEditTopicsPage";
-import CreateLevelPage from "./pages/rtrainer/levels/CreateLevelPage";
+import TrainerEditTopicsPage from "./pages/trainer/TrainerEditTopicsPage";
+import CreateLevelPage from "./pages/trainer/levels/CreateLevelPage";
 import AddTaskPage from "./pages/trainer/levels/AddTaskPage";
 
 function App() {
