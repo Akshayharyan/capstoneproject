@@ -20,7 +20,7 @@ const questRoutes = require("./routes/questRoutes");
 const moduleRoutes = require("./routes/moduleRoutes");
 const activityRoutes = require("./routes/activityRoutes");
 const userRoutes = require("./routes/userRoutes");
-const traineeRoutes = require("./routes/traineeRoutes");
+const trainerRoutes = require("./routes/trainerRoutes");
 const employeeRoutes = require("./routes/employeeRoutes");
 const adminRoutes = require("./routes/adminRoutes");
 
@@ -48,7 +48,7 @@ app.use("/api/user", userRoutes);
 app.use("/api/dashboard", dashboardRoutes);
 app.use("/api/quests", questRoutes);
 app.use("/api/employee", employeeRoutes);
-app.use("/api/trainee", traineeRoutes);
+app.use("/api/trainer", trainerRoutes);
 app.use("/api/modules", moduleRoutes);
 app.use("/api/activity", activityRoutes);
 app.use("/api/admin", adminRoutes);

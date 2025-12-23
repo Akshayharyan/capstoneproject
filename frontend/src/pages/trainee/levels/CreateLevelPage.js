@@ -39,7 +39,7 @@ export default function CreateLevelPage() {
     setLoading(true);
     try {
       const res = await fetch(
-        `http://localhost:5000/api/trainee/module/${moduleId}/topic/${topicIndex}/level`,
+        `http://localhost:5000/api/trainer/module/${moduleId}/topic/${topicIndex}/level`,
         {
           method: "POST",
           headers: {
@@ -61,7 +61,7 @@ export default function CreateLevelPage() {
 
       alert("Level created. Now add tasks.");
       navigate(
-        `/trainee/modules/${moduleId}/topics/${topicIndex}/levels/${levelIndex}/tasks`
+        `/trainer/modules/${moduleId}/topics/${topicIndex}/levels/${levelIndex}/tasks`
       );
     } catch (err) {
       console.error(err);

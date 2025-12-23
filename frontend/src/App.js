@@ -27,12 +27,12 @@ import UsersPage from "./pages/admin/UsersPage";
 import AssignModulePage from "./pages/admin/AssignModulePage";
 import AnalyticsPage from "./pages/admin/AnalyticsPage";
 
-/* TRAINEE */
-import TraineeSidebar from "./components/TraineeSidebar";
-import TraineeModulesPage from "./pages/trainee/TraineeModulesPage";
-import TraineeEditTopicsPage from "./pages/trainee/TraineeEditTopicsPage";
-import CreateLevelPage from "./pages/trainee/levels/CreateLevelPage";
-import AddTaskPage from "./pages/trainee/levels/AddTaskPage";
+/* TRAINER */
+import TrainerrSidebar from "./components/TrainerSidebar";
+import TrainerModulesPage from "./pages/trainer/TrainerModulesPage";
+import TrainerEdirtTopicsPage from "./pages/trainer/TrainerEditTopicsPage";
+import CreateLevelPage from "./pages/rtrainer/levels/CreateLevelPage";
+import AddTaskPage from "./pages/trainer/levels/AddTaskPage";
 
 function App() {
   return (
@@ -125,13 +125,13 @@ function App() {
             <Route path="analytics" element={<AnalyticsPage />} />
           </Route>
 
-          {/* ================= TRAINEE ================= */}
+          {/* ================= TRAINER ================= */}
           <Route
-            path="/trainee"
+            path="/trainer"
             element={
-              <ProtectedRoute allow={["trainee"]}>
+              <ProtectedRoute allow={["trainer"]}>
                 <div className="flex min-h-screen bg-[#0f172a]">
-                  <TraineeSidebar />
+                  <TrainerSidebar />
                   <main className="flex-1 p-10">
                     <Outlet />
                   </main>
@@ -139,8 +139,8 @@ function App() {
               </ProtectedRoute>
             }
           >
-            <Route index element={<TraineeModulesPage />} />
-            <Route path="modules/:moduleId/edit" element={<TraineeEditTopicsPage />} />
+            <Route index element={<TrainerModulesPage />} />
+            <Route path="modules/:moduleId/edit" element={<TrainerEditTopicsPage />} />
             <Route path="modules/:moduleId/topics/:topicIndex/create-level" element={<CreateLevelPage />} />
             <Route path="modules/:moduleId/topics/:topicIndex/levels/:levelIndex/tasks" element={<AddTaskPage />} />
           </Route>

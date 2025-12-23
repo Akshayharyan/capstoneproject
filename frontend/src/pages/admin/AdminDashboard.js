@@ -1,5 +1,5 @@
 import React from "react";
-import { NavLink , Outlet, useNavigate } from "react-router-dom";
+import { NavLink, Outlet, useNavigate } from "react-router-dom";
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
@@ -10,61 +10,46 @@ const AdminDashboard = () => {
   };
 
   return (
-    <div className="flex min-h-screen bg-gradient-to-b from-[#0d0f1a] to-[#010203] text-white m-0 p-0">
+    <div className="flex min-h-screen bg-gradient-to-br from-slate-100 via-indigo-100 to-purple-100 text-gray-900">
       
       {/* Sidebar */}
-      <aside className="w-64 bg-[#11052a] border-r border-purple-700 p-6 flex flex-col gap-6 shadow-lg shadow-purple-900/30">
-        <h2 className="text-2xl font-bold text-purple-300">Admin Panel</h2>
+      <aside className="w-64 bg-gradient-to-b from-indigo-200 to-purple-200 border-r border-purple-300 p-6 flex flex-col gap-6 shadow-lg">
+        <h2 className="text-2xl font-bold text-purple-700">Admin Panel</h2>
 
         <nav className="flex flex-col gap-3">
-          <NavLink
-            to="/admin/users"
-            className={({ isActive }) =>
-              `px-4 py-2 rounded-lg ${isActive ? "bg-purple-600" : "hover:bg-purple-800"}`
-            }
-          >
-            Users
-          </NavLink>
-
-          <NavLink
-            to="/admin/create-module"
-            className={({ isActive }) =>
-              `px-4 py-2 rounded-lg ${isActive ? "bg-purple-600" : "hover:bg-purple-800"}`
-            }
-          >
-            Create Module
-          </NavLink>
-
-          <NavLink
-            to="/admin/assign"
-            className={({ isActive }) =>
-              `px-4 py-2 rounded-lg ${isActive ? "bg-purple-600" : "hover:bg-purple-800"}`
-            }
-          >
-            Assign Trainee
-          </NavLink>
-
-          <NavLink
-            to="/admin/analytics"
-            className={({ isActive }) =>
-              `px-4 py-2 rounded-lg ${isActive ? "bg-purple-600" : "hover:bg-purple-800"}`
-            }
-          >
-            Analytics
-          </NavLink>
+          {[
+            { to: "/admin/users", label: "Users" },
+            { to: "/admin/create-module", label: "Create Module" },
+            { to: "/admin/assign", label: "Assign Trainer" },
+            { to: "/admin/analytics", label: "Analytics" },
+          ].map((item) => (
+            <NavLink
+              key={item.to}
+              to={item.to}
+              className={({ isActive }) =>
+                `px-4 py-2 rounded-lg font-medium transition ${
+                  isActive
+                    ? "bg-purple-600 text-white"
+                    : "text-purple-800 hover:bg-purple-300/60"
+                }`
+              }
+            >
+              {item.label}
+            </NavLink>
+          ))}
         </nav>
 
         <button
           onClick={handleLogout}
-          className="mt-auto px-4 py-2 rounded-lg bg-red-600 hover:bg-red-500"
+          className="mt-auto px-4 py-2 rounded-lg bg-red-500 hover:bg-red-600 text-white"
         >
           Logout
         </button>
       </aside>
 
-      {/* Page Content — Loaded dynamically */}
-      <main className="flex-1 p-10">
-        <Outlet />  {/* 🔥 This loads Users / Create Module / Assign / Analytics */}
+      {/* Content */}
+      <main className="flex-1 p-10 animate-fade-in">
+        <Outlet />
       </main>
     </div>
   );

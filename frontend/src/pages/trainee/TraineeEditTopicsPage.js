@@ -1,9 +1,9 @@
-// frontend/src/pages/trainee/TraineeEditTopicsPage.js
+// frontend/src/pages/trainer/TrainerEditTopicsPage.js
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 
-export default function TraineeEditTopicsPage() {
+export default function TrainerEditTopicsPage() {
   const { moduleId } = useParams();
   const { token } = useAuth();
   const navigate = useNavigate();
@@ -12,7 +12,7 @@ export default function TraineeEditTopicsPage() {
   const [newTopic, setNewTopic] = useState("");
 
   useEffect(() => {
-    fetch(`http://localhost:5000/api/trainee/module/${moduleId}`, {
+    fetch(`http://localhost:5000/api/trainer/module/${moduleId}`, {
       headers: { Authorization: `Bearer ${token}` },
     })
       .then((res) => res.json())
@@ -22,7 +22,7 @@ export default function TraineeEditTopicsPage() {
 
   const addTopic = async () => {
     if (!newTopic) return alert("Title required");
-    const res = await fetch(`http://localhost:5000/api/trainee/module/${moduleId}/topic`, {
+    const res = await fetch(`http://localhost:5000/api/trainer/module/${moduleId}/topic`, {
       method: "POST",
       headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
       body: JSON.stringify({ title: newTopic }),
@@ -52,7 +52,7 @@ export default function TraineeEditTopicsPage() {
               <p className="text-gray-400">Levels: {t.levels.length}</p>
             </div>
             <div className="flex gap-2">
-              <button onClick={() => navigate(`/trainee/modules/${moduleId}/topics/${topicIndex}/create-level`)} className="px-3 py-2 bg-green-600 rounded">+ Add Level</button>
+              <button onClick={() => navigate(`/trainer/modules/${moduleId}/topics/${topicIndex}/create-level`)} className="px-3 py-2 bg-green-600 rounded">+ Add Level</button>
             </div>
           </div>
 
@@ -65,7 +65,7 @@ export default function TraineeEditTopicsPage() {
                   <div className="text-sm text-gray-400">XP: {lv.xp || 0} — Tasks: {(lv.tasks && lv.tasks.length) || 0}</div>
                 </div>
                 <div className="flex gap-2">
-                  <button onClick={() => navigate(`/trainee/modules/${moduleId}/topics/${topicIndex}/levels/${li}/tasks`)} className="px-3 py-2 bg-blue-600 rounded">Manage Tasks</button>
+                  <button onClick={() => navigate(`/trainer/modules/${moduleId}/topics/${topicIndex}/levels/${li}/tasks`)} className="px-3 py-2 bg-blue-600 rounded">Manage Tasks</button>
                 </div>
               </div>
             ))}
