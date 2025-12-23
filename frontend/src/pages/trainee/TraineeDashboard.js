@@ -1,6 +1,6 @@
 import React from "react";
 
-const TraineeDashboard = () => {
+const TrainerDashboard = () => {
   return (
     <div style={{ color: "white", padding: "30px" }}>
       <h1>👨‍🎓 Trainer Dashboard</h1>
@@ -9,4 +9,4 @@ const TraineeDashboard = () => {
   );
 };
 
-export default TraineeDashboard;
+export default TrainerDashboard;

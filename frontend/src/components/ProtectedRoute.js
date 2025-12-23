@@ -12,7 +12,7 @@ const ProtectedRoute = ({ children, allow }) => {
   if (allow && !allow.includes(user.role)) {
     // Redirect user to THEIR home
     if (user.role === "admin") return <Navigate to="/admin" replace />;
-    if (user.role === "trainee") return <Navigate to="/trainee" replace />;
+    if (user.role === "trainer") return <Navigate to="/trainer" replace />;
     return <Navigate to="/dashboard" replace />;
   }
 

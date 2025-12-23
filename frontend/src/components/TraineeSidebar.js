@@ -1,7 +1,7 @@
-// src/components/TraineeSidebar.js
+// src/components/TrainerSidebar.js
 import { NavLink, useNavigate } from "react-router-dom";
 
-const TraineeSidebar = () => {
+const TrainerSidebar = () => {
   const navigate = useNavigate();
 
   const logout = () => {
@@ -14,7 +14,7 @@ const TraineeSidebar = () => {
       <h2 className="text-2xl font-bold text-purple-300">Trainer Panel</h2>
 
       <NavLink
-        to="/trainee"
+        to="/trainer"
         className={({ isActive }) =>
           `px-4 py-2 rounded-lg ${isActive ? "bg-purple-600" : "hover:bg-purple-800"}`
         }
@@ -32,4 +32,4 @@ const TraineeSidebar = () => {
   );
 };
 
-export default TraineeSidebar;
+export default TrainerSidebar;

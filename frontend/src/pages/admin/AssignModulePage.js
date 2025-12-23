@@ -6,7 +6,7 @@ function AssignModulePage() {
   const [users, setUsers] = useState([]);
   const [modules, setModules] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [form, setForm] = useState({ trainee: "", module: "" });
+  const [form, setForm] = useState({ trainer: "", module: "" });
 
   // Fetch users
   useEffect(() => {
@@ -27,8 +27,8 @@ function AssignModulePage() {
   }, [token]);
 
   const handleAssign = async () => {
-    if (!form.trainee || !form.module) {
-      alert("Please select trainee and module");
+    if (!form.trainer || !form.module) {
+      alert("Please select trainer and module");
       return;
     }
 
@@ -44,7 +44,7 @@ function AssignModulePage() {
     setLoading(false);
 
     if (res.status === 409) {
-      alert("⚠ Module already assigned to this trainee");
+      alert("⚠ Module already assigned to this trainer");
       return;
     }
 
@@ -54,20 +54,20 @@ function AssignModulePage() {
     }
 
     alert("🎉 Module Assigned Successfully!");
-    setForm({ trainee: "", module: "" });
+    setForm({ trainer: "", module: "" });
   };
 
   return (
     <div className="max-w-lg">
       <h2 className="text-3xl font-bold text-purple-300 mb-6">Assign Module</h2>
 
-      {/* Trainee select */}
+      {/* Trainer select */}
       <select
         className="p-3 bg-gray-700 rounded text-white mb-4 w-full"
-        value={form.trainee}
-        onChange={(e) => setForm({ ...form, trainee: e.target.value })}
+        value={form.trainer}
+        onChange={(e) => setForm({ ...form, trainer: e.target.value })}
       >
-        <option value="">Select Trainee</option>
+        <option value="">Select Trainer</option>
         {users.map((u) => (
           <option key={u._id} value={u._id}>{u.name}</option>
         ))}

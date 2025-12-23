@@ -1,4 +1,4 @@
-// frontend/src/pages/trainee/AddTaskPage.js
+// frontend/src/pages/trainer/AddTaskPage.js
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useAuth } from "../../../context/AuthContext";
@@ -27,7 +27,7 @@ export default function AddTaskPage() {
   const fetchTasks = async () => {
     try {
       const res = await fetch(
-        `http://localhost:5000/api/trainee/module/${moduleId}/topic/${topicIndex}/level/${levelIndex}/tasks`,
+        `http://localhost:5000/api/trainer/module/${moduleId}/topic/${topicIndex}/level/${levelIndex}/tasks`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       const data = await res.json();
@@ -62,7 +62,7 @@ export default function AddTaskPage() {
 
     try {
       const res = await fetch(
-        `http://localhost:5000/api/trainee/module/${moduleId}/topic/${topicIndex}/level/${levelIndex}/task`,
+        `http://localhost:5000/api/trainer/module/${moduleId}/topic/${topicIndex}/level/${levelIndex}/task`,
         {
           method: "POST",
           headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
@@ -102,7 +102,7 @@ export default function AddTaskPage() {
 
     try {
       const res = await fetch(
-        `http://localhost:5000/api/trainee/module/${moduleId}/topic/${topicIndex}/level/${levelIndex}/task`,
+        `http://localhost:5000/api/trainer/module/${moduleId}/topic/${topicIndex}/level/${levelIndex}/task`,
         {
           method: "POST",
           headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
@@ -126,7 +126,7 @@ export default function AddTaskPage() {
     if (!window.confirm("Delete this task?")) return;
     try {
       const res = await fetch(
-        `http://localhost:5000/api/trainee/module/${moduleId}/topic/${topicIndex}/level/${levelIndex}/task/${taskIdx}`,
+        `http://localhost:5000/api/trainer/module/${moduleId}/topic/${topicIndex}/level/${levelIndex}/task/${taskIdx}`,
         { method: "DELETE", headers: { Authorization: `Bearer ${token}` } }
       );
       const data = await res.json();

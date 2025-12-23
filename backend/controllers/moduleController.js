@@ -15,7 +15,7 @@ exports.createModule = async (req, res) => {
     const module = await Module.create({
       title,
       description: description || "",
-      topics: [] // trainee will add topics + levels later
+      topics: [] // trainer will add topics + levels later
     });
 
     res.json({ success: true, message: "Module created", module });

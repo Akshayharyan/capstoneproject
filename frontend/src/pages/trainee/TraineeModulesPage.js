@@ -2,13 +2,13 @@ import React, { useEffect, useState } from "react";
 import { useAuth } from "../../context/AuthContext";
 import { useNavigate } from "react-router-dom";
 
-function TraineeModulesPage() {
+function TrainerModulesPage() {
   const { token } = useAuth();
   const navigate = useNavigate();
   const [modules, setModules] = useState([]);
 
   useEffect(() => {
-    fetch("http://localhost:5000/api/trainee/assigned", {
+    fetch("http://localhost:5000/api/trainer/assigned", {
       headers: { Authorization: `Bearer ${token}` },
     })
       .then((res) => res.json())
@@ -30,7 +30,7 @@ function TraineeModulesPage() {
           <p className="mt-2">Topics: {m.topicsCount}</p>
 
           <button
-            onClick={() => navigate(`/trainee/modules/${m.moduleId}/edit`)}
+            onClick={() => navigate(`/trainer/modules/${m.moduleId}/edit`)}
             className="mt-3 px-4 py-2 bg-purple-600 rounded hover:bg-purple-700"
           >
             Edit Topics
@@ -41,4 +41,4 @@ function TraineeModulesPage() {
   );
 }
 
-export default TraineeModulesPage;
+export default TrainerModulesPage;
