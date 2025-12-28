@@ -19,7 +19,6 @@ import LevelsRoadmapPage from "./pages/employee/LevelsRoadmapPage";
 import LevelPlayerPage from "./pages/employee/LevelPlayerPage";
 import Profile from "./pages/Profile";
 
-
 /* ADMIN */
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import CreateModulePage from "./pages/admin/CreateModulePage";
@@ -34,89 +33,59 @@ import TrainerEditTopicsPage from "./pages/trainer/TrainerEditTopicsPage";
 import CreateLevelPage from "./pages/trainer/levels/CreateLevelPage";
 import AddTaskPage from "./pages/trainer/levels/AddTaskPage";
 
+/* 🔥 LAYOUTS */
+const PublicEmployeeLayout = () => (
+  <>
+    <Header />
+    <Outlet />
+  </>
+);
+
 function App() {
   return (
     <AuthProvider>
       <Router>
-
         <Routes>
 
-          {/* ================= PUBLIC ================= */}
-          <Route path="/" element={<GuestRoute><Home /></GuestRoute>} />
-          <Route path="/login" element={<GuestRoute><Login /></GuestRoute>} />
-          <Route path="/signup" element={<GuestRoute><Signup /></GuestRoute>} />
+          {/* ================= PUBLIC + EMPLOYEE (WITH HEADER) ================= */}
+          <Route element={<PublicEmployeeLayout />}>
 
-          {/* ================= EMPLOYEE ================= */}
-          <Route
-            element={
-              <>
-                <Header />
-                <Outlet />
-              </>
-            }
-          >
+            {/* PUBLIC */}
+            <Route path="/" element={<GuestRoute><Home /></GuestRoute>} />
+            <Route path="/login" element={<GuestRoute><Login /></GuestRoute>} />
+            <Route path="/signup" element={<GuestRoute><Signup /></GuestRoute>} />
+
+            {/* EMPLOYEE */}
             <Route
               path="/dashboard"
-              element={
-                <ProtectedRoute allow={["employee"]}>
-                  <Dashboard />
-                </ProtectedRoute>
-              }
+              element={<ProtectedRoute allow={["employee"]}><Dashboard /></ProtectedRoute>}
             />
-              <Route
-  path="/profile"
-  element={
-    <ProtectedRoute allow={["employee"]}>
-      <Profile />
-    </ProtectedRoute>
-  }
-/>
-
+            <Route
+              path="/profile"
+              element={<ProtectedRoute allow={["employee"]}><Profile /></ProtectedRoute>}
+            />
             <Route
               path="/modules"
-              element={
-                <ProtectedRoute allow={["employee"]}>
-                  <Modules />
-                </ProtectedRoute>
-              }
+              element={<ProtectedRoute allow={["employee"]}><Modules /></ProtectedRoute>}
             />
-
             <Route
               path="/modules/:moduleId/topics"
-              element={
-                <ProtectedRoute allow={["employee"]}>
-                  <TopicRoadmap />
-                </ProtectedRoute>
-              }
+              element={<ProtectedRoute allow={["employee"]}><TopicRoadmap /></ProtectedRoute>}
             />
-
             <Route
               path="/modules/:moduleId/topics/:topicIndex/levels"
-              element={
-                <ProtectedRoute allow={["employee"]}>
-                  <LevelsRoadmapPage />
-                </ProtectedRoute>
-              }
+              element={<ProtectedRoute allow={["employee"]}><LevelsRoadmapPage /></ProtectedRoute>}
             />
-
             <Route
               path="/modules/:moduleId/topics/:topicIndex/levels/:levelIndex"
-              element={
-                <ProtectedRoute allow={["employee"]}>
-                  <LevelPlayerPage />
-                </ProtectedRoute>
-              }
+              element={<ProtectedRoute allow={["employee"]}><LevelPlayerPage /></ProtectedRoute>}
             />
           </Route>
 
-          {/* ================= ADMIN ================= */}
+          {/* ================= ADMIN (NO HEADER) ================= */}
           <Route
             path="/admin"
-            element={
-              <ProtectedRoute allow={["admin"]}>
-                <AdminDashboard />
-              </ProtectedRoute>
-            }
+            element={<ProtectedRoute allow={["admin"]}><AdminDashboard /></ProtectedRoute>}
           >
             <Route index element={<CreateModulePage />} />
             <Route path="create-module" element={<CreateModulePage />} />
@@ -125,7 +94,7 @@ function App() {
             <Route path="analytics" element={<AnalyticsPage />} />
           </Route>
 
-          {/* ================= TRAINER ================= */}
+          {/* ================= TRAINER (NO HEADER) ================= */}
           <Route
             path="/trainer"
             element={
@@ -146,7 +115,6 @@ function App() {
           </Route>
 
         </Routes>
-
       </Router>
     </AuthProvider>
   );
