@@ -1,28 +1,62 @@
 // backend/routes/trainerRoutes.js
 const express = require("express");
 const router = express.Router();
+
 const protect = require("../middleware/authMiddleware");
-const trainerController = require("../controllers/trainerController");
 
-// assigned modules
-router.get("/assigned", protect, trainerController.getAssignedModules);
+const {
+  getAssignedModules,
+  getSingleModule,
+  addTopic,
+  addTaskToTopic,
+  getTopicTasks,
+  deleteTaskFromTopic,
+} = require("../controllers/trainerController");
 
-// get module details
-router.get("/module/:moduleId", protect, trainerController.getSingleModule);
+/* ======================================================
+   TRAINER ROUTES — FINAL (NO LEVELS)
+====================================================== */
 
-// add topic
-router.post("/module/:moduleId/topic", protect, trainerController.addTopic);
+// Get modules assigned to trainer
+router.get(
+  "/assigned",
+  protect,
+  getAssignedModules
+);
 
-// create level (only level creation)
-router.post("/module/:moduleId/topic/:topicIndex/level", protect, trainerController.createLevel);
+// Get module details (with topics)
+router.get(
+  "/module/:moduleId",
+  protect,
+  getSingleModule
+);
 
-// add single task to an existing level
-router.post("/module/:moduleId/topic/:topicIndex/level/:levelIndex/task", protect, trainerController.addTaskToLevel);
+// Add topic to module
+router.post(
+  "/module/:moduleId/topic",
+  protect,
+  addTopic
+);
 
-// get tasks of a level
-router.get("/module/:moduleId/topic/:topicIndex/level/:levelIndex/tasks", protect, trainerController.getLevelTasks);
+// Add task (quiz / coding) to topic
+router.post(
+  "/module/:moduleId/topic/:topicIndex/task",
+  protect,
+  addTaskToTopic
+);
 
-// delete task
-router.delete("/module/:moduleId/topic/:topicIndex/level/:levelIndex/task/:taskIndex", protect, trainerController.deleteTaskFromLevel);
+// Get tasks of a topic
+router.get(
+  "/module/:moduleId/topic/:topicIndex/tasks",
+  protect,
+  getTopicTasks
+);
+
+// Delete task from topic
+router.delete(
+  "/module/:moduleId/topic/:topicIndex/task/:taskIndex",
+  protect,
+  deleteTaskFromTopic
+);
 
 module.exports = router;

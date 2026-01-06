@@ -1,55 +1,80 @@
 // backend/models/module.js
 const mongoose = require("mongoose");
 
-// ---------------- TASK SCHEMA ----------------
+/* ================================
+   TEST CASE SCHEMA (Coding)
+================================ */
 const TestCaseSchema = new mongoose.Schema({
   input: { type: String },
   output: { type: String },
 });
 
+/* ================================
+   TASK SCHEMA (Quiz / Coding)
+================================ */
 const TaskSchema = new mongoose.Schema({
-  type: { type: String, enum: ["quiz", "coding"], required: true },
+  type: {
+    type: String,
+    enum: ["quiz", "coding"],
+    required: true,
+  },
 
-  // quiz
-  question: String,
-  options: [String],
-  correctAnswer: String, // store as string (option text) for simplicity
+  /* ---------- QUIZ ---------- */
+  question: { type: String },
+  options: [{ type: String }],
+  correctAnswer: { type: String }, // store option text
 
-  // coding
-  codingPrompt: String,
-  starterCode: String,
+  /* ---------- CODING ---------- */
+  codingPrompt: { type: String },
+  starterCode: { type: String },
   testCases: [TestCaseSchema],
 
-  // generic
-  xp: { type: Number, default: 0 },
+  /* ---------- COMMON ---------- */
+  xp: { type: Number, default: 10 },
 });
 
-// ---------------- LEVEL SCHEMA ----------------
-const LevelSchema = new mongoose.Schema({
-  number: { type: Number, required: true },
-  title: { type: String, required: true },
-  contentMarkdown: { type: String, default: "" }, // markdown content
-  xp: { type: Number, default: 0 },
-
-  // Tasks (multiple per level)
-  tasks: [TaskSchema],
-});
-
-// ---------------- TOPIC SCHEMA ----------------
+/* ================================
+   TOPIC SCHEMA (VIDEO-FIRST)
+================================ */
 const TopicSchema = new mongoose.Schema({
   title: { type: String, required: true },
-  levels: [LevelSchema],
+
+  /* 🎥 VIDEO CONTENT */
+  videoUrl: {
+    type: String,
+    required: true, // YouTube / Vimeo / S3 URL
+  },
+  videoDuration: {
+    type: String, // e.g. "12:45"
+  },
+
+  /* 🧠 QUIZ + 💻 CODING (AFTER VIDEO) */
+  tasks: [TaskSchema],
+
+  /* ⭐ TOTAL XP FOR TOPIC */
+  xp: {
+    type: Number,
+    default: 100,
+  },
 });
 
-// ---------------- MODULE SCHEMA ----------------
+/* ================================
+   MODULE SCHEMA
+================================ */
 const ModuleSchema = new mongoose.Schema(
   {
     title: { type: String, required: true },
-    description: String,
+    description: { type: String },
+
+    /* 📚 TOPICS */
     topics: [TopicSchema],
   },
   { timestamps: true }
 );
 
-// avoid OverwriteModelError
-module.exports = mongoose.models.Module || mongoose.model("Module", ModuleSchema);
+/* ================================
+   EXPORT (SAFE FOR HOT RELOAD)
+================================ */
+module.exports =
+  mongoose.models.Module ||
+  mongoose.model("Module", ModuleSchema);

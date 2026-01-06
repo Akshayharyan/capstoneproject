@@ -15,8 +15,7 @@ import Signup from "./pages/signup";
 import Dashboard from "./pages/dashboard";
 import Modules from "./pages/Modules";
 import TopicRoadmap from "./pages/TopicRoadmap";
-import LevelsRoadmapPage from "./pages/employee/LevelsRoadmapPage";
-import LevelPlayerPage from "./pages/employee/LevelPlayerPage";
+import TopicContentPage from "./pages/employee/TopicContentPage";
 import Profile from "./pages/Profile";
 
 /* ADMIN */
@@ -30,8 +29,7 @@ import AnalyticsPage from "./pages/admin/AnalyticsPage";
 import TrainerSidebar from "./components/TrainerSidebar";
 import TrainerModulesPage from "./pages/trainer/TrainerModulesPage";
 import TrainerEditTopicsPage from "./pages/trainer/TrainerEditTopicsPage";
-import CreateLevelPage from "./pages/trainer/levels/CreateLevelPage";
-import AddTaskPage from "./pages/trainer/levels/AddTaskPage";
+import TrainerTopicTasksPage from "./pages/trainer/TrainerTopicTasksPage";
 
 /* 🔥 LAYOUTS */
 const PublicEmployeeLayout = () => (
@@ -73,12 +71,8 @@ function App() {
               element={<ProtectedRoute allow={["employee"]}><TopicRoadmap /></ProtectedRoute>}
             />
             <Route
-              path="/modules/:moduleId/topics/:topicIndex/levels"
-              element={<ProtectedRoute allow={["employee"]}><LevelsRoadmapPage /></ProtectedRoute>}
-            />
-            <Route
-              path="/modules/:moduleId/topics/:topicIndex/levels/:levelIndex"
-              element={<ProtectedRoute allow={["employee"]}><LevelPlayerPage /></ProtectedRoute>}
+              path="/modules/:moduleId/topic/:topicIndex"
+              element={<ProtectedRoute allow={["employee"]}><TopicContentPage /></ProtectedRoute>}
             />
           </Route>
 
@@ -110,8 +104,10 @@ function App() {
           >
             <Route index element={<TrainerModulesPage />} />
             <Route path="modules/:moduleId/edit" element={<TrainerEditTopicsPage />} />
-            <Route path="modules/:moduleId/topics/:topicIndex/create-level" element={<CreateLevelPage />} />
-            <Route path="modules/:moduleId/topics/:topicIndex/levels/:levelIndex/tasks" element={<AddTaskPage />} />
+            <Route
+              path="modules/:moduleId/topic/:topicIndex/tasks"
+              element={<TrainerTopicTasksPage />}
+            />
           </Route>
 
         </Routes>
