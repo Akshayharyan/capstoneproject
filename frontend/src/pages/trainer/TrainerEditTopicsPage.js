@@ -9,69 +9,138 @@ export default function TrainerEditTopicsPage() {
   const navigate = useNavigate();
 
   const [moduleData, setModuleData] = useState(null);
-  const [newTopic, setNewTopic] = useState("");
+  const [newTopic, setNewTopic] = useState({
+    title: "",
+    videoUrl: "",
+    xp: 0,
+  });
 
+  /* ================= FETCH MODULE ================= */
   useEffect(() => {
     fetch(`http://localhost:5000/api/trainer/module/${moduleId}`, {
       headers: { Authorization: `Bearer ${token}` },
     })
       .then((res) => res.json())
-      .then((data) => setModuleData(data))
-      .catch((err) => console.error(err));
+      .then(setModuleData)
+      .catch(console.error);
   }, [moduleId, token]);
 
+  /* ================= ADD TOPIC ================= */
   const addTopic = async () => {
-    if (!newTopic) return alert("Title required");
-    const res = await fetch(`http://localhost:5000/api/trainer/module/${moduleId}/topic`, {
-      method: "POST",
-      headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
-      body: JSON.stringify({ title: newTopic }),
-    });
+    const title = newTopic.title.trim();
+    const videoUrl = newTopic.videoUrl.trim();
+    const xp = Number(newTopic.xp) || 0;
+
+    if (!title || !videoUrl) {
+      alert("Title and valid Video URL are required");
+      return;
+    }
+
+    const res = await fetch(
+      `http://localhost:5000/api/trainer/module/${moduleId}/topic`,
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ title, videoUrl, xp }),
+      }
+    );
+
     const data = await res.json();
-    if (!res.ok) return alert(data.message || "Failed to add topic");
+    if (!res.ok) {
+      alert(data.message || "Failed to add topic");
+      return;
+    }
+
     setModuleData(data.module);
-    setNewTopic("");
+    setNewTopic({ title: "", videoUrl: "", xp: 0 });
   };
 
-  if (!moduleData) return <p className="text-white p-10">Loading...</p>;
+  if (!moduleData) {
+    return <p className="text-white p-10">Loading...</p>;
+  }
 
   return (
-    <div className="text-white p-10">
-      <h2 className="text-3xl font-bold mb-6">{moduleData.title}</h2>
+    <div className="p-10 text-white">
+      <h2 className="text-3xl font-bold mb-6">
+        ✏️ Edit Module: {moduleData.title}
+      </h2>
 
-      <div className="flex gap-3 mb-5">
-        <input value={newTopic} onChange={(e) => setNewTopic(e.target.value)} placeholder="New topic name" className="px-4 py-2 rounded bg-gray-800 w-80" />
-        <button onClick={addTopic} className="px-4 py-2 bg-purple-600 rounded">+ Add Topic</button>
+      {/* ADD TOPIC */}
+      <div className="bg-gray-900 p-6 rounded-xl mb-10">
+        <h3 className="text-xl font-semibold mb-4">➕ Add New Topic</h3>
+
+        <div className="grid md:grid-cols-3 gap-4">
+          <input
+            placeholder="Topic Title"
+            value={newTopic.title}
+            onChange={(e) =>
+              setNewTopic({ ...newTopic, title: e.target.value })
+            }
+            className="px-4 py-2 rounded bg-gray-800"
+          />
+
+          <input
+            placeholder="Video URL (YouTube Embed)"
+            value={newTopic.videoUrl}
+            onChange={(e) =>
+              setNewTopic({ ...newTopic, videoUrl: e.target.value })
+            }
+            className="px-4 py-2 rounded bg-gray-800"
+          />
+
+          <input
+            type="number"
+            placeholder="XP"
+            value={newTopic.xp}
+            onChange={(e) =>
+              setNewTopic({ ...newTopic, xp: e.target.value })
+            }
+            className="px-4 py-2 rounded bg-gray-800"
+          />
+        </div>
+
+        <button
+          type="button"
+          onClick={addTopic}
+          className="mt-5 px-6 py-2 bg-green-600 rounded-lg hover:bg-green-700"
+        >
+          ✅ Add Topic
+        </button>
       </div>
 
-      {moduleData.topics.map((t, topicIndex) => (
-        <div key={topicIndex} className="mb-6 p-4 bg-gray-900 rounded">
-          <div className="flex justify-between items-center">
-            <div>
-              <h3 className="font-semibold text-xl mb-2">{t.title}</h3>
-              <p className="text-gray-400">Levels: {t.levels.length}</p>
-            </div>
-            <div className="flex gap-2">
-              <button onClick={() => navigate(`/trainer/modules/${moduleId}/topics/${topicIndex}/create-level`)} className="px-3 py-2 bg-green-600 rounded">+ Add Level</button>
-            </div>
-          </div>
-
-          {/* list levels */}
-          <div className="mt-4 space-y-3">
-            {t.levels.map((lv, li) => (
-              <div key={li} className="bg-gray-800 p-3 rounded flex justify-between items-center">
-                <div>
-                  <div className="font-semibold">Level {lv.number}: {lv.title}</div>
-                  <div className="text-sm text-gray-400">XP: {lv.xp || 0} — Tasks: {(lv.tasks && lv.tasks.length) || 0}</div>
-                </div>
-                <div className="flex gap-2">
-                  <button onClick={() => navigate(`/trainer/modules/${moduleId}/topics/${topicIndex}/levels/${li}/tasks`)} className="px-3 py-2 bg-blue-600 rounded">Manage Tasks</button>
-                </div>
+      {/* TOPICS LIST */}
+      <div className="space-y-6">
+        {moduleData.topics.map((t, index) => (
+          <div
+            key={index}
+            className="bg-gray-900 p-6 rounded-xl border border-gray-700"
+          >
+            <div className="flex justify-between items-center">
+              <div>
+                <h3 className="text-xl font-bold">{t.title}</h3>
+                <p className="text-gray-400 text-sm">
+                  🎥 Video | 🧪 Tasks: {t.tasks?.length || 0} | ⭐ XP: {t.xp}
+                </p>
               </div>
-            ))}
+
+              <button
+                type="button"
+                onClick={() =>
+                  navigate(
+                    `/trainer/modules/${moduleId}/topic/${index}/tasks`
+                  )
+                }
+                className="px-4 py-2 bg-blue-600 rounded-lg hover:bg-blue-700"
+              >
+                🧪 Manage Tasks
+              </button>
+            </div>
           </div>
-        </div>
-      ))}
+        ))}
+      </div>
     </div>
   );
 }

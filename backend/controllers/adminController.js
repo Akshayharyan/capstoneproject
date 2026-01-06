@@ -1,70 +1,101 @@
-import User from "../models/User.js";
-import Module from "../models/module.js";
-import Assignment from "../models/Assignment.js";
+const mongoose = require("mongoose");
+const User = require("../models/User");
+const Module = require("../models/module");
+const Assignment = require("../models/Assignment");
 
 /* =========================
-   GET ALL USERS (UNCHANGED)
-   ========================= */
-export const getAllUsers = async (req, res) => {
+   GET ALL USERS
+========================= */
+const getAllUsers = async (req, res) => {
   try {
     const users = await User.find().select("-password");
     res.json(users);
-  } catch {
+  } catch (err) {
+    console.error("Get users error:", err);
     res.status(500).json({ message: "Error fetching users" });
   }
 };
 
 /* =========================
-   ASSIGN MODULE (UNCHANGED)
-   ========================= */
-export const assignModule = async (req, res) => {
+   ASSIGN MODULE
+========================= */
+const assignModule = async (req, res) => {
   try {
-    const { trainer, module } = req.body;
+    console.log("📩 Assign request body:", req.body);
 
-    if (!trainer || !module)
+    const { trainerId, moduleId } = req.body;
+
+    // 1️⃣ Validate presence
+    if (!trainerId || !moduleId) {
+      console.log("❌ Missing fields");
       return res.status(400).json({ message: "Missing trainer or module" });
+    }
 
-    const userExists = await User.findById(trainer);
-    if (!userExists)
+    // 2️⃣ Validate ObjectId
+    if (
+      !mongoose.Types.ObjectId.isValid(trainerId) ||
+      !mongoose.Types.ObjectId.isValid(moduleId)
+    ) {
+      console.log("❌ Invalid ObjectId", { trainerId, moduleId });
+      return res.status(400).json({ message: "Invalid trainer or module ID" });
+    }
+
+    // 3️⃣ Trainer exists
+    const trainer = await User.findById(trainerId);
+    if (!trainer) {
+      console.log("❌ Trainer not found");
       return res.status(404).json({ message: "Trainer not found" });
+    }
 
-    const moduleExists = await Module.findById(module);
-    if (!moduleExists)
+    // 4️⃣ Module exists
+    const module = await Module.findById(moduleId);
+    if (!module) {
+      console.log("❌ Module not found");
       return res.status(404).json({ message: "Module not found" });
+    }
 
-    const alreadyAssigned = await Assignment.findOne({ trainer, module });
-    if (alreadyAssigned)
-      return res
-        .status(409)
-        .json({ message: "Module already assigned to this trainer" });
+    // 5️⃣ Prevent duplicate
+    const exists = await Assignment.findOne({
+      trainer: trainerId,
+      module: moduleId,
+    });
 
+    if (exists) {
+      console.log("⚠️ Already assigned");
+      return res.status(409).json({
+        message: "Module already assigned to this trainer",
+      });
+    }
+
+    // 6️⃣ Create assignment
     await Assignment.create({
-      trainer,
-      module,
+      trainer: trainerId,
+      module: moduleId,
       assignedBy: req.user._id,
     });
 
-    // Convert employee → trainer automatically
-    await User.findByIdAndUpdate(trainer, { role: "trainer" });
+    // 7️⃣ Promote role
+    if (trainer.role !== "trainer") {
+      trainer.role = "trainer";
+      await trainer.save();
+    }
 
-    res.json({ success: true, message: "Module assigned successfully" });
-  } catch (error) {
-    console.log(error);
-    res.status(500).json({ message: "Error assigning module" });
+    console.log("✅ Module assigned successfully");
+    res.json({ success: true });
+  } catch (err) {
+    console.error("🔥 Assign module error:", err);
+    res.status(500).json({ message: "Server error" });
   }
 };
 
-
-    
 /* =========================
-   ADMIN ANALYTICS (NEW)
-   ========================= */
-export const getAnalytics = async (req, res) => {
+   ADMIN ANALYTICS
+========================= */
+const getAnalytics = async (req, res) => {
   try {
     const totalUsers = await User.countDocuments();
     const totalAdmins = await User.countDocuments({ role: "admin" });
     const totalTrainers = await User.countDocuments({ role: "trainer" });
-    
     const totalEmployees = await User.countDocuments({ role: "employee" });
 
     const totalModules = await Module.countDocuments();
@@ -74,13 +105,18 @@ export const getAnalytics = async (req, res) => {
       totalUsers,
       totalAdmins,
       totalTrainers,
-     
       totalEmployees,
       totalModules,
       totalAssignments,
     });
-  } catch (error) {
-    console.error("Analytics error:", error);
+  } catch (err) {
+    console.error("Analytics error:", err);
     res.status(500).json({ message: "Error fetching analytics" });
   }
+};
+
+module.exports = {
+  getAllUsers,
+  assignModule,
+  getAnalytics,
 };

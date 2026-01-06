@@ -1,42 +1,62 @@
 const express = require("express");
 const router = express.Router();
+
 const protect = require("../middleware/authMiddleware");
 const verifyAdmin = require("../middleware/verifyAdmin");
+
 const { createModule } = require("../controllers/moduleController");
 const Module = require("../models/module");
 
-// ===============================
-// 📌 CREATE MODULE (Admin Only)
-// ===============================
+/* ======================================================
+   📌 CREATE MODULE (ADMIN ONLY)
+====================================================== */
 router.post("/create", protect, verifyAdmin, createModule);
 
-// ===============================
-// 📌 GET ALL MODULES
-// ===============================
+/* ======================================================
+   📌 GET ALL MODULES
+   ✅ Used by:
+      - Admin Assign Module
+      - Employee Modules Page
+====================================================== */
 router.get("/", protect, async (req, res) => {
   try {
-    const modules = await Module.find({}, "title description");
-    res.json({ modules });
+    const modules = await Module.find({});
+
+    const formatted = modules.map((m) => ({
+      _id: m._id, // ✅ KEEP _id (VERY IMPORTANT)
+      title: m.title,
+      description: m.description || "",
+      topicCount: m.topics.length,
+      totalXp: m.topics.reduce((sum, t) => sum + (t.xp || 0), 0),
+    }));
+
+    res.json({ modules: formatted });
   } catch (err) {
     console.error("Fetch modules error:", err);
     res.status(500).json({ message: "Server error" });
   }
 });
 
-// ===============================
-// 📌 GET TOPICS OF A MODULE
-// ===============================
+/* ======================================================
+   📌 GET TOPICS OF A MODULE (Learning Path Page)
+====================================================== */
 router.get("/:moduleId/topics", protect, async (req, res) => {
   try {
     const module = await Module.findById(req.params.moduleId);
-    if (!module) return res.status(404).json({ message: "Module not found" });
+
+    if (!module) {
+      return res.status(404).json({ message: "Module not found" });
+    }
 
     res.json({
+      moduleId: module._id,
       moduleTitle: module.title,
-      topics: module.topics.map((t, index) => ({
-        id: index,
-        title: t.title,
-        levelCount: t.levels.length,
+      topics: module.topics.map((topic, index) => ({
+        index,
+        title: topic.title,
+        xp: topic.xp || 0,
+        videoDuration: topic.videoDuration || "",
+        taskCount: topic.tasks.length,
       })),
     });
   } catch (err) {
@@ -45,55 +65,50 @@ router.get("/:moduleId/topics", protect, async (req, res) => {
   }
 });
 
-// ===============================
-// 📌 GET LEVELS OF A TOPIC
-// ===============================
-router.get("/:moduleId/topics/:topicIndex/levels", protect, async (req, res) => {
+/* ======================================================
+   📌 GET SINGLE TOPIC (VIDEO + TASKS)
+====================================================== */
+router.get("/:moduleId/topics/:topicIndex", protect, async (req, res) => {
   try {
     const { moduleId, topicIndex } = req.params;
+
     const module = await Module.findById(moduleId);
-    if (!module) return res.status(404).json({ message: "Module not found" });
-
-    const topic = module.topics[topicIndex];
-    if (!topic) return res.status(404).json({ message: "Topic not found" });
-
-    res.json({
-      topicTitle: topic.title,
-      levels: topic.levels.map((lv) => ({
-        id: lv._id,
-        number: lv.number,
-        title: lv.title,
-        taskType: lv.taskType,
-        xp: lv.xp,
-      })),
-    });
-  } catch (err) {
-    console.error("Fetch levels error:", err);
-    res.status(500).json({ message: "Server error" });
-  }
-});
-
-// ===============================
-// 📌 FULL LEVEL DETAILS
-// ===============================
-router.get("/level/:levelId", protect, async (req, res) => {
-  try {
-    const levelId = req.params.levelId;
-    const module = await Module.findOne({ "topics.levels._id": levelId });
-
-    if (!module) return res.status(404).json({ message: "Level not found" });
-
-    for (const topic of module.topics) {
-      const level = topic.levels.id(levelId);
-      if (level) return res.json(level);
+    if (!module) {
+      return res.status(404).json({ message: "Module not found" });
     }
 
-    res.status(404).json({ message: "Level not found" });
+    const topic = module.topics[topicIndex];
+    if (!topic) {
+      return res.status(404).json({ message: "Topic not found" });
+    }
+
+    res.json({
+      title: topic.title,
+      videoUrl: topic.videoUrl,
+      videoDuration: topic.videoDuration,
+      xp: topic.xp || 0,
+      tasks: topic.tasks || [],
+    });
   } catch (err) {
-    console.error("Fetch level error:", err);
+    console.error("Fetch topic content error:", err);
     res.status(500).json({ message: "Server error" });
   }
 });
 
-// ⬅️ MOST IMPORTANT LINE
+/* ======================================================
+   📌 DELETE MODULE (ADMIN ONLY)
+====================================================== */
+router.delete("/:moduleId", protect, verifyAdmin, async (req, res) => {
+  try {
+    await Module.findByIdAndDelete(req.params.moduleId);
+    res.json({ message: "Module deleted successfully" });
+  } catch (err) {
+    console.error("Delete module error:", err);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+/* ======================================================
+   EXPORT ROUTER
+====================================================== */
 module.exports = router;

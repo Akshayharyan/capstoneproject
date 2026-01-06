@@ -1,7 +1,9 @@
 const Module = require("../models/module");
 const Assignment = require("../models/Assignment");
 
-// 1) Get assigned modules (NULL-SAFE)
+/* ======================================================
+   1) Get assigned modules (NULL-SAFE)
+====================================================== */
 exports.getAssignedModules = async (req, res) => {
   try {
     const trainerId = req.user._id;
@@ -9,9 +11,8 @@ exports.getAssignedModules = async (req, res) => {
     const assignments = await Assignment.find({ trainer: trainerId })
       .populate("module", "title description topics");
 
-    // Filter out broken assignments (module deleted or not populated)
     const formatted = assignments
-      .filter(a => a.module) // 🔐 IMPORTANT FIX
+      .filter(a => a.module)
       .map(a => ({
         assignmentId: a._id,
         moduleId: a.module._id,
@@ -28,11 +29,15 @@ exports.getAssignedModules = async (req, res) => {
   }
 };
 
-// 2) Get single module
+/* ======================================================
+   2) Get single module
+====================================================== */
 exports.getSingleModule = async (req, res) => {
   try {
     const module = await Module.findById(req.params.moduleId);
-    if (!module) return res.status(404).json({ message: "Module not found" });
+    if (!module) {
+      return res.status(404).json({ message: "Module not found" });
+    }
     res.json(module);
   } catch (error) {
     console.error("Error fetching module:", error);
@@ -40,74 +45,65 @@ exports.getSingleModule = async (req, res) => {
   }
 };
 
-// 3) Add topic
+/* ======================================================
+   3) ADD TOPIC (FINAL FLOW)
+   Module → Topic → (Video → Quiz → Coding)
+====================================================== */
 exports.addTopic = async (req, res) => {
   try {
-    const { title } = req.body;
-    if (!title) return res.status(400).json({ message: "Topic title required" });
+    const { title, videoUrl, xp } = req.body;
+
+    if (!title || !videoUrl) {
+      return res.status(400).json({
+        message: "Topic title and video URL are required",
+      });
+    }
 
     const module = await Module.findById(req.params.moduleId);
-    if (!module) return res.status(404).json({ message: "Module not found" });
+    if (!module) {
+      return res.status(404).json({ message: "Module not found" });
+    }
 
-    module.topics.push({ title, levels: [] });
+    const newTopic = {
+      title: title.trim(),
+      videoUrl: videoUrl.trim(),
+      xp: Number(xp) || 0,
+      tasks: [],
+    };
+
+    // 🔍 Debug log (keep for now)
+    console.log("📥 Adding topic:", newTopic);
+
+    module.topics.push(newTopic);
     await module.save();
 
-    res.json({ message: "Topic added", module });
+    res.json({
+      message: "Topic added successfully",
+      module,
+    });
   } catch (error) {
     console.error("Error adding topic:", error);
     res.status(500).json({ message: "Server error" });
   }
 };
 
-// 4) Create level
-exports.createLevel = async (req, res) => {
+/* ======================================================
+   4) ADD TASK TO TOPIC (QUIZ / CODING)
+====================================================== */
+exports.addTaskToTopic = async (req, res) => {
   try {
     const { moduleId, topicIndex } = req.params;
-    const { title, contentMarkdown, content, xp } = req.body;
-
-    const module = await Module.findById(moduleId);
-    if (!module) return res.status(404).json({ message: "Module not found" });
-
-    const topic = module.topics[topicIndex];
-    if (!topic) return res.status(404).json({ message: "Topic not found" });
-
-    const levelNumber = topic.levels.length + 1;
-
-    const newLevel = {
-      number: levelNumber,
-      title: title || `Level ${levelNumber}`,
-      contentMarkdown: contentMarkdown || content || "",
-      xp: Number(xp) || 0,
-      tasks: [],
-    };
-
-    topic.levels.push(newLevel);
-    await module.save();
-
-    res.json({
-      message: "Level created",
-      levelIndex: topic.levels.length - 1,
-    });
-  } catch (error) {
-    console.error("Create level error:", error);
-    res.status(500).json({ message: "Server error" });
-  }
-};
-
-// 5) Add task to level
-exports.addTaskToLevel = async (req, res) => {
-  try {
-    const { moduleId, topicIndex, levelIndex } = req.params;
     const payload = req.body;
 
     const module = await Module.findById(moduleId);
-    if (!module) return res.status(404).json({ message: "Module not found" });
+    if (!module) {
+      return res.status(404).json({ message: "Module not found" });
+    }
 
     const topic = module.topics[topicIndex];
-    if (!topic) return res.status(404).json({ message: "Topic not found" });
-
-    const level = topic.levels[levelIndex];
-    if (!level) return res.status(404).json({ message: "Level not found" });
+    if (!topic) {
+      return res.status(404).json({ message: "Topic not found" });
+    }
 
     const task = {
       type: payload.type,
@@ -115,12 +111,9 @@ exports.addTaskToLevel = async (req, res) => {
     };
 
     if (payload.type === "quiz") {
-      task.question = payload.question;
+      task.question = payload.question || "";
       task.options = payload.options || [];
-      task.correctAnswer =
-        typeof payload.correctAnswer === "number"
-          ? task.options[payload.correctAnswer] || ""
-          : payload.correctAnswer || "";
+      task.correctAnswer = payload.correctAnswer || "";
     } else if (payload.type === "coding") {
       task.codingPrompt = payload.codingPrompt || "";
       task.starterCode = payload.starterCode || "";
@@ -131,7 +124,7 @@ exports.addTaskToLevel = async (req, res) => {
       return res.status(400).json({ message: "Invalid task type" });
     }
 
-    level.tasks.push(task);
+    topic.tasks.push(task);
     await module.save();
 
     res.json({ message: "Task added", task });
@@ -141,43 +134,48 @@ exports.addTaskToLevel = async (req, res) => {
   }
 };
 
-// 6) Get tasks of a level
-exports.getLevelTasks = async (req, res) => {
+/* ======================================================
+   5) GET TASKS OF A TOPIC
+====================================================== */
+exports.getTopicTasks = async (req, res) => {
   try {
-    const { moduleId, topicIndex, levelIndex } = req.params;
+    const { moduleId, topicIndex } = req.params;
 
     const module = await Module.findById(moduleId);
-    if (!module) return res.status(404).json({ message: "Module not found" });
+    if (!module) {
+      return res.status(404).json({ message: "Module not found" });
+    }
 
     const topic = module.topics[topicIndex];
-    if (!topic) return res.status(404).json({ message: "Topic not found" });
+    if (!topic) {
+      return res.status(404).json({ message: "Topic not found" });
+    }
 
-    const level = topic.levels[levelIndex];
-    if (!level) return res.status(404).json({ message: "Level not found" });
-
-    res.json({ tasks: level.tasks || [] });
+    res.json({ tasks: topic.tasks || [] });
   } catch (error) {
-    console.error("Get level tasks error:", error);
+    console.error("Get topic tasks error:", error);
     res.status(500).json({ message: "Server error" });
   }
 };
 
-// 7) Delete task
-exports.deleteTaskFromLevel = async (req, res) => {
+/* ======================================================
+   6) DELETE TASK FROM TOPIC
+====================================================== */
+exports.deleteTaskFromTopic = async (req, res) => {
   try {
-    const { moduleId, topicIndex, levelIndex, taskIndex } = req.params;
+    const { moduleId, topicIndex, taskIndex } = req.params;
 
     const module = await Module.findById(moduleId);
-    if (!module) return res.status(404).json({ message: "Module not found" });
+    if (!module) {
+      return res.status(404).json({ message: "Module not found" });
+    }
 
     const topic = module.topics[topicIndex];
-    if (!topic) return res.status(404).json({ message: "Topic not found" });
-
-    const level = topic.levels[levelIndex];
-    if (!level || !level.tasks[taskIndex])
+    if (!topic || !topic.tasks[taskIndex]) {
       return res.status(404).json({ message: "Task not found" });
+    }
 
-    level.tasks.splice(taskIndex, 1);
+    topic.tasks.splice(taskIndex, 1);
     await module.save();
 
     res.json({ message: "Task removed" });
