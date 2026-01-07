@@ -52,12 +52,14 @@ router.get("/:moduleId/topics", protect, async (req, res) => {
       moduleId: module._id,
       moduleTitle: module.title,
       topics: module.topics.map((topic, index) => ({
-        index,
-        title: topic.title,
-        xp: topic.xp || 0,
-        videoDuration: topic.videoDuration || "",
-        taskCount: topic.tasks.length,
-      })),
+  index,
+  title: topic.title,
+  videoUrl: topic.videoUrl,   // ✅ REQUIRED
+  xp: topic.xp || 0,
+  videoDuration: topic.videoDuration || "",
+  taskCount: topic.tasks.length,
+}))
+
     });
   } catch (err) {
     console.error("Fetch topics error:", err);
@@ -72,28 +74,29 @@ router.get("/:moduleId/topics/:topicIndex", protect, async (req, res) => {
   try {
     const { moduleId, topicIndex } = req.params;
 
-    const module = await Module.findById(moduleId);
+    const module = await Module.findById(moduleId).lean();
     if (!module) {
       return res.status(404).json({ message: "Module not found" });
     }
 
-    const topic = module.topics[topicIndex];
+    const topic = module.topics?.[Number(topicIndex)];
     if (!topic) {
       return res.status(404).json({ message: "Topic not found" });
     }
 
+    // 🔥 IMPORTANT: RETURN TASKS DIRECTLY FROM DB
     res.json({
       title: topic.title,
       videoUrl: topic.videoUrl,
-      videoDuration: topic.videoDuration,
       xp: topic.xp || 0,
       tasks: topic.tasks || [],
     });
   } catch (err) {
-    console.error("Fetch topic content error:", err);
+    console.error("Fetch topic error:", err);
     res.status(500).json({ message: "Server error" });
   }
 });
+
 
 /* ======================================================
    📌 DELETE MODULE (ADMIN ONLY)

@@ -69,3 +69,31 @@ exports.getModuleQuests = async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 };
+// ===============================
+// 📌 GET TOPICS OF MODULE (EMPLOYEE)
+// ===============================
+exports.getModuleTopics = async (req, res) => {
+  try {
+    const { moduleId } = req.params;
+
+    const module = await Module.findById(moduleId).lean();
+    if (!module) {
+      return res.status(404).json({ message: "Module not found" });
+    }
+
+    res.json({
+      moduleTitle: module.title,
+      topics: module.topics.map((t, index) => ({
+        index,
+        title: t.title,
+        videoUrl: t.videoUrl,   // ✅ CRITICAL
+        videoDuration: t.videoDuration || "",
+        xp: t.xp || 0,
+        tasksCount: t.tasks?.length || 0
+      }))
+    });
+  } catch (error) {
+    console.error("Get module topics error:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
