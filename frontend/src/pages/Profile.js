@@ -1,15 +1,7 @@
 import React, { useState, useEffect } from "react";
 
-const TABS = ["Overview", "Achievements", "Settings"];
-
 const Profile = () => {
-  const [activeTab, setActiveTab] = useState("Overview");
   const [user, setUser] = useState(null);
-
-  // New states
-  const [role, setRole] = useState("");
-  const [newPassword, setNewPassword] = useState("");
-  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -18,10 +10,8 @@ const Profile = () => {
         const res = await fetch("http://localhost:5000/api/user/me", {
           headers: { Authorization: `Bearer ${token}` },
         });
-
         const data = await res.json();
         setUser(data);
-        setRole(data.role || "Employee");
       } catch (err) {
         console.log("Error loading profile:", err);
       }
@@ -30,148 +20,154 @@ const Profile = () => {
     fetchUser();
   }, []);
 
-  if (!user)
-    return <p className="text-center mt-32 text-white text-xl">Loading profile…</p>;
+  if (!user) {
+    return (
+      <p className="text-center mt-32 text-lg font-semibold text-slate-500">
+        Loading profile…
+      </p>
+    );
+  }
 
-  // Same avatar as dashboard
   const avatarSeed = user?.name?.replace(/\s+/g, "") || "User";
   const avatarUrl = `https://api.dicebear.com/9.x/pixel-art/svg?seed=${avatarSeed}`;
 
- const saveAccount = async () => {
-  setSaving(true);
-  const token = localStorage.getItem("token");
-
-  const res = await fetch("http://localhost:5000/api/user/account", {
-    method: "PUT",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
-    },
-    body: JSON.stringify({ role, password: newPassword }),
-  });
-
-  const data = await res.json();
-  setSaving(false);
-
-  if (!res.ok) {
-    alert(data.message || "Update failed");
-    return;
-  }
-
-  // 🚀 Step-2: Save new token from backend if available
-  if (data.token) {
-    localStorage.setItem("token", data.token);
-  }
-
-  // 🔄 Refresh user profile immediately
-  const refresh = await fetch("http://localhost:5000/api/user/me", {
-    headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
-  });
-  const updatedUser = await refresh.json();
-  setUser(updatedUser);
-
-  setNewPassword("");
-  alert("Account updated successfully");
-};
-
   return (
-    <div className="min-h-screen bg-[#0f172a] text-white px-6 py-10">
-      {/* Header */}
-      <div className="bg-[#1e293b] rounded-xl p-8 text-center shadow-lg">
-        <img
-          src={avatarUrl}
-          alt="profile"
-          className="w-28 h-28 rounded-full mx-auto mb-4 border-4 border-blue-600 shadow-md"
-        />
-        <h2 className="text-2xl font-bold">{user.name}</h2>
-        <p className="text-gray-400">{user.email}</p>
-        <p className="text-gray-300 mt-2 text-sm">{role}</p>
-      </div>
+    <div className="min-h-screen flex flex-col bg-gradient-to-br from-teal-50 via-sky-50 to-orange-50">
+      
+      {/* MAIN CONTENT */}
+      <main className="flex-grow px-6 py-10">
+        <div className="max-w-6xl mx-auto space-y-8">
 
-      {/* Tabs */}
-      <div className="flex justify-center mt-8 space-x-8 border-b border-gray-700 pb-3">
-        {TABS.map((tab) => (
-          <button
-            key={tab}
-            onClick={() => setActiveTab(tab)}
-            className={`pb-1 ${
-              activeTab === tab
-                ? "text-blue-400 border-b-2 border-blue-400"
-                : "text-gray-400 hover:text-blue-300"
-            }`}
-          >
-            {tab}
-          </button>
-        ))}
-      </div>
+          {/* PROFILE HEADER */}
+          <div className="bg-white rounded-3xl p-8 shadow-lg">
+            <div className="flex items-center gap-6">
+              <div className="relative">
+                <img
+                  src={avatarUrl}
+                  alt="profile"
+                  className="w-28 h-28 rounded-full border-4 border-white shadow"
+                />
+                <div className="absolute -bottom-1 -right-1 bg-orange-400 text-white text-sm font-bold px-3 py-1 rounded-full shadow">
+                  {user.level}
+                </div>
+              </div>
 
-      {/* Content */}
-      <div className="mt-10">
-        {/* OVERVIEW */}
-        {activeTab === "Overview" && (
-          <>
-            <h3 className="text-lg font-semibold mb-4">Profile Summary</h3>
-            <div className="bg-[#1e293b] rounded-xl p-6 space-y-4 shadow-md mb-8">
-              <p><span className="font-semibold">XP:</span> {user.xp}</p>
-              <p><span className="font-semibold">Level:</span> {user.level}</p>
-              <p><span className="font-semibold">Badges:</span> {user.badges.length}</p>
+              <div className="flex-1">
+                <div className="flex items-center gap-3">
+                  <h2 className="text-2xl font-extrabold text-slate-800">
+                    {user.name}
+                  </h2>
+                  <span className="text-xs px-3 py-1 rounded-full bg-orange-100 text-orange-600 font-semibold">
+                    Rising Star
+                  </span>
+                </div>
+
+                <p className="text-slate-500 text-sm mt-1">
+                  Passionate learner focused on full-stack development and cloud technologies.
+                </p>
+
+                <div className="flex gap-6 mt-3 text-xs text-slate-500">
+                  <span>{user.email}</span>
+                  <span>Joined Jan 2024</span>
+                </div>
+
+                <div className="mt-4">
+                  <div className="flex justify-between text-xs font-medium text-slate-600 mb-1">
+                    <span>Level {user.level}</span>
+                    <span>{user.xp} XP</span>
+                  </div>
+                  <div className="h-2 bg-slate-200 rounded-full overflow-hidden">
+                    <div className="h-full bg-teal-400 w-[70%]" />
+                  </div>
+                </div>
+              </div>
+
+              <button className="text-sm px-4 py-2 rounded-lg bg-teal-100 text-teal-700 font-semibold hover:bg-teal-200">
+                Edit Profile
+              </button>
             </div>
-          </>
-        )}
+          </div>
 
-        {/* ACHIEVEMENTS */}
-        {activeTab === "Achievements" && (
-          <div className="bg-[#1e293b] rounded-xl p-6 shadow-md">
-            <h3 className="text-lg font-semibold mb-4">Achievements</h3>
-            {user.badges.length === 0 ? (
-              <p className="text-gray-400">🏆 No badges yet</p>
-            ) : (
-              <ul className="space-y-2">
+          {/* STATS */}
+          <div className="grid lg:grid-cols-4 gap-6">
+            <div className="bg-white rounded-2xl p-5 text-center shadow">
+              <p className="text-2xl font-extrabold text-orange-500">{user.xp}</p>
+              <p className="text-sm text-slate-500">Total XP</p>
+            </div>
+            <div className="bg-white rounded-2xl p-5 text-center shadow">
+              <p className="text-2xl font-extrabold text-teal-500">8</p>
+              <p className="text-sm text-slate-500">Modules</p>
+            </div>
+            <div className="bg-white rounded-2xl p-5 text-center shadow">
+              <p className="text-2xl font-extrabold text-blue-500">47</p>
+              <p className="text-sm text-slate-500">Tasks</p>
+            </div>
+            <div className="bg-white rounded-2xl p-5 text-center shadow">
+              <p className="text-2xl font-extrabold text-pink-500">15</p>
+              <p className="text-sm text-slate-500">Day Streak</p>
+            </div>
+          </div>
+
+          {/* ACHIEVEMENTS + ACTIVITY */}
+          <div className="grid lg:grid-cols-3 gap-6">
+            <div className="lg:col-span-2 bg-white rounded-3xl p-6 shadow">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="font-bold text-slate-800">Achievements</h3>
+                <span className="text-xs bg-slate-100 px-3 py-1 rounded-full">
+                  {user.badges.length}/6
+                </span>
+              </div>
+
+              <div className="grid grid-cols-3 gap-4">
                 {user.badges.map((b, i) => (
-                  <li key={i} className="bg-blue-700/40 p-3 rounded-lg">🏅 {b}</li>
+                  <div
+                    key={i}
+                    className="p-4 rounded-xl border bg-slate-50 text-center text-sm font-semibold text-slate-700"
+                  >
+                    🏆 {b}
+                  </div>
                 ))}
-              </ul>
-            )}
-          </div>
-        )}
-
-        {/* SETTINGS — ROLE + PASSWORD */}
-        {activeTab === "Settings" && (
-          <div className="bg-[#1e293b] rounded-xl p-6 shadow-md space-y-6">
-            <h3 className="text-lg font-semibold mb-2">Account Settings</h3>
-
-            {/* Role */}
-            <div>
-              <label className="font-semibold">Job Role / Title:</label>
-              <input
-                value={role}
-                onChange={(e) => setRole(e.target.value)}
-                className="mt-2 w-full p-2 rounded bg-[#334155]"
-              />
+              </div>
             </div>
 
-            {/* Password */}
-            <div>
-              <label className="font-semibold">Change Password:</label>
-              <input
-                type="password"
-                value={newPassword}
-                placeholder="New password"
-                onChange={(e) => setNewPassword(e.target.value)}
-                className="mt-2 w-full p-2 rounded bg-[#334155]"
-              />
+            <div className="bg-white rounded-3xl p-6 shadow">
+              <h3 className="font-bold text-slate-800 mb-4">Activity</h3>
+              <div className="space-y-3 text-sm text-slate-600">
+                <p>✅ Completed React Hooks Deep Dive</p>
+                <p>🚀 Started TypeScript Advanced</p>
+                <p>🏆 Earned Perfect Score</p>
+                <p>🧠 Completed State Quiz</p>
+              </div>
+              <button className="mt-4 w-full text-sm font-semibold text-teal-600 hover:underline">
+                View All Activity →
+              </button>
             </div>
-
-            <button
-              disabled={saving}
-              onClick={saveAccount}
-              className="px-6 py-2 bg-green-600 hover:bg-green-700 rounded-lg font-semibold"
-            >
-              {saving ? "Saving..." : "Save Changes"}
-            </button>
           </div>
-        )}
-      </div>
+
+        </div>
+      </main>
+
+      {/* FOOTER */}
+      <footer className="bg-white/70 backdrop-blur border-t border-slate-200">
+        <div className="max-w-6xl mx-auto px-6 py-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+          <p className="text-sm text-slate-500">
+            © {new Date().getFullYear()}{" "}
+            <span className="font-semibold text-slate-700">SkillQuest</span>. All rights reserved.
+          </p>
+
+          <div className="flex gap-6 text-sm font-medium">
+            <a href="#" className="text-slate-500 hover:text-teal-600 transition">
+              Privacy Policy
+            </a>
+            <a href="#" className="text-slate-500 hover:text-teal-600 transition">
+              Terms
+            </a>
+            <a href="#" className="text-slate-500 hover:text-teal-600 transition">
+              Support
+            </a>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 };
