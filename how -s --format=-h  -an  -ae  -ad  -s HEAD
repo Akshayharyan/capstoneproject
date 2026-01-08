@@ -1,0 +1,35 @@
+[33m5a17851[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmayuresh[m[33m, [m[1;31morigin/mayuresh[m[33m)[m Mayuresh Sarang
+[33mf7c64a2[m Profile UI updated and footer added
+[33me796864[m embede you tube video
+[33mb9ad780[m youtube video support added
+[33md664263[m home login signup ui changed
+[33m4bcc786[m home fixede
+[33m9ae407d[m trainee module created
+[33m124acbe[m done smtg
+[33m8274fc6[m Refactor trainee to trainer and fix User model casing
+[33m47b12f8[m Remove node_modules from git tracking
+[33mfb7732e[m updated level roadmap page
+[33m2b603f4[m completed levels page
+[33m5dddfd4[m trainer module updated
+[33m5390a9d[m routing fixed
+[33ma9d3b46[m trainee login fixed
+[33m18cb872[m bug fixed
+[33m81d098d[m database shifted to mongodb atlass
+[33m298378a[m fixed bugs in levels roadmap
+[33mbbf1181[m completed level craetion module for trainee
+[33m3895ad3[m completed trainee module
+[33m511a6ce[m added admin module
+[33m7e44dc4[m comleted backend integration of dashboard profile and module pages
+[33me032d95[m Implemented authentication system, login/signup, protected routes and improved navbar UI
+[33m2a93cc4[m finalized ui for presentation
+[33m4669dff[m backend setup done
+[33mcf3fb9c[m done smtg homejs
+[33m3c8ac13[m basic website ui done
+[33m11b0b46[m created basic dashboard
+[33ma03c8b6[m finished home login signup page
+[33m0e8886e[m login and signup pages created
+[33m3512f39[m finalized home page basic work reamining
+[33m99cb710[m basic landing page
+[33m202f0e9[m created  homepage frontend
+[33m5808daf[m intitalized website basic structure
+[33mfcd7cfc[m Initial React frontend setup
