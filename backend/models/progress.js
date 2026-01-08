@@ -1,36 +1,67 @@
 const mongoose = require("mongoose");
 
-const ProgressSchema = new mongoose.Schema({
-  userId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "User",
-    required: true,
+const TopicProgressSchema = new mongoose.Schema(
+  {
+    moduleId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Module",
+      required: true,
+    },
+    topicIndex: {
+      type: Number,
+      required: true,
+    },
+
+    videoCompleted: {
+      type: Boolean,
+      default: false,
+    },
+
+    quizCompleted: {
+      type: Boolean,
+      default: false,
+    },
+
+    codingCompleted: {
+      type: Boolean,
+      default: false,
+    },
+
+    xpAwarded: {
+      type: Boolean,
+      default: false,
+    },
   },
+  { _id: false }
+);
 
-  completedLevels: [
-    {
-      moduleId: mongoose.Schema.Types.ObjectId,
-      topicIndex: Number,
-      levelNumber: Number,
-      xpEarned: Number,
-      completedAt: { type: Date, default: Date.now },
-    },
-  ],
-
-  startedModules: [
-    {
+const ProgressSchema = new mongoose.Schema(
+  {
+    userId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "Module",
+      ref: "User",
+      required: true,
+      unique: true,
     },
-  ],
 
-  completedModules: [
-    {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Module",
-    },
-  ],
-});
+    startedModules: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Module",
+      },
+    ],
+
+    completedModules: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Module",
+      },
+    ],
+
+    topics: [TopicProgressSchema],
+  },
+  { timestamps: true }
+);
 
 module.exports =
   mongoose.models.Progress || mongoose.model("Progress", ProgressSchema);
