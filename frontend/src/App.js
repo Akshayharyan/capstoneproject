@@ -18,6 +18,8 @@ import TopicRoadmap from "./pages/TopicRoadmap";
 import TopicVideoPage from "./pages/employee/TopicVideoPage";
 import TopicChallengesPage from "./pages/employee/TopicChallengesPage";
 import Profile from "./pages/Profile";
+import AchievementPage from "./pages/AchievementPage";
+
 
 /* ================= ADMIN ================= */
 import AdminDashboard from "./pages/admin/AdminDashboard";
@@ -74,6 +76,15 @@ function App() {
                 </ProtectedRoute>
               }
             />
+            <Route
+                 path="/achievements"
+                 element={
+                  <ProtectedRoute allow={["employee"]}>
+                   <AchievementPage />
+                  </ProtectedRoute>
+                }
+             />
+
 
             <Route
               path="/modules"

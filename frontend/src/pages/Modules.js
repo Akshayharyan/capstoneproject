@@ -3,33 +3,67 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 
 function Modules() {
+  console.log("🔥 MODULES COMPONENT MOUNTED"); // ✅ MOUNT TEST
+
   const { token } = useAuth();
   const navigate = useNavigate();
 
   const [modules, setModules] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  /* ================= EFFECT ================= */
   useEffect(() => {
+    console.log("🟡 useEffect RUNNING");
     fetchModules();
     // eslint-disable-next-line
   }, []);
 
+  /* ================= FETCH MODULES ================= */
   const fetchModules = async () => {
     try {
+      console.log("🔑 TOKEN USED:", token);
+
+      if (!token) {
+        console.error("❌ TOKEN IS MISSING");
+        setLoading(false);
+        return;
+      }
+
+      console.log("🌐 CALLING /api/modules/status");
+
       const res = await fetch("http://localhost:5000/api/modules/status", {
         headers: { Authorization: `Bearer ${token}` },
       });
+
+      console.log("📡 STATUS CODE:", res.status);
+
       const data = await res.json();
-      setModules(data.modules || []);
+      console.log("📦 RAW MODULE DATA:", data);
+
+      const normalizedModules = Array.isArray(data)
+        ? data
+        : Array.isArray(data?.modules)
+        ? data.modules
+        : [];
+
+      console.log("✅ NORMALIZED MODULES:", normalizedModules);
+
+      setModules(normalizedModules);
     } catch (err) {
-      console.error("Failed to fetch modules:", err);
+      console.error("❌ MODULE FETCH ERROR:", err);
     } finally {
+      console.log("🟢 FETCH FINISHED");
       setLoading(false);
     }
   };
 
+  /* ================= ACTION ================= */
   const handleAction = async (mod) => {
+    console.log("👉 HANDLE ACTION:", mod._id, mod.status);
+
     if (mod.status === "not_started") {
+      console.log("🚀 STARTING MODULE:", mod._id);
+
       await fetch("http://localhost:5000/api/modules/start", {
         method: "POST",
         headers: {
@@ -38,14 +72,17 @@ function Modules() {
         },
         body: JSON.stringify({ moduleId: mod._id }),
       });
+
       fetchModules();
     } else {
+      console.log("➡️ NAVIGATE TO ROADMAP:", mod._id);
       navigate(`/modules/${mod._id}/topics`);
     }
   };
 
-  /* ---------- LOADING ---------- */
+  /* ================= LOADING ================= */
   if (loading) {
+    console.log("⏳ LOADING STATE TRUE");
     return (
       <div className="min-h-screen flex items-center justify-center">
         <p className="text-lg text-slate-500 animate-pulse">
@@ -55,7 +92,9 @@ function Modules() {
     );
   }
 
-  /* ---------- UI ---------- */
+  console.log("📊 MODULES LENGTH:", modules.length);
+
+  /* ================= UI ================= */
   return (
     <div className="min-h-screen bg-[#f8fbfb] px-10 py-8">
       {/* HEADER */}
@@ -78,10 +117,23 @@ function Modules() {
         </div>
       </div>
 
+      {/* EMPTY STATE */}
+      {modules.length === 0 && (
+        <p className="text-center text-slate-500">
+          ⚠️ No modules returned from backend
+        </p>
+      )}
+
       {/* MODULE CARDS */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
         {modules.map((mod, index) => {
-          const status = mod.status; // not_started | in_progress | completed
+          const status =
+            mod.status === "completed"
+              ? "completed"
+              : mod.status === "not_started"
+              ? "not_started"
+              : "in_progress";
+
           const completed = status === "completed";
           const progress = mod.progress || 0;
 
@@ -93,7 +145,6 @@ function Modules() {
                 border rounded-2xl p-6
                 shadow-sm hover:shadow-lg
                 hover:-translate-y-1 transition-all duration-300
-                animate-fade-in
                 ${completed ? "border-green-300" : "border-teal-200"}
               `}
               style={{ animationDelay: `${index * 80}ms` }}
@@ -126,12 +177,6 @@ function Modules() {
               <p className="text-slate-600 text-sm mb-4 line-clamp-2">
                 {mod.description}
               </p>
-
-              {/* META */}
-              <div className="flex items-center gap-6 text-sm text-slate-500 mb-4">
-                <span>⏱ {mod.duration || "3 hours"}</span>
-                <span>👥 {mod.learners || 120}</span>
-              </div>
 
               {/* PROGRESS */}
               <div className="mb-2 flex justify-between text-sm text-slate-600">

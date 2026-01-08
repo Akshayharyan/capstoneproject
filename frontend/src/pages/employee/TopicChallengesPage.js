@@ -6,12 +6,14 @@ import { Lock, Play, CheckCircle, Code } from "lucide-react";
 export default function TopicChallengesPage() {
   const { moduleId, topicIndex } = useParams();
   const navigate = useNavigate();
-  const { token } = useAuth();
+  const { token, refreshUser } = useAuth();
+
 
   const [topic, setTopic] = useState(null);
   const [quizAnswers, setQuizAnswers] = useState({});
   const [quizCompleted, setQuizCompleted] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
 
   /* ================= FETCH TOPIC ================= */
   useEffect(() => {
@@ -70,7 +72,6 @@ export default function TopicChallengesPage() {
       return;
     }
 
-    // Ensure all answered
     if (Object.keys(quizAnswers).length !== quizTasks.length) {
       alert("⚠️ Please answer all quiz questions.");
       return;
@@ -87,6 +88,45 @@ export default function TopicChallengesPage() {
 
     setQuizCompleted(true);
   };
+
+  /* ================= COMPLETE TOPIC (BACKEND) ================= */
+  const completeTopic = async () => {
+    try {
+      setSaving(true);
+
+      const res = await fetch(
+        "http://localhost:5000/api/modules/complete-topic",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            moduleId,
+            topicIndex: Number(topicIndex),
+          }),
+        }
+      );
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || "Failed to complete topic");
+
+     // ✅ SUCCESS → show XP + refresh user + go back
+alert(`🎉 Topic completed!\nYou earned ${data.earnedXP} XP`);
+
+if (typeof refreshUser === "function") {
+  await refreshUser(); // 🔥 sync updated XP immediately
+}
+
+navigate(`/modules/${moduleId}/topics`);
+} catch (err) {
+  console.error(err);
+  alert("❌ Failed to save progress. Please try again.");
+} finally {
+  setSaving(false);
+}
+};
 
   /* ================= UI ================= */
   return (
@@ -200,10 +240,11 @@ export default function TopicChallengesPage() {
 
           {quizCompleted && (
             <button
-              onClick={() => navigate(`/modules/${moduleId}/topics`)}
-              className="mt-6 px-10 py-3 rounded-full bg-gradient-to-r from-green-500 to-emerald-500 text-white font-semibold shadow-lg hover:scale-105 transition"
+              onClick={completeTopic}
+              disabled={saving}
+              className="mt-6 px-10 py-3 rounded-full bg-gradient-to-r from-green-500 to-emerald-500 text-white font-semibold shadow-lg hover:scale-105 transition disabled:opacity-50"
             >
-              Submit & Complete Topic
+              {saving ? "Saving..." : "Submit & Complete Topic"}
             </button>
           )}
         </section>
