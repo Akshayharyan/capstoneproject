@@ -16,9 +16,9 @@ export const AuthProvider = ({ children }) => {
 
   const isAuthenticated = !!token;
 
-  // =========================
-  // PERSIST AUTH
-  // =========================
+  /* =========================
+     PERSIST AUTH
+  ========================= */
   useEffect(() => {
     if (token) localStorage.setItem("token", token);
     else localStorage.removeItem("token");
@@ -27,9 +27,29 @@ export const AuthProvider = ({ children }) => {
     else localStorage.removeItem("user");
   }, [user, token]);
 
-  // =========================
-  // REGISTER
-  // =========================
+  /* =========================
+     🔄 REFRESH USER (KEY FIX)
+  ========================= */
+  const refreshUser = async () => {
+    if (!token) return;
+
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/user/me`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      const data = await res.json();
+      if (res.ok) {
+        setUser(data);
+      }
+    } catch (err) {
+      console.error("❌ refreshUser failed:", err);
+    }
+  };
+
+  /* =========================
+     REGISTER
+  ========================= */
   const register = async (name, email, password) => {
     setLoading(true);
     setAuthError(null);
@@ -46,7 +66,6 @@ export const AuthProvider = ({ children }) => {
 
       setUser(data.user);
       setToken(data.token);
-
       return { success: true };
     } catch (err) {
       setAuthError(err.message);
@@ -56,41 +75,38 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  // =========================
-  // LOGIN
-  // =========================
- const login = async (email, password) => {
-  setLoading(true);
-  setAuthError(null);
+  /* =========================
+     LOGIN
+  ========================= */
+  const login = async (email, password) => {
+    setLoading(true);
+    setAuthError(null);
 
-  try {
-    const res = await fetch(`${API_BASE_URL}/api/auth/login`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, password }),
-    });
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/auth/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
 
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.message || "Login failed");
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || "Login failed");
 
-    setUser(data.user);
-    setToken(data.token);
+      setUser(data.user);
+      setToken(data.token);
 
-    return {
-      success: true,
-      role: data.user.role, // ✅ IMPORTANT
-    };
-  } catch (err) {
-    setAuthError(err.message);
-    return { success: false };
-  } finally {
-    setLoading(false);
-  }
-};
+      return { success: true, role: data.user.role };
+    } catch (err) {
+      setAuthError(err.message);
+      return { success: false };
+    } finally {
+      setLoading(false);
+    }
+  };
 
-  // =========================
-  // LOGOUT
-  // =========================
+  /* =========================
+     LOGOUT
+  ========================= */
   const logout = () => {
     setUser(null);
     setToken(null);
@@ -101,12 +117,13 @@ export const AuthProvider = ({ children }) => {
     <AuthContext.Provider
       value={{
         user,
-        setUser,      // ✅ needed for XP refresh
+        setUser,
+        refreshUser, // ✅ CRITICAL
         token,
         isAuthenticated,
         loading,
         authError,
-        register,     // ✅ FIXED
+        register,
         login,
         logout,
       }}
