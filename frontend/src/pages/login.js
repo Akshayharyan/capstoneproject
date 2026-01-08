@@ -74,7 +74,9 @@ function Login() {
                   value={form.email}
                   onChange={handleChange}
                   required
-                  className="w-full pl-11 pr-4 py-3 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-teal-400"
+                  className="w-full pl-11 pr-4 py-3 rounded-xl border border-slate-300 
+                             text-slate-900 placeholder:text-slate-400
+                             focus:outline-none focus:ring-2 focus:ring-teal-400"
                 />
               </div>
             </div>
@@ -103,7 +105,9 @@ function Login() {
                   value={form.password}
                   onChange={handleChange}
                   required
-                  className="w-full pl-11 pr-4 py-3 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-teal-400"
+                  className="w-full pl-11 pr-4 py-3 rounded-xl border border-slate-300 
+                             text-slate-900 placeholder:text-slate-400
+                             focus:outline-none focus:ring-2 focus:ring-teal-400"
                 />
               </div>
             </div>
