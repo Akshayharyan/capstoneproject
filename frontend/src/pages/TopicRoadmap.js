@@ -5,19 +5,23 @@ import {
   Lock,
   CheckCircle,
   Zap,
-  Trophy
+  Trophy,
 } from "lucide-react";
 import { motion } from "framer-motion";
+import { useAuth } from "../context/AuthContext";
+
 
 function TopicRoadmap() {
   const { moduleId } = useParams();
   const navigate = useNavigate();
+  const { user, token } = useAuth();
+
   const [data, setData] = useState(null);
+  const [completedTopics, setCompletedTopics] = useState([]);
 
   /* ================= FETCH TOPICS ================= */
   useEffect(() => {
     const fetchTopics = async () => {
-      const token = localStorage.getItem("token");
       const res = await fetch(
         `http://localhost:5000/api/modules/${moduleId}/topics`,
         { headers: { Authorization: `Bearer ${token}` } }
@@ -25,8 +29,24 @@ function TopicRoadmap() {
       const json = await res.json();
       setData(json);
     };
+
     fetchTopics();
-  }, [moduleId]);
+  }, [moduleId, token]);
+
+  /* ================= LOAD COMPLETION FROM USER ================= */
+  useEffect(() => {
+  if (!user?.moduleProgress) {
+    setCompletedTopics([]);
+    return;
+  }
+
+  const progress = user.moduleProgress.find(
+    (p) => String(p.moduleId) === String(moduleId)
+  );
+
+  setCompletedTopics(progress?.completedTopics || []);
+}, [user, moduleId]);
+
 
   if (!data) {
     return (
@@ -38,9 +58,10 @@ function TopicRoadmap() {
 
   const { moduleTitle, topics } = data;
 
-  /* ================= STATUS ================= */
+  /* ================= STATUS LOGIC ================= */
   const getStatus = (index) => {
-    if (index === 0) return "unlocked";
+    if (completedTopics.includes(index)) return "completed";
+    if (index === 0 || completedTopics.includes(index - 1)) return "unlocked";
     return "locked";
   };
 
@@ -51,11 +72,12 @@ function TopicRoadmap() {
   };
 
   const nodeIcon = (status) => {
-    if (status === "completed") return <CheckCircle />;
-    if (status === "unlocked") return <Play />;
-    return <Lock />;
+    if (status === "completed") return <CheckCircle className="w-7 h-7" />;
+    if (status === "unlocked") return <Play className="w-7 h-7" />;
+    return <Lock className="w-6 h-6" />;
   };
 
+  /* ================= UI ================= */
   return (
     <div className="min-h-screen bg-gradient-to-b from-white via-indigo-50 to-purple-50 px-4 pt-24 pb-32">
 
@@ -99,11 +121,13 @@ function TopicRoadmap() {
                     navigate(`/modules/${moduleId}/topic/${index}/video`)
                   }
                   className={`
-                    w-18 h-18 w-[72px] h-[72px]
+                    w-[72px] h-[72px]
                     rounded-full flex items-center justify-center
                     text-white shadow-xl
                     bg-gradient-to-br ${nodeColor(status)}
-                    ${status !== "locked" ? "hover:scale-110" : "opacity-60 cursor-not-allowed"}
+                    ${status !== "locked"
+                      ? "hover:scale-110"
+                      : "opacity-60 cursor-not-allowed"}
                     transition
                   `}
                 >
@@ -117,7 +141,9 @@ function TopicRoadmap() {
                     rounded-3xl p-5 w-64
                     shadow-xl shadow-indigo-100
                     transition
-                    ${status !== "locked" ? "hover:-translate-y-1 hover:shadow-2xl" : "opacity-60"}
+                    ${status !== "locked"
+                      ? "hover:-translate-y-1 hover:shadow-2xl"
+                      : "opacity-60"}
                   `}
                 >
                   <h3 className="font-bold text-gray-900 mb-2">
@@ -129,6 +155,12 @@ function TopicRoadmap() {
                       <Zap className="w-3 h-3" />
                       {topic.xp} XP
                     </span>
+
+                    {status === "completed" && (
+                      <span className="text-emerald-600 font-semibold">
+                        ✔ Completed
+                      </span>
+                    )}
 
                     {status === "unlocked" && (
                       <span className="text-indigo-500 font-semibold animate-pulse">

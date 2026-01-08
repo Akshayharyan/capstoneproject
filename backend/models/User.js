@@ -16,20 +16,36 @@ const userSchema = new mongoose.Schema(
     level: { type: Number, default: 1 },
     badges: { type: [String], default: [] },
 
-    gender: { type: String, enum: ["male", "female"], default: "male" },
+    gender: {
+      type: String,
+      enum: ["male", "female"],
+      default: "male",
+    },
 
-    // 🔥 This is what admin access depends on
-  role: {
-  type: String,
-  enum: ["admin", "trainer", "employee"], // 🔥 future-ready
-  default: "employee",
-},
+    role: {
+      type: String,
+      enum: ["admin", "trainer", "employee"],
+      default: "employee",
+    },
 
+    // 🆕 MODULE PROGRESS (SAFE ADD)
+    moduleProgress: [
+      {
+        moduleId: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "Module",
+        },
+        completedTopics: {
+          type: [Number],
+          default: [],
+        },
+      },
+    ],
   },
   { timestamps: true }
 );
 
-// Hash password on save
+// Hash password
 userSchema.pre("save", async function (next) {
   if (!this.isModified("password")) return next();
   this.password = await bcrypt.hash(this.password, 10);
@@ -41,7 +57,7 @@ userSchema.methods.matchPassword = async function (password) {
   return bcrypt.compare(password, this.password);
 };
 
-// Remove password when returning JSON
+// Remove password
 userSchema.methods.toJSON = function () {
   const obj = this.toObject();
   delete obj.password;

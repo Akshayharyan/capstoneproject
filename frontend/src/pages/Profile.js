@@ -10,8 +10,19 @@ const Profile = () => {
         const res = await fetch("http://localhost:5000/api/user/me", {
           headers: { Authorization: `Bearer ${token}` },
         });
+
         const data = await res.json();
-        setUser(data);
+
+        // 🔒 NORMALIZE BACKEND DATA
+        setUser({
+          ...data,
+          xp: data.xp ?? 0,
+          level: data.level ?? 1,
+          badges: Array.isArray(data.badges) ? data.badges : [],
+          moduleProgress: Array.isArray(data.moduleProgress)
+            ? data.moduleProgress
+            : [],
+        });
       } catch (err) {
         console.log("Error loading profile:", err);
       }
@@ -28,13 +39,20 @@ const Profile = () => {
     );
   }
 
-  const avatarSeed = user?.name?.replace(/\s+/g, "") || "User";
+  /* ================= DERIVED STATS ================= */
+  const avatarSeed = user.name?.replace(/\s+/g, "") || "User";
   const avatarUrl = `https://api.dicebear.com/9.x/pixel-art/svg?seed=${avatarSeed}`;
 
+  const nextLevelXp = user.level * 100;
+  const progressPercent = Math.min((user.xp / nextLevelXp) * 100, 100);
+
+  const modulesCompleted = user.moduleProgress.filter(
+    (m) => m.completedTopics?.length > 0
+  ).length;
+
+  /* ================= UI ================= */
   return (
     <div className="min-h-screen flex flex-col bg-gradient-to-br from-teal-50 via-sky-50 to-orange-50">
-      
-      {/* MAIN CONTENT */}
       <main className="flex-grow px-6 py-10">
         <div className="max-w-6xl mx-auto space-y-8">
 
@@ -48,7 +66,7 @@ const Profile = () => {
                   className="w-28 h-28 rounded-full border-4 border-white shadow"
                 />
                 <div className="absolute -bottom-1 -right-1 bg-orange-400 text-white text-sm font-bold px-3 py-1 rounded-full shadow">
-                  {user.level}
+                  Lv {user.level}
                 </div>
               </div>
 
@@ -58,26 +76,29 @@ const Profile = () => {
                     {user.name}
                   </h2>
                   <span className="text-xs px-3 py-1 rounded-full bg-orange-100 text-orange-600 font-semibold">
-                    Rising Star
+                    Learner
                   </span>
                 </div>
 
                 <p className="text-slate-500 text-sm mt-1">
-                  Passionate learner focused on full-stack development and cloud technologies.
+                  Keep learning and leveling up 🚀
                 </p>
 
                 <div className="flex gap-6 mt-3 text-xs text-slate-500">
                   <span>{user.email}</span>
-                  <span>Joined Jan 2024</span>
                 </div>
 
+                {/* XP BAR */}
                 <div className="mt-4">
                   <div className="flex justify-between text-xs font-medium text-slate-600 mb-1">
                     <span>Level {user.level}</span>
                     <span>{user.xp} XP</span>
                   </div>
                   <div className="h-2 bg-slate-200 rounded-full overflow-hidden">
-                    <div className="h-full bg-teal-400 w-[70%]" />
+                    <div
+                      className="h-full bg-teal-400 transition-all duration-700"
+                      style={{ width: `${progressPercent}%` }}
+                    />
                   </div>
                 </div>
               </div>
@@ -89,35 +110,26 @@ const Profile = () => {
           </div>
 
           {/* STATS */}
-          <div className="grid lg:grid-cols-4 gap-6">
-            <div className="bg-white rounded-2xl p-5 text-center shadow">
-              <p className="text-2xl font-extrabold text-orange-500">{user.xp}</p>
-              <p className="text-sm text-slate-500">Total XP</p>
-            </div>
-            <div className="bg-white rounded-2xl p-5 text-center shadow">
-              <p className="text-2xl font-extrabold text-teal-500">8</p>
-              <p className="text-sm text-slate-500">Modules</p>
-            </div>
-            <div className="bg-white rounded-2xl p-5 text-center shadow">
-              <p className="text-2xl font-extrabold text-blue-500">47</p>
-              <p className="text-sm text-slate-500">Tasks</p>
-            </div>
-            <div className="bg-white rounded-2xl p-5 text-center shadow">
-              <p className="text-2xl font-extrabold text-pink-500">15</p>
-              <p className="text-sm text-slate-500">Day Streak</p>
-            </div>
+          <div className="grid lg:grid-cols-3 gap-6">
+            <Stat label="Total XP" value={user.xp} />
+            <Stat label="Modules Started" value={user.moduleProgress.length} />
+            <Stat label="Modules Completed" value={modulesCompleted} />
           </div>
 
-          {/* ACHIEVEMENTS + ACTIVITY */}
-          <div className="grid lg:grid-cols-3 gap-6">
-            <div className="lg:col-span-2 bg-white rounded-3xl p-6 shadow">
-              <div className="flex justify-between items-center mb-4">
-                <h3 className="font-bold text-slate-800">Achievements</h3>
-                <span className="text-xs bg-slate-100 px-3 py-1 rounded-full">
-                  {user.badges.length}/6
-                </span>
-              </div>
+          {/* ACHIEVEMENTS / BADGES */}
+          <div className="bg-white rounded-3xl p-6 shadow">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="font-bold text-slate-800">Badges</h3>
+              <span className="text-xs bg-slate-100 px-3 py-1 rounded-full">
+                {user.badges.length}
+              </span>
+            </div>
 
+            {user.badges.length === 0 ? (
+              <p className="text-slate-500 text-sm">
+                No badges yet. Complete topics to earn some 🏆
+              </p>
+            ) : (
               <div className="grid grid-cols-3 gap-4">
                 {user.badges.map((b, i) => (
                   <div
@@ -128,48 +140,21 @@ const Profile = () => {
                   </div>
                 ))}
               </div>
-            </div>
-
-            <div className="bg-white rounded-3xl p-6 shadow">
-              <h3 className="font-bold text-slate-800 mb-4">Activity</h3>
-              <div className="space-y-3 text-sm text-slate-600">
-                <p>✅ Completed React Hooks Deep Dive</p>
-                <p>🚀 Started TypeScript Advanced</p>
-                <p>🏆 Earned Perfect Score</p>
-                <p>🧠 Completed State Quiz</p>
-              </div>
-              <button className="mt-4 w-full text-sm font-semibold text-teal-600 hover:underline">
-                View All Activity →
-              </button>
-            </div>
+            )}
           </div>
 
         </div>
       </main>
-
-      {/* FOOTER */}
-      <footer className="bg-white/70 backdrop-blur border-t border-slate-200">
-        <div className="max-w-6xl mx-auto px-6 py-6 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <p className="text-sm text-slate-500">
-            © {new Date().getFullYear()}{" "}
-            <span className="font-semibold text-slate-700">SkillQuest</span>. All rights reserved.
-          </p>
-
-          <div className="flex gap-6 text-sm font-medium">
-            <a href="#" className="text-slate-500 hover:text-teal-600 transition">
-              Privacy Policy
-            </a>
-            <a href="#" className="text-slate-500 hover:text-teal-600 transition">
-              Terms
-            </a>
-            <a href="#" className="text-slate-500 hover:text-teal-600 transition">
-              Support
-            </a>
-          </div>
-        </div>
-      </footer>
     </div>
   );
 };
+
+/* ================= STAT CARD ================= */
+const Stat = ({ label, value }) => (
+  <div className="bg-white rounded-2xl p-5 text-center shadow">
+    <p className="text-2xl font-extrabold text-indigo-600">{value}</p>
+    <p className="text-sm text-slate-500">{label}</p>
+  </div>
+);
 
 export default Profile;
