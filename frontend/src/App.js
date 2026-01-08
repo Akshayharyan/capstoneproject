@@ -1,15 +1,21 @@
 import React from "react";
 import { BrowserRouter as Router, Routes, Route, Outlet } from "react-router-dom";
 
+/* ================= CONTEXT ================= */
 import { AuthProvider } from "./context/AuthContext";
+
+/* ================= ROUTE GUARDS ================= */
 import ProtectedRoute from "./components/ProtectedRoute";
 import GuestRoute from "./components/GuestRoute";
+
+/* ================= COMMON ================= */
 import Header from "./components/Header";
 
 /* ================= PUBLIC ================= */
 import Home from "./pages/home";
 import Login from "./pages/login";
 import Signup from "./pages/signup";
+import Features from "./pages/Features";
 
 /* ================= EMPLOYEE ================= */
 import Dashboard from "./pages/dashboard";
@@ -19,7 +25,6 @@ import TopicVideoPage from "./pages/employee/TopicVideoPage";
 import TopicChallengesPage from "./pages/employee/TopicChallengesPage";
 import Profile from "./pages/Profile";
 import AchievementPage from "./pages/AchievementPage";
-
 
 /* ================= ADMIN ================= */
 import AdminDashboard from "./pages/admin/AdminDashboard";
@@ -35,12 +40,14 @@ import TrainerEditTopicsPage from "./pages/trainer/TrainerEditTopicsPage";
 import TrainerTopicTasksPage from "./pages/trainer/TrainerTopicTasksPage";
 
 /* ================= LAYOUTS ================= */
-const PublicEmployeeLayout = () => (
-  <>
-    <Header />
-    <Outlet />
-  </>
-);
+const PublicEmployeeLayout = () => {
+  return (
+    <>
+      <Header />
+      <Outlet />
+    </>
+  );
+};
 
 function App() {
   return (
@@ -54,9 +61,35 @@ function App() {
           <Route element={<PublicEmployeeLayout />}>
 
             {/* ---------- PUBLIC ---------- */}
-            <Route path="/" element={<GuestRoute><Home /></GuestRoute>} />
-            <Route path="/login" element={<GuestRoute><Login /></GuestRoute>} />
-            <Route path="/signup" element={<GuestRoute><Signup /></GuestRoute>} />
+            <Route
+              path="/"
+              element={
+                <GuestRoute>
+                  <Home />
+                </GuestRoute>
+              }
+            />
+
+            <Route
+              path="/login"
+              element={
+                <GuestRoute>
+                  <Login />
+                </GuestRoute>
+              }
+            />
+
+            <Route
+              path="/signup"
+              element={
+                <GuestRoute>
+                  <Signup />
+                </GuestRoute>
+              }
+            />
+
+            {/* ✅ FEATURES PAGE */}
+            <Route path="/features" element={<Features />} />
 
             {/* ---------- EMPLOYEE ---------- */}
             <Route
@@ -76,15 +109,15 @@ function App() {
                 </ProtectedRoute>
               }
             />
-            <Route
-                 path="/achievements"
-                 element={
-                  <ProtectedRoute allow={["employee"]}>
-                   <AchievementPage />
-                  </ProtectedRoute>
-                }
-             />
 
+            <Route
+              path="/achievements"
+              element={
+                <ProtectedRoute allow={["employee"]}>
+                  <AchievementPage />
+                </ProtectedRoute>
+              }
+            />
 
             <Route
               path="/modules"
@@ -95,7 +128,6 @@ function App() {
               }
             />
 
-            {/* Topic Roadmap */}
             <Route
               path="/modules/:moduleId/topics"
               element={
@@ -105,7 +137,7 @@ function App() {
               }
             />
 
-            {/* ✅ PAGE 1 — VIDEO (MANDATORY) */}
+            {/* ---------- TOPIC FLOW ---------- */}
             <Route
               path="/modules/:moduleId/topic/:topicIndex/video"
               element={
@@ -115,7 +147,6 @@ function App() {
               }
             />
 
-            {/* ✅ PAGE 2 — QUIZ + CODING */}
             <Route
               path="/modules/:moduleId/topic/:topicIndex/challenges"
               element={
@@ -124,6 +155,7 @@ function App() {
                 </ProtectedRoute>
               }
             />
+
           </Route>
 
           {/* =====================================================
