@@ -16,6 +16,7 @@ import Home from "./pages/home";
 import Login from "./pages/login";
 import Signup from "./pages/signup";
 import Features from "./pages/Features";
+import About from "./pages/About";
 
 /* ================= EMPLOYEE ================= */
 import Dashboard from "./pages/dashboard";
@@ -90,6 +91,8 @@ function App() {
 
             {/* ✅ FEATURES PAGE */}
             <Route path="/features" element={<Features />} />
+
+            <Route path="/about" element={<About />} />
 
             {/* ---------- EMPLOYEE ---------- */}
             <Route
