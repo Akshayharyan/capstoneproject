@@ -28,7 +28,7 @@ export const AuthProvider = ({ children }) => {
   }, [user, token]);
 
   /* =========================
-     🔄 REFRESH USER (KEY FIX)
+     🔄 REFRESH USER (SOURCE OF TRUTH)
   ========================= */
   const refreshUser = async () => {
     if (!token) return;
@@ -46,6 +46,14 @@ export const AuthProvider = ({ children }) => {
       console.error("❌ refreshUser failed:", err);
     }
   };
+
+  /* =========================
+     🔁 AUTO SYNC ON LOAD / TOKEN CHANGE
+  ========================= */
+  useEffect(() => {
+    if (token) refreshUser();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [token]);
 
   /* =========================
      REGISTER
@@ -66,6 +74,8 @@ export const AuthProvider = ({ children }) => {
 
       setUser(data.user);
       setToken(data.token);
+      setTimeout(() => refreshUser(), 0);
+
       return { success: true };
     } catch (err) {
       setAuthError(err.message);
@@ -94,6 +104,7 @@ export const AuthProvider = ({ children }) => {
 
       setUser(data.user);
       setToken(data.token);
+      setTimeout(() => refreshUser(), 0);
 
       return { success: true, role: data.user.role };
     } catch (err) {
@@ -118,7 +129,7 @@ export const AuthProvider = ({ children }) => {
       value={{
         user,
         setUser,
-        refreshUser, // ✅ CRITICAL
+        refreshUser,
         token,
         isAuthenticated,
         loading,

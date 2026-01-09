@@ -1,25 +1,33 @@
 // src/pages/TopicRoadmap.js
 import React, { useEffect, useRef, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { Play, Lock, CheckCircle, Zap, Trophy } from "lucide-react";
+import {
+  Play,
+  Lock,
+  CheckCircle,
+  Zap,
+  Trophy,
+} from "lucide-react";
 import { motion } from "framer-motion";
 import { useAuth } from "../context/AuthContext";
 
 export default function TopicRoadmap() {
+  console.log("🔥 NEW TopicRoadmap LOADED");
+
   const { moduleId } = useParams();
   const navigate = useNavigate();
-  const { user, token } = useAuth();
+  const { token } = useAuth();
 
   const containerRef = useRef(null);
   const nodeRefs = useRef([]);
 
   const [topics, setTopics] = useState([]);
   const [moduleTitle, setModuleTitle] = useState("");
-  const [completedTopics, setCompletedTopics] = useState([]);
+  const [progressPercent, setProgressPercent] = useState(0);
   const [paths, setPaths] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  /* ================= FETCH TOPICS ================= */
+  /* ================= FETCH TOPICS (BACKEND TRUTH) ================= */
   useEffect(() => {
     const fetchTopics = async () => {
       const res = await fetch(
@@ -30,23 +38,16 @@ export default function TopicRoadmap() {
 
       setTopics(data.topics || []);
       setModuleTitle(data.moduleTitle || "Learning Path");
+      setProgressPercent(data.progressPercent || 0);
       setLoading(false);
     };
 
     fetchTopics();
   }, [moduleId, token]);
 
-  /* ================= USER PROGRESS ================= */
-  useEffect(() => {
-    const progress = user?.moduleProgress?.find(
-      (p) => String(p.moduleId) === String(moduleId)
-    );
-    setCompletedTopics(progress?.completedTopics || []);
-  }, [user, moduleId]);
-
   /* ================= SVG CURVED PATHS ================= */
   useEffect(() => {
-    if (!containerRef.current) return;
+    if (!containerRef.current || topics.length === 0) return;
 
     const containerRect = containerRef.current.getBoundingClientRect();
     const newPaths = [];
@@ -58,13 +59,11 @@ export default function TopicRoadmap() {
 
       const a = from.getBoundingClientRect();
       const b = to.getBoundingClientRect();
-
       const fromLeft = i % 2 === 0;
 
       const x1 = fromLeft
         ? a.right - containerRect.left
         : a.left - containerRect.left;
-
       const x2 = fromLeft
         ? b.left - containerRect.left
         : b.right - containerRect.left;
@@ -72,7 +71,6 @@ export default function TopicRoadmap() {
       const y1 = a.top + a.height / 2 - containerRect.top;
       const y2 = b.top + b.height / 2 - containerRect.top;
 
-      // 🔥 REAL S-CURVE (Lovable style)
       const dx = Math.abs(x2 - x1) * 0.6;
 
       newPaths.push({
@@ -82,24 +80,12 @@ export default function TopicRoadmap() {
             ${x2 - (fromLeft ? dx : -dx)} ${y2},
             ${x2} ${y2}
         `,
-        completed: completedTopics.includes(i),
+        completed: topics[i].status === "completed",
       });
     }
 
     setPaths(newPaths);
-  }, [topics, completedTopics]);
-
-  /* ================= STATUS ================= */
-  const getStatus = (i) => {
-    if (completedTopics.includes(i)) return "completed";
-    if (i === 0 || completedTopics.includes(i - 1)) return "active";
-    return "locked";
-  };
-
-  const progressPercent =
-    topics.length === 0
-      ? 0
-      : Math.round((completedTopics.length / topics.length) * 100);
+  }, [topics]);
 
   if (loading) {
     return (
@@ -134,23 +120,13 @@ export default function TopicRoadmap() {
             />
           </div>
           <p className="text-sm text-gray-500 mt-2">
-            {completedTopics.length}/{topics.length} Topics Completed
+            {progressPercent}% Completed
           </p>
         </div>
       </div>
 
       {/* SVG CONNECTORS */}
       <svg className="absolute inset-0 w-full h-full pointer-events-none">
-        <defs>
-          <filter id="glow">
-            <feGaussianBlur stdDeviation="5" result="blur" />
-            <feMerge>
-              <feMergeNode in="blur" />
-              <feMergeNode in="SourceGraphic" />
-            </feMerge>
-          </filter>
-        </defs>
-
         {paths.map((p, i) => (
           <path
             key={i}
@@ -158,75 +134,82 @@ export default function TopicRoadmap() {
             fill="none"
             stroke={p.completed ? "#22c55e" : "#cbd5e1"}
             strokeWidth="4"
-            strokeDasharray={p.completed ? "0" : "7 7"}
-            filter={p.completed ? "url(#glow)" : ""}
+            strokeDasharray={p.completed ? "0" : "6 6"}
           />
         ))}
       </svg>
 
-      {/* ROADMAP NODES */}
+      {/* ROADMAP */}
       <div className="max-w-3xl mx-auto relative z-10">
         {topics.map((topic, i) => {
-          const status = getStatus(i);
           const left = i % 2 === 0;
 
           return (
             <motion.div
               key={i}
               ref={(el) => (nodeRefs.current[i] = el)}
-              className={`flex mb-32 ${left ? "justify-start" : "justify-end"}`}
+              className={`flex mb-32 ${
+                left ? "justify-start" : "justify-end"
+              }`}
               initial={{ opacity: 0, y: 40 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.12 }}
             >
               <div className="flex items-center gap-6">
-                {/* NODE */}
+                {/* NODE ICON (RESTORED & IMPROVED) */}
                 <button
-                  disabled={status === "locked"}
+                  disabled={topic.status === "locked"}
                   onClick={() =>
-                    status !== "locked" &&
+                    topic.status !== "locked" &&
                     navigate(`/modules/${moduleId}/topic/${i}/video`)
                   }
-                  className={`w-[72px] h-[72px] rounded-full flex items-center justify-center text-white shadow-xl transition
+                  className={`w-[72px] h-[72px] rounded-full flex items-center justify-center text-white shadow-2xl transition
                     ${
-                      status === "completed"
+                      topic.status === "completed"
                         ? "bg-emerald-500"
-                        : status === "active"
-                        ? "bg-indigo-500 animate-pulse"
+                        : topic.status === "active"
+                        ? "bg-indigo-500 animate-pulse ring-4 ring-indigo-300"
                         : "bg-gray-300 cursor-not-allowed"
                     }`}
                 >
-                  {status === "completed" && <CheckCircle />}
-                  {status === "active" && <Play />}
-                  {status === "locked" && <Lock />}
+                  {topic.status === "completed" && <CheckCircle />}
+                  {topic.status === "active" && <Play />}
+                  {topic.status === "locked" && <Lock />}
                 </button>
 
-                {/* CARD */}
-                <div className="bg-white rounded-3xl p-5 w-72 shadow-xl">
-                  <h3 className="font-bold text-gray-900 mb-2">
+                {/* CARD (MORE ATTRACTIVE) */}
+                <div className="bg-white rounded-3xl p-6 w-80 shadow-xl border border-gray-100 hover:shadow-2xl transition">
+                  <h3 className="font-bold text-gray-900 text-lg mb-3">
                     {topic.title}
                   </h3>
 
-                  <div className="flex items-center gap-3 text-sm">
-                    <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-indigo-100 text-indigo-600 font-medium">
+                  <div className="flex items-center gap-3 text-sm mb-3">
+                    <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-indigo-100 text-indigo-600 font-semibold">
                       <Zap className="w-3 h-3" />
                       {topic.xp} XP
                     </span>
 
-                    {status === "completed" && (
+                    {topic.status === "completed" && (
                       <span className="text-emerald-600 font-semibold">
                         ✔ Completed
                       </span>
                     )}
-                    {status === "active" && (
+                    {topic.status === "active" && (
                       <span className="text-indigo-500 font-semibold">
                         ● Active
                       </span>
                     )}
-                    {status === "locked" && (
+                    {topic.status === "locked" && (
                       <span className="text-gray-400">Locked</span>
                     )}
                   </div>
+
+                  {/* CTA */}
+                  {topic.status === "active" && (
+                    <button className="mt-2 text-indigo-600 font-semibold hover:underline">
+                      Start Topic →
+                    </button>
+                  )}
                 </div>
               </div>
             </motion.div>
@@ -234,13 +217,14 @@ export default function TopicRoadmap() {
         })}
 
         {/* FINAL TROPHY */}
-        {completedTopics.length === topics.length && topics.length > 0 && (
-          <div className="flex justify-center mt-20">
-            <div className="w-28 h-28 rounded-full bg-gradient-to-br from-yellow-400 to-orange-400 flex items-center justify-center shadow-2xl ring-4 ring-yellow-300/40">
-              <Trophy className="w-12 h-12 text-white" />
+        {topics.length > 0 &&
+          topics.every((t) => t.status === "completed") && (
+            <div className="flex justify-center mt-20">
+              <div className="w-28 h-28 rounded-full bg-gradient-to-br from-yellow-400 to-orange-400 flex items-center justify-center shadow-2xl ring-4 ring-yellow-300/40">
+                <Trophy className="w-12 h-12 text-white" />
+              </div>
             </div>
-          </div>
-        )}
+          )}
       </div>
     </div>
   );
