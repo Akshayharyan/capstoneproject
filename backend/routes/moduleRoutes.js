@@ -5,6 +5,10 @@ const protect = require("../middleware/authMiddleware");
 const verifyAdmin = require("../middleware/verifyAdmin");
 
 const { createModule } = require("../controllers/moduleController");
+const {
+  getModuleTopicsWithStatus,
+} = require("../controllers/moduleProgressController");
+
 const Module = require("../models/module");
 
 /* ======================================================
@@ -14,16 +18,13 @@ router.post("/create", protect, verifyAdmin, createModule);
 
 /* ======================================================
    📌 GET ALL MODULES
-   ✅ Used by:
-      - Admin Assign Module
-      - Employee Modules Page
 ====================================================== */
 router.get("/", protect, async (req, res) => {
   try {
     const modules = await Module.find({});
 
     const formatted = modules.map((m) => ({
-      _id: m._id, // ✅ KEEP _id (VERY IMPORTANT)
+      _id: m._id,
       title: m.title,
       description: m.description || "",
       topicCount: m.topics.length,
@@ -38,34 +39,14 @@ router.get("/", protect, async (req, res) => {
 });
 
 /* ======================================================
-   📌 GET TOPICS OF A MODULE (Learning Path Page)
+   📌 GET TOPICS OF A MODULE (🔥 WITH PROGRESS & UNLOCK)
+   ✅ USED BY: TopicRoadmap
 ====================================================== */
-router.get("/:moduleId/topics", protect, async (req, res) => {
-  try {
-    const module = await Module.findById(req.params.moduleId);
-
-    if (!module) {
-      return res.status(404).json({ message: "Module not found" });
-    }
-
-    res.json({
-      moduleId: module._id,
-      moduleTitle: module.title,
-      topics: module.topics.map((topic, index) => ({
-  index,
-  title: topic.title,
-  videoUrl: topic.videoUrl,   // ✅ REQUIRED
-  xp: topic.xp || 0,
-  videoDuration: topic.videoDuration || "",
-  taskCount: topic.tasks.length,
-}))
-
-    });
-  } catch (err) {
-    console.error("Fetch topics error:", err);
-    res.status(500).json({ message: "Server error" });
-  }
-});
+router.get(
+  "/:moduleId/topics",
+  protect,
+  getModuleTopicsWithStatus
+);
 
 /* ======================================================
    📌 GET SINGLE TOPIC (VIDEO + TASKS)
@@ -84,7 +65,6 @@ router.get("/:moduleId/topics/:topicIndex", protect, async (req, res) => {
       return res.status(404).json({ message: "Topic not found" });
     }
 
-    // 🔥 IMPORTANT: RETURN TASKS DIRECTLY FROM DB
     res.json({
       title: topic.title,
       videoUrl: topic.videoUrl,
@@ -96,7 +76,6 @@ router.get("/:moduleId/topics/:topicIndex", protect, async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 });
-
 
 /* ======================================================
    📌 DELETE MODULE (ADMIN ONLY)

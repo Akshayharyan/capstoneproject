@@ -23,6 +23,9 @@ const userRoutes = require("./routes/userRoutes");
 const trainerRoutes = require("./routes/trainerRoutes");
 const employeeRoutes = require("./routes/employeeRoutes");
 const adminRoutes = require("./routes/adminRoutes");
+// 🆕 AUTO-GRADER ROUTES
+const graderRoutes = require("./routes/graderRoutes");
+
 
 // 🆕 NEW ROUTES (SAFE ADD)
 const moduleProgressRoutes = require("./routes/moduleProgressRoutes");
@@ -52,6 +55,9 @@ app.use("/api/trainer", trainerRoutes);
 app.use("/api/modules", moduleRoutes);
 app.use("/api/activity", activityRoutes);
 app.use("/api/admin", adminRoutes);
+
+app.use("/api/grader", graderRoutes);
+
 
 // 🆕 REGISTER MODULE PROGRESS ROUTES (NON-BREAKING)
 app.use("/api", moduleProgressRoutes);

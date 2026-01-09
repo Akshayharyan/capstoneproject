@@ -7,6 +7,8 @@ const {
   startModule,
   getStartedModules,
   completeTopic, // 🆕
+  completeVideo,
+   completeQuiz,
 } = require("../controllers/moduleProgressController");
 
 // EXISTING ROUTES (UNCHANGED)
@@ -16,5 +18,9 @@ router.get("/dashboard/started-modules", protect, getStartedModules);
 
 // 🆕 COMPLETE TOPIC + XP
 router.post("/modules/complete-topic", protect, completeTopic);
+router.post("/modules/complete-video", protect, completeVideo);
+
+router.post("/modules/complete-quiz", protect, completeQuiz);
+
 
 module.exports = router;

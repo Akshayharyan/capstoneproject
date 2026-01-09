@@ -3,19 +3,48 @@ const bcrypt = require("bcryptjs");
 
 const userSchema = new mongoose.Schema(
   {
-    name: { type: String, required: true },
-    email: { type: String, required: true, unique: true },
-    password: { type: String, required: true },
+    /* ================= BASIC INFO ================= */
+    name: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+
+    email: {
+      type: String,
+      required: true,
+      unique: true,
+      lowercase: true,
+      trim: true,
+    },
+
+    password: {
+      type: String,
+      required: true,
+    },
 
     avatar: {
       type: String,
       default: "https://avatar.iran.liara.run/public",
     },
 
-    xp: { type: Number, default: 0 },
-    level: { type: Number, default: 1 },
-    badges: { type: [String], default: [] },
+    /* ================= GAMIFICATION ================= */
+    xp: {
+      type: Number,
+      default: 0,
+    },
 
+    level: {
+      type: Number,
+      default: 1,
+    },
+
+    badges: {
+      type: [String],
+      default: [],
+    },
+
+    /* ================= USER META ================= */
     gender: {
       type: String,
       enum: ["male", "female"],
@@ -27,41 +56,28 @@ const userSchema = new mongoose.Schema(
       enum: ["admin", "trainer", "employee"],
       default: "employee",
     },
-
-    // 🆕 MODULE PROGRESS (SAFE ADD)
-    moduleProgress: [
-      {
-        moduleId: {
-          type: mongoose.Schema.Types.ObjectId,
-          ref: "Module",
-        },
-        completedTopics: {
-          type: [Number],
-          default: [],
-        },
-      },
-    ],
   },
   { timestamps: true }
 );
 
-// Hash password
+/* ================= PASSWORD HASH ================= */
 userSchema.pre("save", async function (next) {
   if (!this.isModified("password")) return next();
   this.password = await bcrypt.hash(this.password, 10);
   next();
 });
 
-// Compare password
+/* ================= PASSWORD MATCH ================= */
 userSchema.methods.matchPassword = async function (password) {
   return bcrypt.compare(password, this.password);
 };
 
-// Remove password
+/* ================= HIDE PASSWORD ================= */
 userSchema.methods.toJSON = function () {
   const obj = this.toObject();
   delete obj.password;
   return obj;
 };
 
-module.exports = mongoose.model("User", userSchema);
+module.exports =
+  mongoose.models.User || mongoose.model("User", userSchema);

@@ -13,18 +13,23 @@ export default function TopicVideoPage() {
   const [player, setPlayer] = useState(null);
   const [progress, setProgress] = useState(0);
   const [canProceed, setCanProceed] = useState(false);
+  const [markedComplete, setMarkedComplete] = useState(false);
 
-  /* ================= FETCH TOPIC ================= */
+  /* ================= FETCH SINGLE TOPIC (✅ FIXED) ================= */
   useEffect(() => {
     const fetchTopic = async () => {
       const res = await fetch(
-        `http://localhost:5000/api/modules/${moduleId}/topics`,
-        { headers: { Authorization: `Bearer ${token}` } }
+        `http://localhost:5000/api/modules/${moduleId}/topics/${topicIndex}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
       );
 
       const data = await res.json();
-      const selectedTopic = data.topics?.[topicIndex];
-      setTopic(selectedTopic || null);
+      console.log("VIDEO TOPIC RESPONSE 👉", data);
+      setTopic(data || null);
     };
 
     fetchTopic();
@@ -34,7 +39,7 @@ export default function TopicVideoPage() {
   useEffect(() => {
     if (!player) return;
 
-    const interval = setInterval(() => {
+    const interval = setInterval(async () => {
       const duration = player.getDuration();
       const current = player.getCurrentTime();
 
@@ -42,15 +47,30 @@ export default function TopicVideoPage() {
         const percent = Math.floor((current / duration) * 100);
         setProgress(percent);
 
-        if (percent >= 90) {
+        if (percent >= 90 && !markedComplete) {
           setCanProceed(true);
+          setMarkedComplete(true);
           clearInterval(interval);
+
+          // 🔥 MARK VIDEO COMPLETED IN BACKEND
+          await fetch("http://localhost:5000/api/modules/complete-video", {
+  method: "POST",
+  headers: {
+    Authorization: `Bearer ${token}`,
+    "Content-Type": "application/json",
+  },
+  body: JSON.stringify({
+    moduleId,
+    topicIndex: Number(topicIndex),
+  }),
+});
+
         }
       }
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [player]);
+  }, [player, markedComplete, moduleId, topicIndex, token]);
 
   /* ================= VIDEO ID ================= */
   const getVideoId = (url) => {
@@ -82,7 +102,7 @@ export default function TopicVideoPage() {
     <div className="min-h-screen bg-gradient-to-b from-white via-indigo-50 to-purple-50 px-4 pt-24 pb-32">
 
       {/* HEADER */}
-      <div className="max-w-4xl mx-auto mb-0 text-center">
+      <div className="max-w-4xl mx-auto mb-6 text-center">
         <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-indigo-100 text-indigo-600 font-semibold mb-4">
           <Play className="w-4 h-4" />
           Video Lesson
@@ -93,12 +113,13 @@ export default function TopicVideoPage() {
         </h1>
 
         <p className="text-gray-600 max-w-2xl mx-auto">
-          Watch the complete lesson to unlock quizzes and coding challenges.
+          Watch at least 90% of the lesson to unlock quizzes and coding
+          challenges.
         </p>
       </div>
 
       {/* VIDEO CARD */}
-      <div className="max-w-4xl mx-auto mb-10 bg-white/70 backdrop-blur-md rounded-3xl shadow-2xl shadow-indigo-100 overflow-hidden">
+      <div className="max-w-4xl mx-auto mb-10 bg-white/70 backdrop-blur-md rounded-3xl shadow-2xl overflow-hidden">
         <YouTube
           videoId={videoId}
           opts={{
@@ -127,7 +148,7 @@ export default function TopicVideoPage() {
         {!canProceed && (
           <p className="text-sm text-gray-500 mt-2 flex items-center gap-2">
             <Lock className="w-4 h-4" />
-            Complete at least 90% to continue
+            Watch at least 90% to continue
           </p>
         )}
       </div>
