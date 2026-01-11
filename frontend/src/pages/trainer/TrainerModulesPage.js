@@ -18,40 +18,91 @@ function TrainerModulesPage() {
   }, [token]);
 
   return (
-    <div className="p-10 text-white">
-      <h2 className="text-3xl font-bold text-purple-300 mb-6">
-        📘 My Assigned Modules
-      </h2>
+  <div className="min-h-screen bg-[#f7f8fc] text-gray-900">
+    {/* Page Content Wrapper */}
+    <div className="px-10 py-10 max-w-6xl">
+      {/* Header */}
+      <div className="mb-10">
+        <h1 className="text-4xl font-extrabold text-orange-500">
+          My Modules
+        </h1>
+        <p className="text-gray-600 mt-2 max-w-2xl">
+          Create and manage learning content for your assigned modules.
+        </p>
+      </div>
 
+      {/* Empty State */}
       {modules.length === 0 && (
-        <p className="text-gray-400">No modules assigned yet.</p>
+        <p className="text-gray-500">No modules assigned yet.</p>
       )}
 
-      <div className="space-y-5">
-        {modules.map((m) => (
+      {/* Modules Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+        {modules.map((m, index) => (
           <div
             key={m.assignmentId}
-            className="bg-gray-900 p-6 rounded-xl border border-gray-700 hover:border-purple-500 transition"
+            className="bg-white rounded-2xl p-6
+                       border border-gray-200
+                       shadow-sm hover:shadow-lg
+                       transition-all duration-300 animate-fadeIn"
+            style={{ animationDelay: `${index * 70}ms` }}
           >
-            <h3 className="text-xl font-bold">{m.title}</h3>
-            <p className="text-gray-400 mb-2">{m.description}</p>
-            <p className="text-sm text-gray-500">
-              Topics: {m.topicsCount}
+            {/* Accent Bar */}
+            <div className="h-1 w-16 bg-orange-400 rounded-full mb-4" />
+
+            <h2 className="text-xl font-bold text-gray-800 mb-2">
+              {m.title}
+            </h2>
+
+            <p className="text-sm text-gray-600 mb-4 line-clamp-3">
+              {m.description || "No description provided."}
+            </p>
+
+            <p className="text-sm text-indigo-500 mb-6">
+              Topics:{" "}
+              <span className="font-semibold text-gray-800">
+                {m.topicsCount}
+              </span>
             </p>
 
             <button
               onClick={() =>
                 navigate(`/trainer/modules/${m.moduleId}/edit`)
               }
-              className="mt-4 px-5 py-2 bg-purple-600 rounded-lg hover:bg-purple-700 transition"
+              className="w-full py-2.5 rounded-lg
+                         bg-orange-500 hover:bg-orange-400
+                         text-white font-semibold
+                         transition"
             >
-              ✏️ Edit Topics & Content
+              Edit Topics & Content
             </button>
           </div>
         ))}
       </div>
     </div>
-  );
+
+    {/* Animation */}
+    <style>
+      {`
+        @keyframes fadeIn {
+          from {
+            opacity: 0;
+            transform: translateY(10px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+
+        .animate-fadeIn {
+          animation: fadeIn 0.35s ease-out forwards;
+          opacity: 0;
+        }
+      `}
+    </style>
+  </div>
+);
 }
 
 export default TrainerModulesPage;

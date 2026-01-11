@@ -186,12 +186,14 @@ function App() {
             path="/trainer"
             element={
               <ProtectedRoute allow={["trainer"]}>
-                <div className="flex min-h-screen bg-[#0f172a]">
-                  <TrainerSidebar />
-                  <main className="flex-1 p-10">
-                    <Outlet />
-                  </main>
-                </div>
+                <div className="flex min-h-screen bg-[#f7f8fc]">
+  <TrainerSidebar />
+
+  <main className="flex-1 bg-[#f7f8fc] p-10">
+    <Outlet />
+  </main>
+</div>
+
               </ProtectedRoute>
             }
           >

@@ -1,5 +1,5 @@
 /* src/styles/index.css */
-
+@import "./theme.css";
 /* =========================
    TAILWIND DIRECTIVES
    ========================= */

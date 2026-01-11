@@ -97,117 +97,175 @@ export default function TrainerTopicTasksPage() {
   };
 
   if (loading) {
-    return <p className="text-white">Loading tasks...</p>;
+    return <p className="text-gray-500">Loading tasks...</p>;
   }
 
   return (
-    <div className="text-white">
-      <h2 className="text-2xl font-bold mb-6">🧪 Manage Topic Tasks</h2>
+    <div className="min-h-screen bg-[#f7f8fc] text-gray-900">
+      <div className="max-w-5xl px-10 py-10">
+        {/* Header */}
+        <div className="mb-8">
+          <h1 className="text-3xl font-extrabold text-orange-500">
+            Manage Topic Tasks
+          </h1>
+          <p className="text-gray-600">
+            Add quizzes or coding challenges for this topic
+          </p>
+        </div>
 
-      {/* ADD TASK */}
-      <div className="bg-gray-900 p-6 rounded-xl mb-8">
-        <select
-          value={newTask.type}
-          onChange={(e) =>
-            setNewTask({ ...newTask, type: e.target.value })
-          }
-          className="mb-4 px-4 py-2 bg-gray-800 rounded"
-        >
-          <option value="quiz">Quiz</option>
-          <option value="coding">Coding</option>
-        </select>
-
-        {newTask.type === "quiz" && (
-          <>
-            <input
-              placeholder="Question"
-              className="w-full mb-2 px-4 py-2 bg-gray-800 rounded"
-              value={newTask.question}
-              onChange={(e) =>
-                setNewTask({ ...newTask, question: e.target.value })
-              }
-            />
-
-            {newTask.options.map((opt, i) => (
-              <input
-                key={i}
-                placeholder={`Option ${i + 1}`}
-                className="w-full mb-2 px-4 py-2 bg-gray-800 rounded"
-                value={opt}
-                onChange={(e) => {
-                  const updated = [...newTask.options];
-                  updated[i] = e.target.value;
-                  setNewTask({ ...newTask, options: updated });
-                }}
-              />
-            ))}
-
-            <input
-              placeholder="Correct Answer"
-              className="w-full mb-2 px-4 py-2 bg-gray-800 rounded"
-              value={newTask.correctAnswer}
-              onChange={(e) =>
-                setNewTask({ ...newTask, correctAnswer: e.target.value })
-              }
-            />
-          </>
-        )}
-
-        {newTask.type === "coding" && (
-          <>
-            <textarea
-              placeholder="Coding Prompt"
-              className="w-full mb-2 px-4 py-2 bg-gray-800 rounded"
-              value={newTask.codingPrompt}
-              onChange={(e) =>
-                setNewTask({ ...newTask, codingPrompt: e.target.value })
-              }
-            />
-            <textarea
-              placeholder="Starter Code"
-              className="w-full mb-2 px-4 py-2 bg-gray-800 rounded"
-              value={newTask.starterCode}
-              onChange={(e) =>
-                setNewTask({ ...newTask, starterCode: e.target.value })
-              }
-            />
-          </>
-        )}
-
-        <input
-          type="number"
-          placeholder="XP"
-          className="w-full mb-4 px-4 py-2 bg-gray-800 rounded"
-          value={newTask.xp}
-          onChange={(e) =>
-            setNewTask({ ...newTask, xp: e.target.value })
-          }
-        />
-
-        <button
-          type="button"
-          onClick={addTask}
-          className="px-6 py-2 bg-green-600 rounded hover:bg-green-700"
-        >
-          ➕ Add Task
-        </button>
-      </div>
-
-      {/* TASK LIST */}
-      <div className="space-y-4">
-        {tasks.map((t, i) => (
-          <div
-            key={i}
-            className="bg-gray-900 p-4 rounded border border-gray-700"
+        {/* ADD TASK CARD */}
+        <div className="bg-white rounded-xl p-6 mb-10 border border-gray-200 shadow-sm">
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Task Type
+          </label>
+          <select
+            value={newTask.type}
+            onChange={(e) =>
+              setNewTask({ ...newTask, type: e.target.value })
+            }
+            className="mb-6 px-4 py-2 border border-gray-300 rounded-lg"
           >
-            <p className="font-semibold">
-              {t.type.toUpperCase()} — ⭐ {t.xp} XP
-            </p>
-            {t.question && <p>{t.question}</p>}
-            {t.codingPrompt && <p>{t.codingPrompt}</p>}
+            <option value="quiz">Quiz</option>
+            <option value="coding">Coding</option>
+          </select>
+
+          {/* QUIZ FORM */}
+          {newTask.type === "quiz" && (
+            <div className="space-y-3">
+              <Input
+                label="Question"
+                value={newTask.question}
+                onChange={(v) =>
+                  setNewTask({ ...newTask, question: v })
+                }
+              />
+
+              {newTask.options.map((opt, i) => (
+                <Input
+                  key={i}
+                  label={`Option ${i + 1}`}
+                  value={opt}
+                  onChange={(v) => {
+                    const updated = [...newTask.options];
+                    updated[i] = v;
+                    setNewTask({ ...newTask, options: updated });
+                  }}
+                />
+              ))}
+
+              <Input
+                label="Correct Answer"
+                value={newTask.correctAnswer}
+                onChange={(v) =>
+                  setNewTask({ ...newTask, correctAnswer: v })
+                }
+              />
+            </div>
+          )}
+
+          {/* CODING FORM */}
+          {newTask.type === "coding" && (
+            <div className="space-y-3">
+              <Textarea
+                label="Coding Prompt"
+                value={newTask.codingPrompt}
+                onChange={(v) =>
+                  setNewTask({ ...newTask, codingPrompt: v })
+                }
+              />
+              <Textarea
+                label="Starter Code"
+                value={newTask.starterCode}
+                onChange={(v) =>
+                  setNewTask({ ...newTask, starterCode: v })
+                }
+              />
+            </div>
+          )}
+
+          <Input
+            label="XP Reward"
+            type="number"
+            value={newTask.xp}
+            onChange={(v) =>
+              setNewTask({ ...newTask, xp: v })
+            }
+            width="w-32"
+          />
+
+          <button
+            type="button"
+            onClick={addTask}
+            className="mt-4 px-6 py-2 rounded-lg bg-orange-500 hover:bg-orange-400 text-white font-semibold"
+          >
+            Add Task
+          </button>
+        </div>
+
+        {/* TASK LIST */}
+        <div>
+          <h3 className="text-xl font-semibold mb-4">
+            Existing Tasks
+          </h3>
+
+          {tasks.length === 0 && (
+            <p className="text-gray-500">No tasks added yet.</p>
+          )}
+
+          <div className="space-y-4">
+            {tasks.map((t, i) => (
+              <div
+                key={i}
+                className="bg-white rounded-lg p-4 border border-gray-200 shadow-sm"
+              >
+                <p className="font-semibold">
+                  {t.type.toUpperCase()} — ⭐ {t.xp} XP
+                </p>
+                {t.question && (
+                  <p className="text-gray-700 mt-1">
+                    {t.question}
+                  </p>
+                )}
+                {t.codingPrompt && (
+                  <p className="text-gray-700 mt-1">
+                    {t.codingPrompt}
+                  </p>
+                )}
+              </div>
+            ))}
           </div>
-        ))}
+        </div>
       </div>
     </div>
   );
 }
+
+/* ===== Small Reusable Inputs ===== */
+
+const Input = ({ label, value, onChange, type = "text", width }) => (
+  <div className={width || "w-full"}>
+    <label className="block text-sm text-gray-700 mb-1">
+      {label}
+    </label>
+    <input
+      type={type}
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+      className="w-full px-4 py-2 rounded-lg border border-gray-300"
+    />
+  </div>
+);
+
+const Textarea = ({ label, value, onChange }) => (
+  <div>
+    <label className="block text-sm text-gray-700 mb-1">
+      {label}
+    </label>
+    <textarea
+      rows={4}
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+      className="w-full px-4 py-2 rounded-lg border border-gray-300"
+    />
+  </div>
+);
