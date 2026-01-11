@@ -1,4 +1,3 @@
-// frontend/src/pages/trainer/TrainerEditTopicsPage.js
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
@@ -12,7 +11,7 @@ export default function TrainerEditTopicsPage() {
   const [newTopic, setNewTopic] = useState({
     title: "",
     videoUrl: "",
-    xp: 0,
+    xp: "",
   });
 
   /* ================= FETCH MODULE ================= */
@@ -55,42 +54,57 @@ export default function TrainerEditTopicsPage() {
     }
 
     setModuleData(data.module);
-    setNewTopic({ title: "", videoUrl: "", xp: 0 });
+    setNewTopic({ title: "", videoUrl: "", xp: "" });
   };
 
   if (!moduleData) {
-    return <p className="text-white p-10">Loading...</p>;
+    return <p className="p-10 text-gray-500">Loading...</p>;
   }
 
   return (
-    <div className="p-10 text-white">
-      <h2 className="text-3xl font-bold mb-6">
-        ✏️ Edit Module: {moduleData.title}
-      </h2>
+    <div className="p-10 min-h-screen bg-[#f7f8fc]">
+      {/* HEADER */}
+      <div className="mb-8">
+        <h1 className="text-3xl font-extrabold text-orange-500">
+          Edit Topics
+        </h1>
+        <p className="text-gray-600 mt-1">
+          Module: <span className="font-semibold">{moduleData.title}</span>
+        </p>
+      </div>
 
-      {/* ADD TOPIC */}
-      <div className="bg-gray-900 p-6 rounded-xl mb-10">
-        <h3 className="text-xl font-semibold mb-4">➕ Add New Topic</h3>
+      {/* ADD TOPIC CARD */}
+      <div className="bg-white rounded-xl p-6 mb-10 border border-gray-200 shadow-sm">
+        <h3 className="text-lg font-semibold text-gray-800 mb-4">
+          Add New Topic
+        </h3>
 
         <div className="grid md:grid-cols-3 gap-4">
+          {/* TITLE */}
           <input
-            placeholder="Topic Title"
+            placeholder="Topic title"
             value={newTopic.title}
             onChange={(e) =>
               setNewTopic({ ...newTopic, title: e.target.value })
             }
-            className="px-4 py-2 rounded bg-gray-800"
+            className="px-4 py-2 rounded-lg border border-gray-300
+                       text-gray-900 placeholder-gray-400
+                       focus:outline-none focus:ring-2 focus:ring-orange-400"
           />
 
+          {/* VIDEO URL */}
           <input
-            placeholder="Video URL (YouTube Embed)"
+            placeholder="YouTube embed URL"
             value={newTopic.videoUrl}
             onChange={(e) =>
               setNewTopic({ ...newTopic, videoUrl: e.target.value })
             }
-            className="px-4 py-2 rounded bg-gray-800"
+            className="px-4 py-2 rounded-lg border border-gray-300
+                       text-gray-900 placeholder-gray-400
+                       focus:outline-none focus:ring-2 focus:ring-orange-400"
           />
 
+          {/* XP */}
           <input
             type="number"
             placeholder="XP"
@@ -98,46 +112,55 @@ export default function TrainerEditTopicsPage() {
             onChange={(e) =>
               setNewTopic({ ...newTopic, xp: e.target.value })
             }
-            className="px-4 py-2 rounded bg-gray-800"
+            className="px-4 py-2 rounded-lg border border-gray-300
+                       text-gray-900 placeholder-gray-400
+                       focus:outline-none focus:ring-2 focus:ring-orange-400"
           />
         </div>
 
         <button
           type="button"
           onClick={addTopic}
-          className="mt-5 px-6 py-2 bg-green-600 rounded-lg hover:bg-green-700"
+          className="mt-5 px-6 py-2 rounded-lg
+                     bg-orange-500 hover:bg-orange-400
+                     text-white font-semibold transition"
         >
-          ✅ Add Topic
+          Add Topic
         </button>
       </div>
 
       {/* TOPICS LIST */}
-      <div className="space-y-6">
+      <div className="space-y-4">
         {moduleData.topics.map((t, index) => (
           <div
             key={index}
-            className="bg-gray-900 p-6 rounded-xl border border-gray-700"
+            className="bg-white rounded-xl p-6 flex justify-between items-center
+                       border border-gray-200 shadow-sm"
           >
-            <div className="flex justify-between items-center">
-              <div>
-                <h3 className="text-xl font-bold">{t.title}</h3>
-                <p className="text-gray-400 text-sm">
-                  🎥 Video | 🧪 Tasks: {t.tasks?.length || 0} | ⭐ XP: {t.xp}
-                </p>
-              </div>
-
-              <button
-                type="button"
-                onClick={() =>
-                  navigate(
-                    `/trainer/modules/${moduleId}/topic/${index}/tasks`
-                  )
-                }
-                className="px-4 py-2 bg-blue-600 rounded-lg hover:bg-blue-700"
-              >
-                🧪 Manage Tasks
-              </button>
+            <div>
+              <h3 className="text-lg font-bold text-gray-800">
+                {index + 1}. {t.title}
+              </h3>
+              <p className="text-sm text-gray-500 mt-1">
+                🎥 Video · 🧪 Tasks: {t.tasks?.length || 0} · ⭐ XP: {t.xp}
+              </p>
             </div>
+
+            <button
+              type="button"
+              onClick={() =>
+                navigate(
+                  `/trainer/modules/${moduleId}/topic/${index}/tasks`
+                )
+              }
+              className="px-4 py-2 rounded-lg
+                         border border-indigo-500
+                         text-indigo-600
+                         hover:bg-indigo-50
+                         transition"
+            >
+              Manage Tasks
+            </button>
           </div>
         ))}
       </div>

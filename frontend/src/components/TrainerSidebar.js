@@ -9,22 +9,41 @@ const TrainerSidebar = () => {
     navigate("/login");
   };
 
+  const linkClass = ({ isActive }) =>
+    `px-4 py-3 rounded-lg text-sm font-medium transition
+     ${
+       isActive
+         ? "bg-orange-500 text-white"
+         : "text-gray-700 hover:bg-orange-50"
+     }`;
+
   return (
-    <aside className="w-64 bg-[#11052a] border-r border-purple-700 p-6 flex flex-col gap-6">
-      <h2 className="text-2xl font-bold text-purple-300">Trainer Panel</h2>
+    <aside className="w-64 min-h-screen p-6 flex flex-col bg-white border-r border-gray-200">
+      {/* Brand */}
+      <div className="mb-10">
+        <h2 className="text-2xl font-extrabold text-orange-500">
+          SkillQuest
+        </h2>
+        <p className="text-xs text-gray-500">Trainer Portal</p>
+      </div>
 
-      <NavLink
-        to="/trainer"
-        className={({ isActive }) =>
-          `px-4 py-2 rounded-lg ${isActive ? "bg-purple-600" : "hover:bg-purple-800"}`
-        }
-      >
-        My Modules
-      </NavLink>
+      {/* Primary Navigation */}
+      <nav className="flex flex-col gap-2">
+        <NavLink to="/trainer" className={linkClass}>
+          📘 My Modules
+        </NavLink>
+      </nav>
 
+      {/* Hint */}
+      <div className="mt-6 text-xs text-gray-400 leading-relaxed">
+        Select a module to manage topics, levels, and tasks.
+      </div>
+
+      {/* Logout */}
       <button
-        className="mt-auto px-4 py-2 rounded-lg bg-red-600 hover:bg-red-500"
         onClick={logout}
+        className="mt-auto px-4 py-3 rounded-lg text-sm font-medium
+                   text-red-600 hover:bg-red-50 transition"
       >
         Logout
       </button>

@@ -1,0 +1,23 @@
+:root {
+  /* Backgrounds */
+  --bg-app: #f7f8fc;
+  --bg-sidebar: #ffffff;
+  --bg-card: #ffffff;
+
+  /* Text */
+  --text-primary: #1f2937; /* gray-800 */
+  --text-secondary: #6b7280; /* gray-500 */
+  --text-muted: #9ca3af;
+
+  /* Brand */
+  --brand-primary: #f97316; /* orange-500 */
+  --brand-primary-hover: #fb923c; /* orange-400 */
+  --brand-accent: #6366f1; /* indigo-500 */
+
+  /* Borders & shadows */
+  --border-light: #e5e7eb;
+  --shadow-soft: 0 4px 12px rgba(0, 0, 0, 0.06);
+
+  /* Radius */
+  --radius-lg: 14px;
+}
