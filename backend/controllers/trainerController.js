@@ -46,8 +46,7 @@ exports.getSingleModule = async (req, res) => {
 };
 
 /* ======================================================
-   3) ADD TOPIC (FINAL FLOW)
-   Module → Topic → (Video → Quiz → Coding)
+   3) ADD TOPIC
 ====================================================== */
 exports.addTopic = async (req, res) => {
   try {
@@ -71,7 +70,6 @@ exports.addTopic = async (req, res) => {
       tasks: [],
     };
 
-    // 🔍 Debug log (keep for now)
     console.log("📥 Adding topic:", newTopic);
 
     module.topics.push(newTopic);
@@ -114,13 +112,19 @@ exports.addTaskToTopic = async (req, res) => {
       task.question = payload.question || "";
       task.options = payload.options || [];
       task.correctAnswer = payload.correctAnswer || "";
-    } else if (payload.type === "coding") {
+    } 
+    else if (payload.type === "coding") {
       task.codingPrompt = payload.codingPrompt || "";
       task.starterCode = payload.starterCode || "";
       task.testCases = Array.isArray(payload.testCases)
         ? payload.testCases
         : [];
-    } else {
+
+      // 🔥 NEW (SAFE ADDITIONS)
+      task.language = payload.language || "html";
+      task.gradingRules = payload.gradingRules || {};
+    } 
+    else {
       return res.status(400).json({ message: "Invalid task type" });
     }
 

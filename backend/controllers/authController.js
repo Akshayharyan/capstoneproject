@@ -1,6 +1,8 @@
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
 const User = require("../models/User");
+const Progress = require("../models/Progress");
+
 
 // Helper: generate token with role
 const generateToken = (user) =>
@@ -67,12 +69,22 @@ exports.loginUser = async (req, res) => {
       return res.status(401).json({ message: "Invalid credentials" });
     }
 
-    const freshUser = await User.findById(user._id).select("-password");
-    const token = generateToken(freshUser);
+const freshUser = await User.findById(user._id).select("-password");
 
-    console.log("🟢 LOGIN SUCCESS");
+// 🔥 FETCH PROGRESS
+const progress = await Progress.findOne({ userId: freshUser._id });
 
-    res.json({ user: freshUser, token });
+const enrichedUser = {
+  ...freshUser.toObject(),
+  completedModules: progress?.completedModules || [],
+  startedModules: progress?.startedModules || [],
+  topics: progress?.topics || [],
+};
+
+const token = generateToken(freshUser);
+
+res.json({ user: enrichedUser, token });
+
   } catch (err) {
     console.error("🔴 LOGIN ERROR:", err);
     res.status(500).json({ message: "Server error" });
