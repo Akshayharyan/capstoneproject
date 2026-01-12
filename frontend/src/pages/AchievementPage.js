@@ -1,11 +1,51 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useAuth } from "../context/AuthContext";
 
 const AchievementPage = () => {
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState("All");
 
-  /* ================= SAFE GUARD ================= */
+  const [completedModulesCount, setCompletedModulesCount] = useState(0);
+  const [loadingModules, setLoadingModules] = useState(true);
+
+  /* ================= XP ================= */
+  const totalXP = Number(user?.xp || 0);
+
+  /* ================= FRONTEND-ONLY MODULE COMPLETION ================= */
+  useEffect(() => {
+    if (!user) return; // ✅ SAFE GUARD INSIDE EFFECT
+
+    const fetchCompletedModules = async () => {
+      try {
+        const token = localStorage.getItem("token");
+
+        const res = await fetch("http://localhost:5000/api/modules", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        const data = await res.json();
+
+        const completed = (data.modules || []).filter(
+          (mod) =>
+            Array.isArray(mod.topics) &&
+            mod.topics.length > 0 &&
+            mod.topics.every((t) => t.status === "completed")
+        ).length;
+
+        setCompletedModulesCount(completed);
+      } catch (err) {
+        console.error("Failed to compute completed modules", err);
+      } finally {
+        setLoadingModules(false);
+      }
+    };
+
+    fetchCompletedModules();
+  }, [user]);
+
+  /* ================= SAFE GUARD (AFTER HOOKS) ================= */
   if (!user) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
@@ -14,19 +54,9 @@ const AchievementPage = () => {
     );
   }
 
-  /* ================= BACKEND-CORRECT DATA ================= */
-  const totalXP = Number(user.xp || 0);
-  const moduleProgress = Array.isArray(user.moduleProgress)
-    ? user.moduleProgress
-    : [];
-
-  const completedModules = moduleProgress.filter(
-    (m) => Array.isArray(m.completedTopics) && m.completedTopics.length > 0
-  ).length;
-
   /* ================= ACHIEVEMENTS ================= */
   const achievements = [
-    // XP MILESTONES
+    // XP
     {
       id: "xp_50",
       title: "XP Beginner",
@@ -58,7 +88,7 @@ const AchievementPage = () => {
       unlocked: totalXP >= 200,
     },
 
-    // MODULE ACHIEVEMENTS
+    // MODULES (FRONTEND-DERIVED)
     {
       id: "module_1",
       title: "First Module Complete",
@@ -66,8 +96,8 @@ const AchievementPage = () => {
       category: "Modules",
       icon: "🏁",
       target: 1,
-      progress: completedModules,
-      unlocked: completedModules >= 1,
+      progress: completedModulesCount,
+      unlocked: completedModulesCount >= 1,
     },
     {
       id: "module_2",
@@ -76,8 +106,8 @@ const AchievementPage = () => {
       category: "Modules",
       icon: "👑",
       target: 2,
-      progress: completedModules,
-      unlocked: completedModules >= 2,
+      progress: completedModulesCount,
+      unlocked: completedModulesCount >= 2,
     },
   ];
 
@@ -96,7 +126,7 @@ const AchievementPage = () => {
     <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50 p-6">
       <div className="max-w-7xl mx-auto">
 
-        {/* HERO HEADER */}
+        {/* HEADER */}
         <div>
           <h1 className="text-4xl font-extrabold text-gray-900 flex items-center gap-3">
             <span className="text-5xl">🏆</span> Your Achievements
@@ -106,7 +136,7 @@ const AchievementPage = () => {
           </p>
         </div>
 
-        {/* STATUS CARDS */}
+        {/* STATUS */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mt-10">
           <StatusCard
             icon="🎯"
@@ -146,10 +176,14 @@ const AchievementPage = () => {
           ))}
         </div>
 
-        {/* ACHIEVEMENTS GRID */}
+        {/* GRID */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mt-6">
           {filteredAchievements.map((achievement) => (
-            <AchievementCard key={achievement.id} achievement={achievement} />
+            <AchievementCard
+              key={achievement.id}
+              achievement={achievement}
+              loadingModules={loadingModules}
+            />
           ))}
         </div>
       </div>
@@ -176,7 +210,7 @@ const StatusCard = ({ icon, title, value, gradient }) => (
   </div>
 );
 
-const AchievementCard = ({ achievement }) => {
+const AchievementCard = ({ achievement, loadingModules }) => {
   const progressPercent = Math.min(
     Math.round((achievement.progress / achievement.target) * 100),
     100
@@ -191,7 +225,7 @@ const AchievementCard = ({ achievement }) => {
             : "bg-white/70 backdrop-blur border text-gray-600"
         }`}
     >
-      {!achievement.unlocked && (
+      {!achievement.unlocked && !loadingModules && (
         <div className="absolute inset-0 rounded-3xl bg-white/60 backdrop-blur-sm flex items-center justify-center z-10">
           <span className="text-5xl opacity-70">🔒</span>
         </div>

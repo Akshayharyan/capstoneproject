@@ -1,17 +1,16 @@
 const Module = require("../models/module");
 const Progress = require("../models/progress");
+const gradeSubmission = require("../graders");
 
 /* ======================================================
-   📌 AUTO GRADER – CODING TASK (HTML ONLY)
+   📌 AUTO GRADER – DYNAMIC (ALL LANGUAGES READY)
 ====================================================== */
 exports.gradeCodingTask = async (req, res) => {
   try {
     const { moduleId, topicIndex, taskIndex, code } = req.body;
     const userId = req.user._id;
 
-    /* ===============================
-       BASIC VALIDATION
-    ============================== */
+    /* ================= BASIC VALIDATION ================= */
     if (!code || code.trim().length === 0) {
       return res.json({
         success: false,
@@ -30,23 +29,15 @@ exports.gradeCodingTask = async (req, res) => {
       });
     }
 
-    /* ===============================
-       FETCH MODULE / TOPIC / TASK
-    ============================== */
+    /* ================= FETCH MODULE / TASK ================= */
     const module = await Module.findById(moduleId).lean();
     if (!module) {
-      return res.json({
-        success: false,
-        message: "Module not found",
-      });
+      return res.json({ success: false, message: "Module not found" });
     }
 
     const topic = module.topics?.[Number(topicIndex)];
     if (!topic) {
-      return res.json({
-        success: false,
-        message: "Topic not found",
-      });
+      return res.json({ success: false, message: "Topic not found" });
     }
 
     const task = topic.tasks?.[Number(taskIndex)];
@@ -57,32 +48,18 @@ exports.gradeCodingTask = async (req, res) => {
       });
     }
 
-    /* ===============================
-       HTML VALIDATION (STATIC ANALYSIS)
-    ============================== */
-    const normalized = code
-      .toLowerCase()
-      .replace(/\n/g, " ")
-      .replace(/\s+/g, " ")
-      .trim();
+    /* ================= DYNAMIC GRADING ================= */
+    const result = gradeSubmission(code, task);
 
-    const hasH1 =
-      /<h1[^>]*>\s*welcome to html\s*<\/h1>/.test(normalized);
-
-    const hasP =
-      /<p[^>]*>\s*this is my first web page\s*<\/p>/.test(normalized);
-
-    if (!hasH1 || !hasP) {
+    if (!result.passed) {
       return res.json({
         success: false,
-        message:
-          "❌ Invalid HTML. Required:\n<h1>Welcome to HTML</h1>\n<p>This is my first web page</p>",
+        message: "❌ Code validation failed",
+        errors: result.errors,
       });
     }
 
-    /* ===============================
-       MARK CODING COMPLETED (NO XP)
-    ============================== */
+    /* ================= UPDATE PROGRESS ================= */
     let progress = await Progress.findOne({ userId });
     if (!progress) {
       progress = await Progress.create({ userId });
@@ -109,12 +86,10 @@ exports.gradeCodingTask = async (req, res) => {
 
     await progress.save();
 
-    /* ===============================
-       SUCCESS
-    ============================== */
+    /* ================= SUCCESS ================= */
     return res.json({
       success: true,
-      message: "HTML structure is correct 🎉",
+      message: "✅ Code is correct. Well done!",
     });
   } catch (err) {
     console.error("Grader error:", err);

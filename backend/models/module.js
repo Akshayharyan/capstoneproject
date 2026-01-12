@@ -29,6 +29,18 @@ const TaskSchema = new mongoose.Schema({
   starterCode: { type: String },
   testCases: [TestCaseSchema],
 
+  // 🔥 NEW (NON-BREAKING)
+  language: {
+    type: String,
+    default: "html", // safe default
+  },
+
+  // 🔥 NEW (NON-BREAKING)
+  gradingRules: {
+    type: Object,
+    default: {}, // dynamic rules for grader
+  },
+
   /* ---------- COMMON ---------- */
   xp: { type: Number, default: 10 },
 });
@@ -42,13 +54,13 @@ const TopicSchema = new mongoose.Schema({
   /* 🎥 VIDEO CONTENT */
   videoUrl: {
     type: String,
-    required: true, // YouTube / Vimeo / S3 URL
+    required: true,
   },
   videoDuration: {
-    type: String, // e.g. "12:45"
+    type: String,
   },
 
-  /* 🧠 QUIZ + 💻 CODING (AFTER VIDEO) */
+  /* 🧠 QUIZ + 💻 CODING */
   tasks: [TaskSchema],
 
   /* ⭐ TOTAL XP FOR TOPIC */
@@ -65,8 +77,6 @@ const ModuleSchema = new mongoose.Schema(
   {
     title: { type: String, required: true },
     description: { type: String },
-
-    /* 📚 TOPICS */
     topics: [TopicSchema],
   },
   { timestamps: true }

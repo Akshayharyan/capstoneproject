@@ -11,12 +11,23 @@ export default function TrainerTopicTasksPage() {
 
   const [newTask, setNewTask] = useState({
     type: "quiz",
+
+    // quiz
     question: "",
     options: ["", "", "", ""],
     correctAnswer: "",
+
+    // coding
     codingPrompt: "",
     starterCode: "",
-    testCases: [],
+    language: "html",
+
+    gradingRules: {
+      requiredTags: "",
+      textIncludes: "",
+      forbiddenTags: "",
+    },
+
     xp: 0,
   });
 
@@ -26,20 +37,16 @@ export default function TrainerTopicTasksPage() {
       try {
         const res = await fetch(
           `http://localhost:5000/api/trainer/module/${moduleId}/topic/${topicIndex}/tasks`,
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
+          { headers: { Authorization: `Bearer ${token}` } }
         );
-
         const data = await res.json();
         setTasks(data.tasks || []);
       } catch (err) {
-        console.error("Failed to fetch tasks:", err);
+        console.error(err);
       } finally {
         setLoading(false);
       }
     };
-
     fetchTasks();
   }, [moduleId, topicIndex, token]);
 
@@ -54,10 +61,29 @@ export default function TrainerTopicTasksPage() {
       payload.question = newTask.question.trim();
       payload.options = newTask.options.filter(Boolean);
       payload.correctAnswer = newTask.correctAnswer.trim();
-    } else {
+    }
+
+    if (newTask.type === "coding") {
       payload.codingPrompt = newTask.codingPrompt.trim();
       payload.starterCode = newTask.starterCode;
-      payload.testCases = newTask.testCases;
+      payload.language = newTask.language;
+
+      payload.gradingRules = {
+        requiredTags: newTask.gradingRules.requiredTags
+          .split(",")
+          .map((s) => s.trim())
+          .filter(Boolean),
+
+        textIncludes: newTask.gradingRules.textIncludes
+          .split(",")
+          .map((s) => s.trim().toLowerCase())
+          .filter(Boolean),
+
+        forbiddenTags: newTask.gradingRules.forbiddenTags
+          .split(",")
+          .map((s) => s.trim())
+          .filter(Boolean),
+      };
     }
 
     try {
@@ -74,198 +100,171 @@ export default function TrainerTopicTasksPage() {
       );
 
       const data = await res.json();
-      if (!res.ok) {
-        alert(data.message || "Failed to add task");
-        return;
-      }
+      if (!res.ok) return alert(data.message || "Failed");
 
       setTasks((prev) => [...prev, data.task]);
-      setNewTask({
-        type: "quiz",
-        question: "",
-        options: ["", "", "", ""],
-        correctAnswer: "",
-        codingPrompt: "",
-        starterCode: "",
-        testCases: [],
-        xp: 0,
-      });
+      resetForm();
     } catch (err) {
-      console.error("Add task failed:", err);
-      alert("Server error while adding task");
+      alert("Server error");
     }
   };
 
-  if (loading) {
-    return <p className="text-gray-500">Loading tasks...</p>;
-  }
+  const resetForm = () =>
+    setNewTask({
+      type: "quiz",
+      question: "",
+      options: ["", "", "", ""],
+      correctAnswer: "",
+      codingPrompt: "",
+      starterCode: "",
+      language: "html",
+      gradingRules: {
+        requiredTags: "",
+        textIncludes: "",
+        forbiddenTags: "",
+      },
+      xp: 0,
+    });
+
+  if (loading) return <p className="text-gray-500">Loading tasks…</p>;
 
   return (
     <div className="min-h-screen bg-[#f7f8fc] text-gray-900">
       <div className="max-w-5xl px-10 py-10">
-        {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-extrabold text-orange-500">
-            Manage Topic Tasks
-          </h1>
-          <p className="text-gray-600">
-            Add quizzes or coding challenges for this topic
-          </p>
-        </div>
+        <h1 className="text-3xl font-extrabold text-orange-500 mb-6">
+          Manage Topic Tasks
+        </h1>
 
-        {/* ADD TASK CARD */}
-        <div className="bg-white rounded-xl p-6 mb-10 border border-gray-200 shadow-sm">
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Task Type
-          </label>
-          <select
+        {/* ADD TASK */}
+        <div className="bg-white p-6 rounded-xl border shadow-sm mb-10">
+          <Select
+            label="Task Type"
             value={newTask.type}
-            onChange={(e) =>
-              setNewTask({ ...newTask, type: e.target.value })
-            }
-            className="mb-6 px-4 py-2 border border-gray-300 rounded-lg"
-          >
-            <option value="quiz">Quiz</option>
-            <option value="coding">Coding</option>
-          </select>
-
-          {/* QUIZ FORM */}
-          {newTask.type === "quiz" && (
-            <div className="space-y-3">
-              <Input
-                label="Question"
-                value={newTask.question}
-                onChange={(v) =>
-                  setNewTask({ ...newTask, question: v })
-                }
-              />
-
-              {newTask.options.map((opt, i) => (
-                <Input
-                  key={i}
-                  label={`Option ${i + 1}`}
-                  value={opt}
-                  onChange={(v) => {
-                    const updated = [...newTask.options];
-                    updated[i] = v;
-                    setNewTask({ ...newTask, options: updated });
-                  }}
-                />
-              ))}
-
-              <Input
-                label="Correct Answer"
-                value={newTask.correctAnswer}
-                onChange={(v) =>
-                  setNewTask({ ...newTask, correctAnswer: v })
-                }
-              />
-            </div>
-          )}
-
-          {/* CODING FORM */}
-          {newTask.type === "coding" && (
-            <div className="space-y-3">
-              <Textarea
-                label="Coding Prompt"
-                value={newTask.codingPrompt}
-                onChange={(v) =>
-                  setNewTask({ ...newTask, codingPrompt: v })
-                }
-              />
-              <Textarea
-                label="Starter Code"
-                value={newTask.starterCode}
-                onChange={(v) =>
-                  setNewTask({ ...newTask, starterCode: v })
-                }
-              />
-            </div>
-          )}
-
-          <Input
-            label="XP Reward"
-            type="number"
-            value={newTask.xp}
-            onChange={(v) =>
-              setNewTask({ ...newTask, xp: v })
-            }
-            width="w-32"
+            options={["quiz", "coding"]}
+            onChange={(v) => setNewTask({ ...newTask, type: v })}
           />
 
+          {/* QUIZ */}
+          {newTask.type === "quiz" && (
+            <>
+              <Input label="Question" value={newTask.question}
+                onChange={(v) => setNewTask({ ...newTask, question: v })} />
+
+              {newTask.options.map((o, i) => (
+                <Input key={i} label={`Option ${i + 1}`} value={o}
+                  onChange={(v) => {
+                    const opts = [...newTask.options];
+                    opts[i] = v;
+                    setNewTask({ ...newTask, options: opts });
+                  }} />
+              ))}
+
+              <Input label="Correct Answer" value={newTask.correctAnswer}
+                onChange={(v) =>
+                  setNewTask({ ...newTask, correctAnswer: v })} />
+            </>
+          )}
+
+          {/* CODING */}
+          {newTask.type === "coding" && (
+            <>
+              <Select
+                label="Language"
+                value={newTask.language}
+                options={["html", "css", "javascript", "python", "java"]}
+                onChange={(v) =>
+                  setNewTask({ ...newTask, language: v })}
+              />
+
+              <Textarea label="Coding Prompt"
+                value={newTask.codingPrompt}
+                onChange={(v) =>
+                  setNewTask({ ...newTask, codingPrompt: v })} />
+
+              <Textarea label="Starter Code"
+                value={newTask.starterCode}
+                onChange={(v) =>
+                  setNewTask({ ...newTask, starterCode: v })} />
+
+              <Input label="Required Tags (comma separated)"
+                value={newTask.gradingRules.requiredTags}
+                onChange={(v) =>
+                  setNewTask({
+                    ...newTask,
+                    gradingRules: { ...newTask.gradingRules, requiredTags: v },
+                  })} />
+
+              <Input label="Text Must Include"
+                value={newTask.gradingRules.textIncludes}
+                onChange={(v) =>
+                  setNewTask({
+                    ...newTask,
+                    gradingRules: { ...newTask.gradingRules, textIncludes: v },
+                  })} />
+
+              <Input label="Forbidden Tags"
+                value={newTask.gradingRules.forbiddenTags}
+                onChange={(v) =>
+                  setNewTask({
+                    ...newTask,
+                    gradingRules: { ...newTask.gradingRules, forbiddenTags: v },
+                  })} />
+            </>
+          )}
+
+          <Input label="XP Reward" type="number" value={newTask.xp}
+            onChange={(v) => setNewTask({ ...newTask, xp: v })} />
+
           <button
-            type="button"
             onClick={addTask}
-            className="mt-4 px-6 py-2 rounded-lg bg-orange-500 hover:bg-orange-400 text-white font-semibold"
+            className="mt-4 px-6 py-2 bg-orange-500 text-white rounded-lg font-semibold"
           >
             Add Task
           </button>
         </div>
 
-        {/* TASK LIST */}
-        <div>
-          <h3 className="text-xl font-semibold mb-4">
-            Existing Tasks
-          </h3>
-
-          {tasks.length === 0 && (
-            <p className="text-gray-500">No tasks added yet.</p>
-          )}
-
-          <div className="space-y-4">
-            {tasks.map((t, i) => (
-              <div
-                key={i}
-                className="bg-white rounded-lg p-4 border border-gray-200 shadow-sm"
-              >
-                <p className="font-semibold">
-                  {t.type.toUpperCase()} — ⭐ {t.xp} XP
-                </p>
-                {t.question && (
-                  <p className="text-gray-700 mt-1">
-                    {t.question}
-                  </p>
-                )}
-                {t.codingPrompt && (
-                  <p className="text-gray-700 mt-1">
-                    {t.codingPrompt}
-                  </p>
-                )}
-              </div>
-            ))}
+        {/* EXISTING */}
+        <h3 className="text-xl font-semibold mb-4">Existing Tasks</h3>
+        {tasks.map((t, i) => (
+          <div key={i} className="bg-white p-4 rounded-lg border mb-3">
+            <b>{t.type.toUpperCase()}</b> — ⭐ {t.xp} XP
+            {t.codingPrompt && <p>{t.codingPrompt}</p>}
+            {t.question && <p>{t.question}</p>}
           </div>
-        </div>
+        ))}
       </div>
     </div>
   );
 }
 
-/* ===== Small Reusable Inputs ===== */
-
-const Input = ({ label, value, onChange, type = "text", width }) => (
-  <div className={width || "w-full"}>
-    <label className="block text-sm text-gray-700 mb-1">
-      {label}
-    </label>
-    <input
-      type={type}
-      value={value}
+/* ===== UI HELPERS ===== */
+const Input = ({ label, value, onChange, type = "text" }) => (
+  <div className="mb-3">
+    <label className="text-sm text-gray-700">{label}</label>
+    <input type={type} value={value}
       onChange={(e) => onChange(e.target.value)}
-      className="w-full px-4 py-2 rounded-lg border border-gray-300"
-    />
+      className="w-full px-4 py-2 border rounded-lg" />
   </div>
 );
 
 const Textarea = ({ label, value, onChange }) => (
-  <div>
-    <label className="block text-sm text-gray-700 mb-1">
-      {label}
-    </label>
-    <textarea
-      rows={4}
-      value={value}
+  <div className="mb-3">
+    <label className="text-sm text-gray-700">{label}</label>
+    <textarea rows={4} value={value}
       onChange={(e) => onChange(e.target.value)}
-      className="w-full px-4 py-2 rounded-lg border border-gray-300"
-    />
+      className="w-full px-4 py-2 border rounded-lg" />
+  </div>
+);
+
+const Select = ({ label, value, options, onChange }) => (
+  <div className="mb-4">
+    <label className="text-sm text-gray-700">{label}</label>
+    <select value={value}
+      onChange={(e) => onChange(e.target.value)}
+      className="w-full px-4 py-2 border rounded-lg">
+      {options.map((o) => (
+        <option key={o} value={o}>{o}</option>
+      ))}
+    </select>
   </div>
 );
