@@ -9,27 +9,20 @@ const computeNextLevelXP = (level) => level * (level + 1) * 50;
 const calculateLearningStreak = (activities) => {
   if (!activities || activities.length === 0) return 0;
 
-  // Unique activity days (YYYY-MM-DD)
   const activeDays = new Set(
-    activities.map((a) =>
-      new Date(a.createdAt).toISOString().split("T")[0]
-    )
+    activities.map((a) => new Date(a.createdAt).toISOString().split("T")[0])
   );
 
   let streak = 0;
   const today = new Date();
 
-  // Check consecutive days backwards
   for (let i = 0; i < 365; i++) {
     const day = new Date(today);
     day.setDate(today.getDate() - i);
     const dayStr = day.toISOString().split("T")[0];
 
-    if (activeDays.has(dayStr)) {
-      streak++;
-    } else {
-      break;
-    }
+    if (activeDays.has(dayStr)) streak++;
+    else break;
   }
 
   return streak;
@@ -78,14 +71,20 @@ exports.getDashboard = async (req, res) => {
       }).lean();
     }
 
-    const modulesWithState = modules.map((m) => ({
-      id: m._id,
-      title: m.title,
-      description: m.description,
-      completed: progress.completedModules.some(
+    const modulesWithState = modules.map((m) => {
+      const completed = progress.completedModules.some(
         (mid) => String(mid) === String(m._id)
-      ),
-    }));
+      );
+
+      return {
+        id: m._id,
+        title: m.title,
+        description: m.description,
+        completed,
+        // ⭐ Quick progress (until topic progress is added)
+        progressPercent: completed ? 100 : 0,
+      };
+    });
 
     // ===============================
     // ACTIVITY + STREAK
@@ -101,8 +100,11 @@ exports.getDashboard = async (req, res) => {
     // STATS
     // ===============================
     const totalPoints = user.xp || 0;
-    const badgesEarned = (user.badges || []).length;
     const modulesCompleted = progress.completedModules.length;
+
+    // ✅ Achievements (replace badges)
+    const achievementsEarned = modulesCompleted;
+
     const nextLevelXP = computeNextLevelXP(user.level || 1);
 
     // ===============================
@@ -113,9 +115,9 @@ exports.getDashboard = async (req, res) => {
       modules: modulesWithState,
       stats: {
         totalPoints,
-        badgesEarned,
+        achievementsEarned,
         modulesCompleted,
-        learningStreak, // 🔥 NEW & FINAL
+        learningStreak,
       },
       nextLevelXP,
       recentActivity,
