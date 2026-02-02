@@ -3,49 +3,42 @@ import { useAuth } from "../context/AuthContext";
 
 const AchievementPage = () => {
   const { user } = useAuth();
-  const [activeTab, setActiveTab] = useState("All");
 
-  const [completedModulesCount, setCompletedModulesCount] = useState(0);
-  const [loadingModules, setLoadingModules] = useState(true);
+  const [activeTab, setActiveTab] = useState("All");
+  const [moduleAchievements, setModuleAchievements] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   /* ================= XP ================= */
   const totalXP = Number(user?.xp || 0);
 
-  /* ================= FRONTEND-ONLY MODULE COMPLETION ================= */
+  /* ================= FETCH BACKEND ACHIEVEMENTS ================= */
   useEffect(() => {
-    if (!user) return; // ✅ SAFE GUARD INSIDE EFFECT
-
-    const fetchCompletedModules = async () => {
+    const fetchAchievements = async () => {
       try {
         const token = localStorage.getItem("token");
 
-        const res = await fetch("http://localhost:5000/api/modules", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
+        const res = await fetch(
+          "http://localhost:5000/api/achievements/me",
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
 
         const data = await res.json();
-
-        const completed = (data.modules || []).filter(
-          (mod) =>
-            Array.isArray(mod.topics) &&
-            mod.topics.length > 0 &&
-            mod.topics.every((t) => t.status === "completed")
-        ).length;
-
-        setCompletedModulesCount(completed);
+        setModuleAchievements(Array.isArray(data) ? data : []);
       } catch (err) {
-        console.error("Failed to compute completed modules", err);
+        console.error("Failed to load achievements", err);
       } finally {
-        setLoadingModules(false);
+        setLoading(false);
       }
     };
 
-    fetchCompletedModules();
-  }, [user]);
+    fetchAchievements();
+  }, []);
 
-  /* ================= SAFE GUARD (AFTER HOOKS) ================= */
+  /* ================= SAFE GUARD ================= */
   if (!user) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
@@ -54,9 +47,8 @@ const AchievementPage = () => {
     );
   }
 
-  /* ================= ACHIEVEMENTS ================= */
-  const achievements = [
-    // XP
+  /* ================= XP ACHIEVEMENTS (OPTIONAL) ================= */
+  const xpAchievements = [
     {
       id: "xp_50",
       title: "XP Beginner",
@@ -87,52 +79,43 @@ const AchievementPage = () => {
       progress: totalXP,
       unlocked: totalXP >= 200,
     },
-
-    // MODULES (FRONTEND-DERIVED)
-    {
-      id: "module_1",
-      title: "First Module Complete",
-      description: "Complete your first module",
-      category: "Modules",
-      icon: "🏁",
-      target: 1,
-      progress: completedModulesCount,
-      unlocked: completedModulesCount >= 1,
-    },
-    {
-      id: "module_2",
-      title: "Module Master",
-      description: "Complete 2 modules",
-      category: "Modules",
-      icon: "👑",
-      target: 2,
-      progress: completedModulesCount,
-      unlocked: completedModulesCount >= 2,
-    },
   ];
+
+  /* ================= NORMALIZE BACKEND ACHIEVEMENTS ================= */
+  const moduleAchievementCards = moduleAchievements.map((a) => ({
+    id: a._id,
+    title: a.title,
+    description: a.description,
+    icon: a.icon || "🏆",
+    category: "Modules",
+    unlocked: a.unlocked,
+    progress: a.unlocked ? 1 : 0,
+    target: 1,
+  }));
+
+  const allAchievements = [...xpAchievements, ...moduleAchievementCards];
 
   const filteredAchievements =
     activeTab === "All"
-      ? achievements
-      : achievements.filter((a) => a.category === activeTab);
+      ? allAchievements
+      : allAchievements.filter((a) => a.category === activeTab);
 
-  const unlockedCount = achievements.filter((a) => a.unlocked).length;
+  const unlockedCount = allAchievements.filter((a) => a.unlocked).length;
   const completionRate = Math.round(
-    (unlockedCount / achievements.length) * 100
+    (unlockedCount / allAchievements.length) * 100
   );
 
   /* ================= UI ================= */
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50 p-6">
       <div className="max-w-7xl mx-auto">
-
         {/* HEADER */}
         <div>
           <h1 className="text-4xl font-extrabold text-gray-900 flex items-center gap-3">
             <span className="text-5xl">🏆</span> Your Achievements
           </h1>
           <p className="text-gray-500 mt-2 max-w-xl">
-            Level up your skills, earn XP, and unlock milestones as you progress.
+            Achievements are unlocked when you complete modules or reach XP milestones.
           </p>
         </div>
 
@@ -141,7 +124,7 @@ const AchievementPage = () => {
           <StatusCard
             icon="🎯"
             title="Unlocked"
-            value={`${unlockedCount}/${achievements.length}`}
+            value={`${unlockedCount}/${allAchievements.length}`}
             gradient="from-indigo-500 to-purple-500"
           />
           <StatusCard
@@ -182,7 +165,7 @@ const AchievementPage = () => {
             <AchievementCard
               key={achievement.id}
               achievement={achievement}
-              loadingModules={loadingModules}
+              loading={loading}
             />
           ))}
         </div>
@@ -210,7 +193,7 @@ const StatusCard = ({ icon, title, value, gradient }) => (
   </div>
 );
 
-const AchievementCard = ({ achievement, loadingModules }) => {
+const AchievementCard = ({ achievement, loading }) => {
   const progressPercent = Math.min(
     Math.round((achievement.progress / achievement.target) * 100),
     100
@@ -225,7 +208,7 @@ const AchievementCard = ({ achievement, loadingModules }) => {
             : "bg-white/70 backdrop-blur border text-gray-600"
         }`}
     >
-      {!achievement.unlocked && !loadingModules && (
+      {!achievement.unlocked && !loading && (
         <div className="absolute inset-0 rounded-3xl bg-white/60 backdrop-blur-sm flex items-center justify-center z-10">
           <span className="text-5xl opacity-70">🔒</span>
         </div>

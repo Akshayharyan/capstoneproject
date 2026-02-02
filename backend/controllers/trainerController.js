@@ -1,5 +1,7 @@
 const Module = require("../models/module");
 const Assignment = require("../models/Assignment");
+const Achievement = require("../models/Achievement");
+console.log("Achievement model type:", typeof Achievement);
 
 /* ======================================================
    1) Get assigned modules (NULL-SAFE)
@@ -185,6 +187,29 @@ exports.deleteTaskFromTopic = async (req, res) => {
     res.json({ message: "Task removed" });
   } catch (error) {
     console.error("Delete task error:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+
+
+exports.createAchievement = async (req, res) => {
+  try {
+    const { title, description, icon, type, moduleId, targetValue } = req.body;
+
+    const achievement = await Achievement.create({
+      title,
+      description,
+      icon,
+      type,
+      moduleId,
+      targetValue,
+      createdBy: req.user._id,
+    });
+
+    res.json({ message: "Achievement created", achievement });
+  } catch (err) {
+    console.error("Create achievement error:", err);
     res.status(500).json({ message: "Server error" });
   }
 };
