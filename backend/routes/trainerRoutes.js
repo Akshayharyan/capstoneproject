@@ -11,32 +11,21 @@ const {
   addTaskToTopic,
   getTopicTasks,
   deleteTaskFromTopic,
+  createAchievement, // ✅ import directly
 } = require("../controllers/trainerController");
 
 /* ======================================================
-   TRAINER ROUTES — FINAL (NO LEVELS)
+   TRAINER ROUTES — FINAL
 ====================================================== */
 
 // Get modules assigned to trainer
-router.get(
-  "/assigned",
-  protect,
-  getAssignedModules
-);
+router.get("/assigned", protect, getAssignedModules);
 
 // Get module details (with topics)
-router.get(
-  "/module/:moduleId",
-  protect,
-  getSingleModule
-);
+router.get("/module/:moduleId", protect, getSingleModule);
 
 // Add topic to module
-router.post(
-  "/module/:moduleId/topic",
-  protect,
-  addTopic
-);
+router.post("/module/:moduleId/topic", protect, addTopic);
 
 // Add task (quiz / coding) to topic
 router.post(
@@ -57,6 +46,13 @@ router.delete(
   "/module/:moduleId/topic/:topicIndex/task/:taskIndex",
   protect,
   deleteTaskFromTopic
+);
+
+// 🔥 CREATE ACHIEVEMENT (TRAINER ONLY)
+router.post(
+  "/achievements",
+  protect,              // ✅ FIXED HERE
+  createAchievement
 );
 
 module.exports = router;

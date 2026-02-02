@@ -1,6 +1,8 @@
 const Module = require("../models/module");
 const Progress = require("../models/progress");
 const User = require("../models/User");
+const { unlockModuleAchievements } = require("../utils/unlockAchievements");
+
 
 /* ===============================
    GET MODULES WITH STATUS + PROGRESS
@@ -130,10 +132,14 @@ exports.completeTopic = async (req, res) => {
     ).length;
 
     if (completedTopics === module.topics.length) {
-      if (!progress.completedModules.includes(moduleId)) {
-        progress.completedModules.push(moduleId);
-      }
-    }
+  if (!progress.completedModules.includes(moduleId)) {
+    progress.completedModules.push(moduleId);
+
+    // 🔓 Unlock module achievement (Option A)
+    await unlockModuleAchievements(userId, moduleId);
+  }
+}
+
 
     await user.save();
     await progress.save();
