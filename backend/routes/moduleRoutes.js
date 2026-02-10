@@ -5,8 +5,10 @@ const protect = require("../middleware/authMiddleware");
 const verifyAdmin = require("../middleware/verifyAdmin");
 
 const { createModule } = require("../controllers/moduleController");
+
 const {
   getModuleTopicsWithStatus,
+  getModulesWithStatus, // 🔥 IMPORTANT
 } = require("../controllers/moduleProgressController");
 
 const Module = require("../models/module");
@@ -17,9 +19,20 @@ const Module = require("../models/module");
 router.post("/create", protect, verifyAdmin, createModule);
 
 /* ======================================================
-   📌 GET ALL MODULES
+   📌 GET ALL MODULES WITH STATUS (EMPLOYEE SIDE) ✅ FIX
+   👉 USED BY: Employee Modules Page
+   👉 URL: /api/modules/status
 ====================================================== */
-router.get("/", protect, async (req, res) => {
+router.get(
+  "/status",
+  protect,
+  getModulesWithStatus
+);
+
+/* ======================================================
+   📌 GET ALL MODULES (ADMIN LIST ONLY)
+====================================================== */
+router.get("/", protect, verifyAdmin, async (req, res) => {
   try {
     const modules = await Module.find({});
 
@@ -40,7 +53,7 @@ router.get("/", protect, async (req, res) => {
 
 /* ======================================================
    📌 GET TOPICS OF A MODULE (🔥 WITH PROGRESS & UNLOCK)
-   ✅ USED BY: TopicRoadmap
+   👉 USED BY: TopicRoadmap (EMPLOYEE)
 ====================================================== */
 router.get(
   "/:moduleId/topics",
@@ -90,7 +103,4 @@ router.delete("/:moduleId", protect, verifyAdmin, async (req, res) => {
   }
 });
 
-/* ======================================================
-   EXPORT ROUTER
-====================================================== */
 module.exports = router;

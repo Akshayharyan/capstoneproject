@@ -33,6 +33,7 @@ import CreateModulePage from "./pages/admin/CreateModulePage";
 import UsersPage from "./pages/admin/UsersPage";
 import AssignModulePage from "./pages/admin/AssignModulePage";
 import AnalyticsPage from "./pages/admin/AnalyticsPage";
+import EmployeeMonitoringPage from "./pages/admin/EmployeeMonitoringPage";
 
 /* ================= TRAINER ================= */
 import TrainerSidebar from "./components/TrainerSidebar";
@@ -176,6 +177,7 @@ function App() {
             <Route path="create-module" element={<CreateModulePage />} />
             <Route path="users" element={<UsersPage />} />
             <Route path="assign" element={<AssignModulePage />} />
+            <Route path="employee-monitoring" element={<EmployeeMonitoringPage />} /> {/* ✅ */}
             <Route path="analytics" element={<AnalyticsPage />} />
           </Route>
 

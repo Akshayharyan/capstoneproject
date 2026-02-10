@@ -9,6 +9,16 @@ const {
   assignModule,
   getAnalytics, // 👈 added
 } = require("../controllers/adminController");
+const { getEmployeeMonitoring } =
+  require("../controllers/adminEmployeeController");
+
+router.get(
+  "/employee-monitoring",
+  protect,
+  verifyAdmin,
+  getEmployeeMonitoring
+);
+
 
 // GET ALL USERS
 router.get("/users", protect, verifyAdmin, getAllUsers);
