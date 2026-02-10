@@ -1,5 +1,4 @@
 const Module = require("../models/module");
-const Progress = require("../models/progress");
 
 
 // ===============================
@@ -15,7 +14,8 @@ exports.createModule = async (req, res) => {
     const module = await Module.create({
       title,
       description: description || "",
-      topics: [] // trainer will add topics + levels later
+      status: "active",
+      topics: []
     });
 
     res.json({ success: true, message: "Module created", module });
@@ -27,73 +27,48 @@ exports.createModule = async (req, res) => {
 
 
 // ===============================
-// 📌 GET QUESTS OF MODULE (Existing)
+// 📌 GET SINGLE MODULE (Admin Edit)
 // ===============================
-exports.getModuleQuests = async (req, res) => {
+exports.getSingleModule = async (req, res) => {
   try {
-    const userId = req.user._id;
-    const { moduleId } = req.params;
+    const module = await Module.findById(req.params.moduleId);
 
-    const module = await Module.findById(moduleId).lean();
-    if (!module) return res.status(404).json({ message: "Module not found" });
-
-    const progress = await Progress.findOne({ userId }).lean();
-
-    const completedIds =
-      progress?.completedQuests
-        .filter((cq) => String(cq.moduleId) === String(moduleId))
-        .map((cq) => String(cq.questId)) || [];
-
-    const quests = module.quests
-      .sort((a, b) => a.order - b.order)
-      .map((q, index) => {
-        const isCompleted = completedIds.includes(String(q._id));
-        const isCurrent = index === completedIds.length;
-        const isLocked = index > completedIds.length;
-
-        return {
-          id: q._id,
-          title: q.title,
-          xp: q.xp,
-          order: q.order,
-          status: isCompleted ? "Completed" : isCurrent ? "Current" : "Locked",
-        };
-      });
+    if (!module)
+      return res.status(404).json({ message: "Module not found" });
 
     res.json({
-      moduleTitle: module.title,
-      quests,
+      _id: module._id,
+      title: module.title,
+      description: module.description,
+      status: module.status || "active"
     });
-  } catch (error) {
-    console.error("Get module quests error:", error);
+  } catch (err) {
+    console.error("Fetch single module error:", err);
     res.status(500).json({ message: "Server error" });
   }
 };
+
+
 // ===============================
-// 📌 GET TOPICS OF MODULE (EMPLOYEE)
+// 📌 UPDATE MODULE (Admin)
 // ===============================
-exports.getModuleTopics = async (req, res) => {
+exports.updateModule = async (req, res) => {
   try {
-    const { moduleId } = req.params;
+    const { title, description, status } = req.body;
 
-    const module = await Module.findById(moduleId).lean();
-    if (!module) {
+    const module = await Module.findById(req.params.moduleId);
+    if (!module)
       return res.status(404).json({ message: "Module not found" });
-    }
 
-    res.json({
-      moduleTitle: module.title,
-      topics: module.topics.map((t, index) => ({
-        index,
-        title: t.title,
-        videoUrl: t.videoUrl,   // ✅ CRITICAL
-        videoDuration: t.videoDuration || "",
-        xp: t.xp || 0,
-        tasksCount: t.tasks?.length || 0
-      }))
-    });
-  } catch (error) {
-    console.error("Get module topics error:", error);
+    if (title) module.title = title;
+    if (description !== undefined) module.description = description;
+    if (status) module.status = status;
+
+    await module.save();
+
+    res.json({ success: true, message: "Module updated", module });
+  } catch (err) {
+    console.error("Update module error:", err);
     res.status(500).json({ message: "Server error" });
   }
 };
