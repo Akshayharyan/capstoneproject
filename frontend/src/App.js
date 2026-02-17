@@ -26,6 +26,8 @@ import TopicVideoPage from "./pages/employee/TopicVideoPage";
 import TopicChallengesPage from "./pages/employee/TopicChallengesPage";
 import Profile from "./pages/Profile";
 import AchievementPage from "./pages/AchievementPage";
+import BossBattlePage from "./pages/employee/BossBattlePage";
+
 
 /* ================= ADMIN ================= */
 import AdminDashboard from "./pages/admin/AdminDashboard";
@@ -140,6 +142,8 @@ function App() {
                 </ProtectedRoute>
               }
             />
+            <Route path="/employee/boss/:moduleId" element={<BossBattlePage />} />
+
 
             {/* ---------- TOPIC FLOW ---------- */}
             <Route

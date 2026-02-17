@@ -1,12 +1,11 @@
 const Module = require("../models/module");
 
-
 // ===============================
 // 📌 CREATE NEW MODULE (Admin)
 // ===============================
 exports.createModule = async (req, res) => {
   try {
-    const { title, description } = req.body;
+    const { title, description, boss } = req.body;
 
     if (!title || title.trim() === "")
       return res.status(400).json({ message: "Module title is required" });
@@ -14,6 +13,7 @@ exports.createModule = async (req, res) => {
     const module = await Module.create({
       title,
       description: description || "",
+      boss: boss || null,   // 🐉 NEW (safe)
       status: "active",
       topics: []
     });
@@ -31,7 +31,7 @@ exports.createModule = async (req, res) => {
 // ===============================
 exports.getSingleModule = async (req, res) => {
   try {
-    const module = await Module.findById(req.params.moduleId);
+    const module = await Module.findById(req.params.moduleId).populate("boss");
 
     if (!module)
       return res.status(404).json({ message: "Module not found" });
@@ -40,7 +40,8 @@ exports.getSingleModule = async (req, res) => {
       _id: module._id,
       title: module.title,
       description: module.description,
-      status: module.status || "active"
+      status: module.status || "active",
+      boss: module.boss || null   // 🐉 NEW
     });
   } catch (err) {
     console.error("Fetch single module error:", err);
@@ -54,7 +55,7 @@ exports.getSingleModule = async (req, res) => {
 // ===============================
 exports.updateModule = async (req, res) => {
   try {
-    const { title, description, status } = req.body;
+    const { title, description, status, boss } = req.body;
 
     const module = await Module.findById(req.params.moduleId);
     if (!module)
@@ -63,6 +64,9 @@ exports.updateModule = async (req, res) => {
     if (title) module.title = title;
     if (description !== undefined) module.description = description;
     if (status) module.status = status;
+
+    // 🐉 NEW
+    if (boss !== undefined) module.boss = boss;
 
     await module.save();
 

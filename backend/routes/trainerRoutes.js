@@ -12,6 +12,7 @@ const {
   getTopicTasks,
   deleteTaskFromTopic,
   createAchievement, // ✅ import directly
+  assignBossToModule,
 } = require("../controllers/trainerController");
 
 /* ======================================================
@@ -54,5 +55,11 @@ router.post(
   protect,              // ✅ FIXED HERE
   createAchievement
 );
+router.post(
+  "/module/:moduleId/assign-boss",
+  protect,
+  assignBossToModule
+);
+
 
 module.exports = router;

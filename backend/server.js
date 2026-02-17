@@ -2,12 +2,13 @@ require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
 const cookieParser = require("cookie-parser");
+const path = require("path");
 const connectDB = require("./config/db");
 
 // Test model import
 const TestUserModel = require("./models/User");
 console.log("🧪 Testing model import =", TestUserModel);
-
+require("./models/Boss");
 const app = express();
 connectDB();
 
@@ -23,14 +24,15 @@ const userRoutes = require("./routes/userRoutes");
 const trainerRoutes = require("./routes/trainerRoutes");
 const employeeRoutes = require("./routes/employeeRoutes");
 const adminRoutes = require("./routes/adminRoutes");
-// 🆕 AUTO-GRADER ROUTES
 const graderRoutes = require("./routes/graderRoutes");
 const achievementRoutes = require("./routes/achievementRoutes");
-
-
-
-// 🆕 NEW ROUTES (SAFE ADD)
 const moduleProgressRoutes = require("./routes/moduleProgressRoutes");
+const bossBattleRoutes = require("./routes/bossBattleRoutes");
+const bossChallengeRoutes = require("./routes/bossChallengeRoutes");
+
+
+// 🆕 NEW BOSS ROUTES
+const bossRoutes = require("./routes/bossRoutes");
 
 // ===============================
 // MIDDLEWARE
@@ -45,6 +47,9 @@ app.use(
 app.use(express.json());
 app.use(cookieParser());
 
+// 🆕 Serve boss images statically
+app.use("/bosses", express.static(path.join(__dirname, "../frontend/public/bosses")));
+
 // ===============================
 // REGISTER ROUTES
 // ===============================
@@ -57,13 +62,17 @@ app.use("/api/trainer", trainerRoutes);
 app.use("/api/modules", moduleRoutes);
 app.use("/api/activity", activityRoutes);
 app.use("/api/admin", adminRoutes);
-
 app.use("/api/grader", graderRoutes);
 app.use("/api/achievements", achievementRoutes);
 
+// 🆕 REGISTER BOSS ROUTES
+
+app.use("/api/bosses", bossRoutes);
+app.use("/api/boss", bossBattleRoutes);
+app.use("/api/boss", bossChallengeRoutes);
 
 
-// 🆕 REGISTER MODULE PROGRESS ROUTES (NON-BREAKING)
+// 🆕 MODULE PROGRESS ROUTES
 app.use("/api", moduleProgressRoutes);
 
 // ===============================
@@ -81,4 +90,4 @@ app.use((err, req, res, next) => {
 
 // ===============================
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));

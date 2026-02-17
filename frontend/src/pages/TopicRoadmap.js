@@ -1,4 +1,3 @@
-// src/pages/TopicRoadmap.js
 import React, { useEffect, useRef, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import {
@@ -20,12 +19,14 @@ export default function TopicRoadmap() {
   const nodeRefs = useRef([]);
 
   const [topics, setTopics] = useState([]);
+  const [boss, setBoss] = useState(null);
+  const [bossUnlocked, setBossUnlocked] = useState(false);
   const [moduleTitle, setModuleTitle] = useState("");
   const [progressPercent, setProgressPercent] = useState(0);
   const [paths, setPaths] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  /* ================= FETCH TOPICS ================= */
+  /* ================= FETCH TOPICS + BOSS ================= */
   useEffect(() => {
     const fetchTopics = async () => {
       const res = await fetch(
@@ -35,6 +36,8 @@ export default function TopicRoadmap() {
       const data = await res.json();
 
       setTopics(data.topics || []);
+      setBoss(data.boss || null);
+      setBossUnlocked(data.bossUnlocked || false);
       setModuleTitle(data.moduleTitle || "Learning Path");
       setProgressPercent(data.progressPercent || 0);
       setLoading(false);
@@ -43,7 +46,7 @@ export default function TopicRoadmap() {
     fetchTopics();
   }, [moduleId, token]);
 
-  /* ================= ZIG-ZAG SVG CONNECTORS ================= */
+  /* ================= CONNECTOR PATHS ================= */
   useEffect(() => {
     if (!containerRef.current || nodeRefs.current.length < 2) return;
 
@@ -104,7 +107,6 @@ export default function TopicRoadmap() {
           Your Learning Journey
         </h1>
 
-        {/* Progress */}
         <div className="max-w-md mx-auto">
           <div className="h-3 bg-gray-200 rounded-full overflow-hidden">
             <motion.div
@@ -158,7 +160,6 @@ export default function TopicRoadmap() {
               transition={{ delay: i * 0.12 }}
             >
               <div className="flex items-center gap-6">
-                {/* NODE */}
                 <motion.button
                   ref={(el) => (nodeRefs.current[i] = el)}
                   disabled={topic.status === "locked"}
@@ -171,11 +172,8 @@ export default function TopicRoadmap() {
                       ? { scale: [1, 1.1, 1] }
                       : {}
                   }
-                  transition={{
-                    repeat: Infinity,
-                    duration: 1.6,
-                  }}
-                  className={`w-[72px] h-[72px] rounded-full flex items-center justify-center text-white shadow-2xl transition
+                  transition={{ repeat: Infinity, duration: 1.6 }}
+                  className={`w-[72px] h-[72px] rounded-full flex items-center justify-center text-white shadow-2xl
                     ${
                       topic.status === "completed"
                         ? "bg-emerald-500"
@@ -189,67 +187,53 @@ export default function TopicRoadmap() {
                   {topic.status === "locked" && <Lock />}
                 </motion.button>
 
-                {/* CARD */}
-                <div
-                  className={`bg-white rounded-3xl p-6 w-80 shadow-xl border transition
-                    ${
-                      topic.status === "locked"
-                        ? "opacity-70 backdrop-blur"
-                        : "hover:shadow-2xl"
-                    }`}
-                >
+                <div className="bg-white rounded-3xl p-6 w-80 shadow-xl border">
                   <h3 className="font-bold text-gray-900 text-lg mb-3">
                     {topic.title}
                   </h3>
 
-                  <div className="flex items-center gap-3 text-sm mb-3">
-                    <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-indigo-100 text-indigo-600 font-semibold">
-                      <Zap className="w-3 h-3" />
-                      {topic.xp} XP
-                    </span>
-
-                    {topic.status === "completed" && (
-                      <span className="text-emerald-600 font-semibold">
-                        ✔ Completed
-                      </span>
-                    )}
-                    {topic.status === "active" && (
-                      <span className="text-indigo-500 font-semibold">
-                        ● Active
-                      </span>
-                    )}
-                    {topic.status === "locked" && (
-                      <span className="text-gray-400">
-                        Locked
-                      </span>
-                    )}
-                  </div>
-
-                  {topic.status === "active" && (
-                    <button className="mt-2 text-indigo-600 font-semibold hover:underline">
-                      Start Topic →
-                    </button>
-                  )}
+                  <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-indigo-100 text-indigo-600 font-semibold">
+                    <Zap className="w-3 h-3" />
+                    {topic.xp} XP
+                  </span>
                 </div>
               </div>
             </motion.div>
           );
         })}
 
-        {/* FINAL TROPHY */}
-        {topics.length > 0 &&
-          topics.every((t) => t.status === "completed") && (
-            <motion.div
-              className="flex justify-center mt-24"
-              initial={{ scale: 0 }}
-              animate={{ scale: 1 }}
-              transition={{ type: "spring", stiffness: 120 }}
-            >
-              <div className="w-28 h-28 rounded-full bg-gradient-to-br from-yellow-400 to-orange-400 flex items-center justify-center shadow-2xl ring-4 ring-yellow-300/40">
-                <Trophy className="w-12 h-12 text-white" />
-              </div>
-            </motion.div>
-          )}
+        {/* 🐲 FINAL BOSS */}
+        {bossUnlocked && boss && (
+          <motion.div
+            className="flex justify-center mt-28"
+            initial={{ scale: 0.8, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ duration: 0.6 }}
+          >
+            <div className="bg-gradient-to-br from-purple-600 to-indigo-700 rounded-3xl p-8 shadow-2xl text-center text-white w-80">
+              <img
+                src={boss.image}
+                alt={boss.name}
+                className="w-40 mx-auto mb-4 rounded-xl shadow-xl"
+              />
+
+              <h2 className="text-2xl font-extrabold mb-1">{boss.name}</h2>
+              <p className="opacity-90 mb-5">
+                Difficulty: {boss.difficulty}
+              </p>
+
+              <button
+                onClick={() =>
+                  navigate(`/employee/boss/${moduleId}`)
+
+                }
+                className="bg-white text-purple-700 font-bold px-6 py-3 rounded-xl hover:scale-105 transition shadow-lg"
+              >
+                ⚔️ Fight Final Boss
+              </button>
+            </div>
+          </motion.div>
+        )}
       </div>
     </div>
   );
