@@ -1,90 +1,86 @@
-// backend/models/module.js
 const mongoose = require("mongoose");
 
 /* ================================
-   TEST CASE SCHEMA (Coding)
+   TEST CASE (CODING)
 ================================ */
 const TestCaseSchema = new mongoose.Schema({
-  input: { type: String },
-  output: { type: String },
+  input: String,
+  output: String,
 });
 
 /* ================================
-   TASK SCHEMA (Quiz / Coding)
+   TASK (QUIZ / CODING / BUG FIX)
 ================================ */
 const TaskSchema = new mongoose.Schema({
   type: {
     type: String,
-    enum: ["quiz", "coding"],
+    enum: ["quiz", "coding", "bugfix"],
     required: true,
   },
 
   /* ---------- QUIZ ---------- */
-  question: { type: String },
-  options: [{ type: String }],
-  correctAnswer: { type: String }, // store option text
+  question: String,
+  options: [String],
+  correctAnswer: String,
 
   /* ---------- CODING ---------- */
-  codingPrompt: { type: String },
-  starterCode: { type: String },
+  codingPrompt: String,
+  starterCode: String,
   testCases: [TestCaseSchema],
 
-  // 🔥 NEW (NON-BREAKING)
   language: {
     type: String,
-    default: "html", // safe default
+    default: "javascript",
   },
 
-  // 🔥 NEW (NON-BREAKING)
   gradingRules: {
     type: Object,
-    default: {}, // dynamic rules for grader
+    default: {},
   },
 
+  /* ---------- BUG FIX ---------- */
+  buggyCode: String,
+  expectedFix: String,
+  hint: String,
+
   /* ---------- COMMON ---------- */
-  xp: { type: Number, default: 10 },
+  xp: { type: Number, default: 20 },
 });
 
 /* ================================
-   TOPIC SCHEMA (VIDEO-FIRST)
+   TOPIC
 ================================ */
 const TopicSchema = new mongoose.Schema({
   title: { type: String, required: true },
 
-  /* 🎥 VIDEO CONTENT */
-  videoUrl: {
-    type: String,
-    required: true,
-  },
-  videoDuration: {
-    type: String,
-  },
+  videoUrl: { type: String, required: true },
+  videoDuration: String,
 
-  /* 🧠 QUIZ + 💻 CODING */
   tasks: [TaskSchema],
 
-  /* ⭐ TOTAL XP FOR TOPIC */
-  xp: {
-    type: Number,
-    default: 100,
-  },
+  xp: { type: Number, default: 100 },
 });
 
 /* ================================
-   MODULE SCHEMA
+   MODULE (GAME READY)
 ================================ */
 const ModuleSchema = new mongoose.Schema(
   {
     title: { type: String, required: true },
-    description: { type: String },
+    description: String,
+
+    // 🐲 BOSS ATTACHED TO MODULE
+    boss: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Boss",
+      default: null, // keeps old modules safe
+    },
+
     topics: [TopicSchema],
   },
   { timestamps: true }
 );
 
-/* ================================
-   EXPORT (SAFE FOR HOT RELOAD)
-================================ */
 module.exports =
   mongoose.models.Module ||
   mongoose.model("Module", ModuleSchema);
