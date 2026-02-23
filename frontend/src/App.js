@@ -28,7 +28,6 @@ import Profile from "./pages/Profile";
 import AchievementPage from "./pages/AchievementPage";
 import BossBattlePage from "./pages/employee/BossBattlePage";
 
-
 /* ================= ADMIN ================= */
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import CreateModulePage from "./pages/admin/CreateModulePage";
@@ -43,15 +42,13 @@ import TrainerModulesPage from "./pages/trainer/TrainerModulesPage";
 import TrainerEditTopicsPage from "./pages/trainer/TrainerEditTopicsPage";
 import TrainerTopicTasksPage from "./pages/trainer/TrainerTopicTasksPage";
 
-/* ================= LAYOUTS ================= */
-const PublicEmployeeLayout = () => {
-  return (
-    <>
-      <Header />
-      <Outlet />
-    </>
-  );
-};
+/* ================= LAYOUT ================= */
+const PublicEmployeeLayout = () => (
+  <>
+    <Header />
+    <Outlet />
+  </>
+);
 
 function App() {
   return (
@@ -64,154 +61,102 @@ function App() {
           ===================================================== */}
           <Route element={<PublicEmployeeLayout />}>
 
-            {/* ---------- PUBLIC ---------- */}
-            <Route
-              path="/"
-              element={
-                <GuestRoute>
-                  <Home />
-                </GuestRoute>
-              }
-            />
+            <Route path="/" element={<GuestRoute><Home /></GuestRoute>} />
+            <Route path="/login" element={<GuestRoute><Login /></GuestRoute>} />
+            <Route path="/signup" element={<GuestRoute><Signup /></GuestRoute>} />
 
-            <Route
-              path="/login"
-              element={
-                <GuestRoute>
-                  <Login />
-                </GuestRoute>
-              }
-            />
-
-            <Route
-              path="/signup"
-              element={
-                <GuestRoute>
-                  <Signup />
-                </GuestRoute>
-              }
-            />
-
-            {/* ✅ FEATURES PAGE */}
             <Route path="/features" element={<Features />} />
-
             <Route path="/about" element={<About />} />
 
-            {/* ---------- EMPLOYEE ---------- */}
             <Route
               path="/dashboard"
-              element={
-                <ProtectedRoute allow={["employee"]}>
-                  <Dashboard />
-                </ProtectedRoute>
-              }
+              element={<ProtectedRoute allow={["employee"]}><Dashboard /></ProtectedRoute>}
             />
 
             <Route
               path="/profile"
-              element={
-                <ProtectedRoute allow={["employee"]}>
-                  <Profile />
-                </ProtectedRoute>
-              }
+              element={<ProtectedRoute allow={["employee"]}><Profile /></ProtectedRoute>}
             />
 
             <Route
               path="/achievements"
-              element={
-                <ProtectedRoute allow={["employee"]}>
-                  <AchievementPage />
-                </ProtectedRoute>
-              }
+              element={<ProtectedRoute allow={["employee"]}><AchievementPage /></ProtectedRoute>}
             />
 
             <Route
               path="/modules"
-              element={
-                <ProtectedRoute allow={["employee"]}>
-                  <Modules />
-                </ProtectedRoute>
-              }
+              element={<ProtectedRoute allow={["employee"]}><Modules /></ProtectedRoute>}
             />
 
             <Route
               path="/modules/:moduleId/topics"
-              element={
-                <ProtectedRoute allow={["employee"]}>
-                  <TopicRoadmap />
-                </ProtectedRoute>
-              }
+              element={<ProtectedRoute allow={["employee"]}><TopicRoadmap /></ProtectedRoute>}
             />
-            <Route path="/employee/boss/:moduleId" element={<BossBattlePage />} />
 
-
-            {/* ---------- TOPIC FLOW ---------- */}
             <Route
               path="/modules/:moduleId/topic/:topicIndex/video"
-              element={
-                <ProtectedRoute allow={["employee"]}>
-                  <TopicVideoPage />
-                </ProtectedRoute>
-              }
+              element={<ProtectedRoute allow={["employee"]}><TopicVideoPage /></ProtectedRoute>}
             />
 
             <Route
               path="/modules/:moduleId/topic/:topicIndex/challenges"
-              element={
-                <ProtectedRoute allow={["employee"]}>
-                  <TopicChallengesPage />
-                </ProtectedRoute>
-              }
+              element={<ProtectedRoute allow={["employee"]}><TopicChallengesPage /></ProtectedRoute>}
+            />
+
+            <Route
+              path="/employee/boss/:moduleId"
+              element={<ProtectedRoute allow={["employee"]}><BossBattlePage /></ProtectedRoute>}
             />
 
           </Route>
 
           {/* =====================================================
-              ADMIN (NO HEADER)
+              ADMIN
           ===================================================== */}
           <Route
             path="/admin"
-            element={
-              <ProtectedRoute allow={["admin"]}>
-                <AdminDashboard />
-              </ProtectedRoute>
-            }
+            element={<ProtectedRoute allow={["admin"]}><AdminDashboard /></ProtectedRoute>}
           >
             <Route index element={<CreateModulePage />} />
             <Route path="create-module" element={<CreateModulePage />} />
             <Route path="users" element={<UsersPage />} />
             <Route path="assign" element={<AssignModulePage />} />
-            <Route path="employee-monitoring" element={<EmployeeMonitoringPage />} /> {/* ✅ */}
+            <Route path="employee-monitoring" element={<EmployeeMonitoringPage />} />
             <Route path="analytics" element={<AnalyticsPage />} />
           </Route>
 
           {/* =====================================================
-              TRAINER (NO HEADER)
+              TRAINER (CLEAN FLOW)
           ===================================================== */}
           <Route
             path="/trainer"
             element={
               <ProtectedRoute allow={["trainer"]}>
                 <div className="flex min-h-screen bg-[#f7f8fc]">
-  <TrainerSidebar />
-
-  <main className="flex-1 bg-[#f7f8fc] p-10">
-    <Outlet />
-  </main>
-</div>
-
+                  <TrainerSidebar />
+                  <main className="flex-1 p-10 text-gray-900">
+                    <Outlet />
+                  </main>
+                </div>
               </ProtectedRoute>
             }
           >
+
+            {/* Trainer dashboard */}
             <Route index element={<TrainerModulesPage />} />
+
+            {/* Edit module topics */}
             <Route
               path="modules/:moduleId/edit"
               element={<TrainerEditTopicsPage />}
             />
+
+            {/* Manage topic tasks (sandbox) */}
             <Route
               path="modules/:moduleId/topic/:topicIndex/tasks"
               element={<TrainerTopicTasksPage />}
             />
+
           </Route>
 
         </Routes>

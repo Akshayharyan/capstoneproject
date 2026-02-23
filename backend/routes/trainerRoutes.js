@@ -1,65 +1,94 @@
-// backend/routes/trainerRoutes.js
 const express = require("express");
 const router = express.Router();
-
 const protect = require("../middleware/authMiddleware");
 
 const {
   getAssignedModules,
   getSingleModule,
   addTopic,
+
+  /* TASK MANAGEMENT */
   addTaskToTopic,
+  updateTaskInTopic,
   getTopicTasks,
   deleteTaskFromTopic,
-  createAchievement, // ✅ import directly
-  assignBossToModule,
+  addTestCase,
+
+  /* ACHIEVEMENTS & BOSS */
+  createAchievement,
+  assignBossToModule
 } = require("../controllers/trainerController");
 
-/* ======================================================
-   TRAINER ROUTES — FINAL
-====================================================== */
+/* =====================================================
+   MODULE ROUTES
+===================================================== */
 
 // Get modules assigned to trainer
 router.get("/assigned", protect, getAssignedModules);
 
-// Get module details (with topics)
+// Get single module with topics
 router.get("/module/:moduleId", protect, getSingleModule);
 
 // Add topic to module
 router.post("/module/:moduleId/topic", protect, addTopic);
 
-// Add task (quiz / coding) to topic
-router.post(
-  "/module/:moduleId/topic/:topicIndex/task",
-  protect,
-  addTaskToTopic
-);
 
-// Get tasks of a topic
+/* =====================================================
+   TASK ROUTES
+===================================================== */
+
+// Get all tasks inside a topic
 router.get(
   "/module/:moduleId/topic/:topicIndex/tasks",
   protect,
   getTopicTasks
 );
 
-// Delete task from topic
+// Add new task (quiz / coding / bugfix)
+router.post(
+  "/module/:moduleId/topic/:topicIndex/task",
+  protect,
+  addTaskToTopic
+);
+
+// ✏️ Edit existing task
+router.put(
+  "/module/:moduleId/topic/:topicIndex/task/:taskIndex",
+  protect,
+  updateTaskInTopic
+);
+
+// 🗑 Delete task
 router.delete(
   "/module/:moduleId/topic/:topicIndex/task/:taskIndex",
   protect,
   deleteTaskFromTopic
 );
 
-// 🔥 CREATE ACHIEVEMENT (TRAINER ONLY)
+// ➕ Add test case to coding task
 router.post(
-  "/achievements",
-  protect,              // ✅ FIXED HERE
-  createAchievement
+  "/module/:moduleId/topic/:topicIndex/task/:taskIndex/testcase",
+  protect,
+  addTestCase
 );
+router.put(
+  "/module/:moduleId/topic/:topicIndex/task/:taskIndex",
+  protect,
+  updateTaskInTopic
+);
+
+/* =====================================================
+   ACHIEVEMENTS & BOSS
+===================================================== */
+
+// Create achievement
+router.post("/achievements", protect, createAchievement);
+
+// Assign boss to module
 router.post(
   "/module/:moduleId/assign-boss",
   protect,
   assignBossToModule
 );
-
 
 module.exports = router;

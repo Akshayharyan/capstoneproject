@@ -1,19 +1,27 @@
-require("dotenv").config();
+require("dotenv").config({
+  path: require("path").resolve(__dirname, ".env"),
+});
+
 const express = require("express");
 const cors = require("cors");
 const cookieParser = require("cookie-parser");
 const path = require("path");
+
 const connectDB = require("./config/db");
 
-// Test model import
-const TestUserModel = require("./models/User");
-console.log("🧪 Testing model import =", TestUserModel);
-require("./models/Boss");
+// ===============================
+// INIT
+// ===============================
 const app = express();
 connectDB();
 
 // ===============================
-// ROUTES (EXISTING)
+// DEBUG (optional)
+// ===============================
+console.log("ENV LOADED:", process.env.OPENAI_API_KEY ? "YES" : "NO");
+
+// ===============================
+// IMPORT ROUTES
 // ===============================
 const authRoutes = require("./routes/authRoutes");
 const dashboardRoutes = require("./routes/dashboardRoutes");
@@ -29,10 +37,10 @@ const achievementRoutes = require("./routes/achievementRoutes");
 const moduleProgressRoutes = require("./routes/moduleProgressRoutes");
 const bossBattleRoutes = require("./routes/bossBattleRoutes");
 const bossChallengeRoutes = require("./routes/bossChallengeRoutes");
-
-
-// 🆕 NEW BOSS ROUTES
+const judgeRoutes = require("./routes/judgeRoutes");
 const bossRoutes = require("./routes/bossRoutes");
+const codeRoutes = require("./routes/codeRoutes");
+const aiRoutes = require("./routes/aiRoutes");
 
 // ===============================
 // MIDDLEWARE
@@ -47,12 +55,16 @@ app.use(
 app.use(express.json());
 app.use(cookieParser());
 
-// 🆕 Serve boss images statically
-app.use("/bosses", express.static(path.join(__dirname, "../frontend/public/bosses")));
+// Serve boss images statically
+app.use(
+  "/bosses",
+  express.static(path.join(__dirname, "../frontend/public/bosses"))
+);
 
 // ===============================
 // REGISTER ROUTES
 // ===============================
+
 app.use("/api/auth", authRoutes);
 app.use("/api/user", userRoutes);
 app.use("/api/dashboard", dashboardRoutes);
@@ -62,32 +74,43 @@ app.use("/api/trainer", trainerRoutes);
 app.use("/api/modules", moduleRoutes);
 app.use("/api/activity", activityRoutes);
 app.use("/api/admin", adminRoutes);
-app.use("/api/grader", graderRoutes);
-app.use("/api/achievements", achievementRoutes);
 
-// 🆕 REGISTER BOSS ROUTES
+app.use("/api/grader", graderRoutes);        // ✅ ONLY ONCE
+app.use("/api/code", codeRoutes);            // sandbox engine
+app.use("/api/ai", aiRoutes);
+
+app.use("/api/achievements", achievementRoutes);
+app.use("/api/judge", judgeRoutes);
 
 app.use("/api/bosses", bossRoutes);
 app.use("/api/boss", bossBattleRoutes);
 app.use("/api/boss", bossChallengeRoutes);
 
-
-// 🆕 MODULE PROGRESS ROUTES
 app.use("/api", moduleProgressRoutes);
 
 // ===============================
 // HEALTH CHECK
 // ===============================
-app.get("/", (req, res) => res.send("API running"));
+app.get("/", (req, res) => {
+  res.send("API running");
+});
 
 // ===============================
 // GLOBAL ERROR HANDLER
 // ===============================
 app.use((err, req, res, next) => {
   console.error("SERVER ERROR:", err);
-  res.status(500).json({ message: "Server Error" });
+  res.status(500).json({
+    success: false,
+    message: "Internal Server Error",
+  });
 });
 
 // ===============================
+// START SERVER
+// ===============================
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
+
+app.listen(PORT, () => {
+  console.log(`🚀 Server running on port ${PORT}`);
+});

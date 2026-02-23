@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { useParams } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 
@@ -8,263 +8,326 @@ export default function TrainerTopicTasksPage() {
 
   const [tasks, setTasks] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [editingIndex, setEditingIndex] = useState(null);
+  const [testCaseDrafts, setTestCaseDrafts] = useState({});
 
-  const [newTask, setNewTask] = useState({
-    type: "quiz",
-
-    // quiz
-    question: "",
-    options: ["", "", "", ""],
-    correctAnswer: "",
-
-    // coding
-    codingPrompt: "",
+  const emptyForm = {
+    type: "coding",
+    title: "",
+    description: "",
     starterCode: "",
-    language: "html",
+    options: ["", "", "", ""],
+    correctOption: 0
+  };
 
-    gradingRules: {
-      requiredTags: "",
-      textIncludes: "",
-      forbiddenTags: "",
-    },
+  const [form, setForm] = useState(emptyForm);
 
-    xp: 0,
-  });
+  /* ================= LOAD ================= */
 
-  /* ================= FETCH TASKS ================= */
-  useEffect(() => {
-    const fetchTasks = async () => {
-      try {
-        const res = await fetch(
-          `http://localhost:5000/api/trainer/module/${moduleId}/topic/${topicIndex}/tasks`,
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
-        const data = await res.json();
-        setTasks(data.tasks || []);
-      } catch (err) {
-        console.error(err);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchTasks();
-  }, [moduleId, topicIndex, token]);
-
-  /* ================= ADD TASK ================= */
-  const addTask = async () => {
-    const payload = {
-      type: newTask.type,
-      xp: Number(newTask.xp) || 0,
-    };
-
-    if (newTask.type === "quiz") {
-      payload.question = newTask.question.trim();
-      payload.options = newTask.options.filter(Boolean);
-      payload.correctAnswer = newTask.correctAnswer.trim();
-    }
-
-    if (newTask.type === "coding") {
-      payload.codingPrompt = newTask.codingPrompt.trim();
-      payload.starterCode = newTask.starterCode;
-      payload.language = newTask.language;
-
-      payload.gradingRules = {
-        requiredTags: newTask.gradingRules.requiredTags
-          .split(",")
-          .map((s) => s.trim())
-          .filter(Boolean),
-
-        textIncludes: newTask.gradingRules.textIncludes
-          .split(",")
-          .map((s) => s.trim().toLowerCase())
-          .filter(Boolean),
-
-        forbiddenTags: newTask.gradingRules.forbiddenTags
-          .split(",")
-          .map((s) => s.trim())
-          .filter(Boolean),
-      };
-    }
-
+  const loadTasks = useCallback(async () => {
     try {
       const res = await fetch(
-        `http://localhost:5000/api/trainer/module/${moduleId}/topic/${topicIndex}/task`,
-        {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(payload),
-        }
+        `http://localhost:5000/api/trainer/module/${moduleId}/topic/${topicIndex}/tasks`,
+        { headers: { Authorization: `Bearer ${token}` } }
       );
 
       const data = await res.json();
-      if (!res.ok) return alert(data.message || "Failed");
+      setTasks(data.success ? data.tasks : []);
+    } catch {
+      setTasks([]);
+    } finally {
+      setLoading(false);
+    }
+  }, [moduleId, topicIndex, token]);
 
-      setTasks((prev) => [...prev, data.task]);
-      resetForm();
-    } catch (err) {
-      alert("Server error");
+  useEffect(() => {
+    loadTasks();
+  }, [loadTasks]);
+
+  /* ================= ADD / UPDATE ================= */
+
+  const submitTask = async () => {
+    if (!form.title.trim() || !form.description.trim())
+      return alert("Title & description required");
+
+    if (form.type === "quiz" && form.options.some(o => !o.trim()))
+      return alert("Fill all quiz options");
+
+    const payload = {
+      type: form.type,
+      title: form.title,
+      description: form.description,
+      starterCode: form.starterCode,
+      options: form.type === "quiz" ? form.options : [],
+      correctOption: form.type === "quiz" ? form.correctOption : null
+    };
+
+    const url =
+      editingIndex === null
+        ? `http://localhost:5000/api/trainer/module/${moduleId}/topic/${topicIndex}/task`
+        : `http://localhost:5000/api/trainer/module/${moduleId}/topic/${topicIndex}/task/${editingIndex}`;
+
+    const method = editingIndex === null ? "POST" : "PUT";
+
+    const res = await fetch(url, {
+      method,
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(payload)
+    });
+
+    const data = await res.json();
+
+    if (data.success) {
+      setTasks(data.tasks);
+      setForm(emptyForm);
+      setEditingIndex(null);
     }
   };
 
-  const resetForm = () =>
-    setNewTask({
-      type: "quiz",
-      question: "",
-      options: ["", "", "", ""],
-      correctAnswer: "",
-      codingPrompt: "",
-      starterCode: "",
-      language: "html",
-      gradingRules: {
-        requiredTags: "",
-        textIncludes: "",
-        forbiddenTags: "",
-      },
-      xp: 0,
-    });
+  /* ================= DELETE ================= */
 
-  if (loading) return <p className="text-gray-500">Loading tasks…</p>;
+  const deleteTask = async (index) => {
+    if (!window.confirm("Delete this task?")) return;
+
+    await fetch(
+      `http://localhost:5000/api/trainer/module/${moduleId}/topic/${topicIndex}/task/${index}`,
+      {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` }
+      }
+    );
+
+    loadTasks();
+  };
+
+  /* ================= EDIT ================= */
+
+  const startEdit = (task, index) => {
+    setEditingIndex(index);
+
+    let description = "";
+    let starterCode = "";
+    let options = ["", "", "", ""];
+    let correctOption = 0;
+
+    if (task.type === "coding") {
+      description = task.content?.coding?.prompt || "";
+      starterCode = task.content?.coding?.starterCode || "";
+    }
+
+    if (task.type === "quiz") {
+      description = task.content?.quiz?.question || "";
+      options = task.content?.quiz?.options || options;
+      correctOption = task.content?.quiz?.correctIndex ?? 0;
+    }
+
+    if (task.type === "bugfix") {
+      description = task.content?.bugfix?.hint || "";
+      starterCode = task.content?.bugfix?.buggyCode || "";
+    }
+
+    setForm({
+      type: task.type,
+      title: task.title || "",
+      description,
+      starterCode,
+      options,
+      correctOption
+    });
+  };
+
+  /* ================= ADD TEST CASE ================= */
+
+  const addTestCase = async (taskIndex) => {
+    const draft = testCaseDrafts[taskIndex];
+
+    if (!draft?.input?.trim() || !draft?.output?.trim())
+      return alert("Input & Output required");
+
+    const res = await fetch(
+      `http://localhost:5000/api/trainer/module/${moduleId}/topic/${topicIndex}/task/${taskIndex}/testcase`,
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(draft)
+      }
+    );
+
+    const data = await res.json();
+
+    if (data.success) {
+      await loadTasks();
+      setTestCaseDrafts(p => ({
+        ...p,
+        [taskIndex]: { input: "", output: "" }
+      }));
+    }
+  };
+
+  if (loading) return <p className="p-10">Loading tasks...</p>;
+
+  /* ================= UI ================= */
 
   return (
-    <div className="min-h-screen bg-[#f7f8fc] text-gray-900">
-      <div className="max-w-5xl px-10 py-10">
-        <h1 className="text-3xl font-extrabold text-orange-500 mb-6">
-          Manage Topic Tasks
-        </h1>
+    <div className="space-y-10">
 
-        {/* ADD TASK */}
-        <div className="bg-white p-6 rounded-xl border shadow-sm mb-10">
-          <Select
-            label="Task Type"
-            value={newTask.type}
-            options={["quiz", "coding"]}
-            onChange={(v) => setNewTask({ ...newTask, type: v })}
+      <h1 className="text-3xl font-bold text-indigo-600">🧪 Topic Tasks</h1>
+
+      {/* ================= FORM ================= */}
+
+      <div className="bg-white p-6 rounded-xl border shadow space-y-3">
+
+        <select
+          className="w-full p-3 border rounded"
+          value={form.type}
+          onChange={(e) => setForm({ ...form, type: e.target.value })}
+        >
+          <option value="coding">Coding</option>
+          <option value="quiz">Quiz</option>
+          <option value="bugfix">Bug Fix</option>
+        </select>
+
+        <input
+          className="w-full p-3 border rounded"
+          placeholder="Task title"
+          value={form.title}
+          onChange={(e) => setForm({ ...form, title: e.target.value })}
+        />
+
+        <textarea
+          className="w-full p-3 border rounded h-28"
+          placeholder="Task description / hint"
+          value={form.description}
+          onChange={(e) => setForm({ ...form, description: e.target.value })}
+        />
+
+        {form.type !== "quiz" && (
+          <textarea
+            className="w-full p-3 border rounded h-28"
+            placeholder={form.type === "bugfix" ? "Buggy code" : "Starter code"}
+            value={form.starterCode}
+            onChange={(e) => setForm({ ...form, starterCode: e.target.value })}
           />
+        )}
 
-          {/* QUIZ */}
-          {newTask.type === "quiz" && (
-            <>
-              <Input label="Question" value={newTask.question}
-                onChange={(v) => setNewTask({ ...newTask, question: v })} />
-
-              {newTask.options.map((o, i) => (
-                <Input key={i} label={`Option ${i + 1}`} value={o}
-                  onChange={(v) => {
-                    const opts = [...newTask.options];
-                    opts[i] = v;
-                    setNewTask({ ...newTask, options: opts });
-                  }} />
-              ))}
-
-              <Input label="Correct Answer" value={newTask.correctAnswer}
-                onChange={(v) =>
-                  setNewTask({ ...newTask, correctAnswer: v })} />
-            </>
-          )}
-
-          {/* CODING */}
-          {newTask.type === "coding" && (
-            <>
-              <Select
-                label="Language"
-                value={newTask.language}
-                options={["html", "css", "javascript", "python", "java"]}
-                onChange={(v) =>
-                  setNewTask({ ...newTask, language: v })}
+        {form.type === "quiz" &&
+          form.options.map((opt, i) => (
+            <div key={i} className="flex gap-2 items-center">
+              <input
+                className="flex-1 p-2 border rounded"
+                placeholder={`Option ${i + 1}`}
+                value={opt}
+                onChange={(e) => {
+                  const ops = [...form.options];
+                  ops[i] = e.target.value;
+                  setForm({ ...form, options: ops });
+                }}
               />
+              <input
+                type="radio"
+                checked={form.correctOption === i}
+                onChange={() => setForm({ ...form, correctOption: i })}
+              />
+            </div>
+          ))}
 
-              <Textarea label="Coding Prompt"
-                value={newTask.codingPrompt}
-                onChange={(v) =>
-                  setNewTask({ ...newTask, codingPrompt: v })} />
+        <button
+          onClick={submitTask}
+          className="bg-indigo-600 text-white px-6 py-3 rounded-lg"
+        >
+          {editingIndex !== null ? "Update Task" : "Add Task"}
+        </button>
+      </div>
 
-              <Textarea label="Starter Code"
-                value={newTask.starterCode}
-                onChange={(v) =>
-                  setNewTask({ ...newTask, starterCode: v })} />
+      {/* ================= TASK LIST ================= */}
 
-              <Input label="Required Tags (comma separated)"
-                value={newTask.gradingRules.requiredTags}
-                onChange={(v) =>
-                  setNewTask({
-                    ...newTask,
-                    gradingRules: { ...newTask.gradingRules, requiredTags: v },
-                  })} />
+      <div className="space-y-6">
 
-              <Input label="Text Must Include"
-                value={newTask.gradingRules.textIncludes}
-                onChange={(v) =>
-                  setNewTask({
-                    ...newTask,
-                    gradingRules: { ...newTask.gradingRules, textIncludes: v },
-                  })} />
+        {tasks.map((task, i) => {
+          const testCases =
+            task.type === "coding"
+              ? task.content?.coding?.testCases
+              : task.type === "bugfix"
+              ? task.content?.bugfix?.testCases
+              : [];
 
-              <Input label="Forbidden Tags"
-                value={newTask.gradingRules.forbiddenTags}
-                onChange={(v) =>
-                  setNewTask({
-                    ...newTask,
-                    gradingRules: { ...newTask.gradingRules, forbiddenTags: v },
-                  })} />
-            </>
-          )}
+          return (
+            <div key={i} className="bg-white p-6 rounded-xl border shadow space-y-3">
 
-          <Input label="XP Reward" type="number" value={newTask.xp}
-            onChange={(v) => setNewTask({ ...newTask, xp: v })} />
+              <div className="flex justify-between">
+                <h3 className="font-bold">
+                  {task.title} ({task.type})
+                </h3>
 
-          <button
-            onClick={addTask}
-            className="mt-4 px-6 py-2 bg-orange-500 text-white rounded-lg font-semibold"
-          >
-            Add Task
-          </button>
-        </div>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => startEdit(task, i)}
+                    className="bg-yellow-400 px-3 py-1 rounded"
+                  >
+                    Edit
+                  </button>
+                  <button
+                    onClick={() => deleteTask(i)}
+                    className="bg-red-500 text-white px-3 py-1 rounded"
+                  >
+                    Delete
+                  </button>
+                </div>
+              </div>
 
-        {/* EXISTING */}
-        <h3 className="text-xl font-semibold mb-4">Existing Tasks</h3>
-        {tasks.map((t, i) => (
-          <div key={i} className="bg-white p-4 rounded-lg border mb-3">
-            <b>{t.type.toUpperCase()}</b> — ⭐ {t.xp} XP
-            {t.codingPrompt && <p>{t.codingPrompt}</p>}
-            {t.question && <p>{t.question}</p>}
-          </div>
-        ))}
+              {(task.type === "coding" || task.type === "bugfix") && (
+                <div className="bg-gray-50 p-4 rounded space-y-2">
+
+                  <input
+                    className="w-full p-2 border rounded"
+                    placeholder="Input"
+                    value={testCaseDrafts[i]?.input || ""}
+                    onChange={(e) =>
+                      setTestCaseDrafts(p => ({
+                        ...p,
+                        [i]: { ...p[i], input: e.target.value }
+                      }))
+                    }
+                  />
+
+                  <input
+                    className="w-full p-2 border rounded"
+                    placeholder="Output"
+                    value={testCaseDrafts[i]?.output || ""}
+                    onChange={(e) =>
+                      setTestCaseDrafts(p => ({
+                        ...p,
+                        [i]: { ...p[i], output: e.target.value }
+                      }))
+                    }
+                  />
+
+                  <button
+                    onClick={() => addTestCase(i)}
+                    className="bg-green-600 text-white px-4 py-2 rounded"
+                  >
+                    Save Test Case
+                  </button>
+
+                  {testCases?.length > 0 && (
+                    <div className="text-sm mt-2">
+                      {testCases.map((tc, idx) => (
+                        <p key={idx}>{tc.input} → {tc.output}</p>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          );
+        })}
       </div>
     </div>
   );
 }
-
-/* ===== UI HELPERS ===== */
-const Input = ({ label, value, onChange, type = "text" }) => (
-  <div className="mb-3">
-    <label className="text-sm text-gray-700">{label}</label>
-    <input type={type} value={value}
-      onChange={(e) => onChange(e.target.value)}
-      className="w-full px-4 py-2 border rounded-lg" />
-  </div>
-);
-
-const Textarea = ({ label, value, onChange }) => (
-  <div className="mb-3">
-    <label className="text-sm text-gray-700">{label}</label>
-    <textarea rows={4} value={value}
-      onChange={(e) => onChange(e.target.value)}
-      className="w-full px-4 py-2 border rounded-lg" />
-  </div>
-);
-
-const Select = ({ label, value, options, onChange }) => (
-  <div className="mb-4">
-    <label className="text-sm text-gray-700">{label}</label>
-    <select value={value}
-      onChange={(e) => onChange(e.target.value)}
-      className="w-full px-4 py-2 border rounded-lg">
-      {options.map((o) => (
-        <option key={o} value={o}>{o}</option>
-      ))}
-    </select>
-  </div>
-);

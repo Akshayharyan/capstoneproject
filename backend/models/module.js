@@ -1,15 +1,53 @@
 const mongoose = require("mongoose");
 
 /* ================================
-   TEST CASE (CODING)
+   CODING TEST CASE
 ================================ */
 const TestCaseSchema = new mongoose.Schema({
   input: String,
   output: String,
+  hidden: {
+    type: Boolean,
+    default: false,
+  },
 });
 
 /* ================================
-   TASK (QUIZ / CODING / BUG FIX)
+   TASK CONTENT (BY TYPE)
+================================ */
+
+/* ---- QUIZ ---- */
+const QuizContentSchema = new mongoose.Schema({
+  question: { type: String, required: true },
+  options: {
+    type: [String],
+    validate: v => v.length === 4,
+  },
+  correctIndex: {
+    type: Number,
+    min: 0,
+    max: 3,
+    required: true,
+  },
+});
+
+/* ---- CODING ---- */
+const CodingContentSchema = new mongoose.Schema({
+  prompt: { type: String, required: true },
+  starterCode: String,
+  language: { type: String, default: "javascript" },
+  testCases: [TestCaseSchema],
+});
+
+/* ---- BUG FIX ---- */
+const BugFixContentSchema = new mongoose.Schema({
+  buggyCode: { type: String, required: true },
+  hint: String,
+  testCases: [TestCaseSchema]   // 🔥 REQUIRED
+});
+
+/* ================================
+   TASK (CLEAN & SAFE)
 ================================ */
 const TaskSchema = new mongoose.Schema({
   type: {
@@ -18,32 +56,14 @@ const TaskSchema = new mongoose.Schema({
     required: true,
   },
 
-  /* ---------- QUIZ ---------- */
-  question: String,
-  options: [String],
-  correctAnswer: String,
+  title: { type: String, required: true },
 
-  /* ---------- CODING ---------- */
-  codingPrompt: String,
-  starterCode: String,
-  testCases: [TestCaseSchema],
-
-  language: {
-    type: String,
-    default: "javascript",
+  content: {
+    quiz: QuizContentSchema,
+    coding: CodingContentSchema,
+    bugfix: BugFixContentSchema,
   },
 
-  gradingRules: {
-    type: Object,
-    default: {},
-  },
-
-  /* ---------- BUG FIX ---------- */
-  buggyCode: String,
-  expectedFix: String,
-  hint: String,
-
-  /* ---------- COMMON ---------- */
   xp: { type: Number, default: 20 },
 });
 
@@ -52,28 +72,24 @@ const TaskSchema = new mongoose.Schema({
 ================================ */
 const TopicSchema = new mongoose.Schema({
   title: { type: String, required: true },
-
-  videoUrl: { type: String, required: true },
-  videoDuration: String,
+  videoUrl: String,
+  xp: { type: Number, default: 100 },
 
   tasks: [TaskSchema],
-
-  xp: { type: Number, default: 100 },
 });
 
 /* ================================
-   MODULE (GAME READY)
+   MODULE
 ================================ */
 const ModuleSchema = new mongoose.Schema(
   {
-    title: { type: String, required: true },
+    title: { type: String },
     description: String,
 
-    // 🐲 BOSS ATTACHED TO MODULE
     boss: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Boss",
-      default: null, // keeps old modules safe
+      default: null,
     },
 
     topics: [TopicSchema],

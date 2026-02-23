@@ -1,240 +1,223 @@
 const Module = require("../models/module");
-const Assignment = require("../models/Assignment");
 const Achievement = require("../models/Achievement");
 
-console.log("Achievement model type:", typeof Achievement);
+/* ================= GET MODULES ================= */
 
-/* ======================================================
-   1) GET ASSIGNED MODULES
-====================================================== */
 exports.getAssignedModules = async (req, res) => {
-  try {
-    const trainerId = req.user._id;
+  const modules = await Module.find().select("title description topics");
 
-    const assignments = await Assignment.find({ trainer: trainerId })
-      .populate("module", "title description topics boss");
-
-    const formatted = assignments
-      .filter(a => a.module)
-      .map(a => ({
-        assignmentId: a._id,
-        moduleId: a.module._id,
-        title: a.module.title,
-        description: a.module.description,
-        topicsCount: a.module.topics?.length || 0,
-        boss: a.module.boss || null,
-        createdAt: a.createdAt,
-      }));
-
-    res.json(formatted);
-  } catch (error) {
-    console.error("Fetching assigned modules failed:", error);
-    res.status(500).json({ message: "Server error" });
-  }
+  res.json(
+    modules.map(m => ({
+      moduleId: m._id,
+      title: m.title,
+      description: m.description,
+      topicsCount: m.topics.length
+    }))
+  );
 };
 
-/* ======================================================
-   2) GET SINGLE MODULE
-====================================================== */
+/* ================= SINGLE MODULE ================= */
+
 exports.getSingleModule = async (req, res) => {
-  try {
-    const module = await Module.findById(req.params.moduleId).populate("boss");
+  const module = await Module.findById(req.params.moduleId);
+  if (!module) return res.status(404).json({ success: false });
 
-    if (!module) {
-      return res.status(404).json({ message: "Module not found" });
-    }
-
-    res.json(module);
-  } catch (error) {
-    console.error("Error fetching module:", error);
-    res.status(500).json({ message: "Server error" });
-  }
+  res.json({ success: true, module });
 };
 
-/* ======================================================
-   3) ADD TOPIC
-====================================================== */
+/* ================= ADD TOPIC ================= */
+
 exports.addTopic = async (req, res) => {
-  try {
-    const { title, videoUrl, xp } = req.body;
+  const module = await Module.findById(req.params.moduleId);
 
-    if (!title || !videoUrl) {
-      return res.status(400).json({
-        message: "Topic title and video URL are required",
-      });
-    }
+  module.topics.push({
+    title: req.body.title,
+    videoUrl: req.body.videoUrl,
+    xp: req.body.xp || 100,
+    tasks: []
+  });
 
-    const module = await Module.findById(req.params.moduleId);
-    if (!module) {
-      return res.status(404).json({ message: "Module not found" });
-    }
-
-    const newTopic = {
-      title: title.trim(),
-      videoUrl: videoUrl.trim(),
-      xp: Number(xp) || 0,
-      tasks: [],
-    };
-
-    module.topics.push(newTopic);
-    await module.save();
-
-    res.json({
-      message: "Topic added successfully",
-      module,
-    });
-  } catch (error) {
-    console.error("Error adding topic:", error);
-    res.status(500).json({ message: "Server error" });
-  }
+  await module.save();
+  res.json({ success: true, module });
 };
 
-/* ======================================================
-   4) ADD TASK TO TOPIC
-====================================================== */
+/* ================= ADD TASK ================= */
+
 exports.addTaskToTopic = async (req, res) => {
   try {
     const { moduleId, topicIndex } = req.params;
-    const payload = req.body;
-
-    const module = await Module.findById(moduleId);
-    if (!module) {
-      return res.status(404).json({ message: "Module not found" });
-    }
-
-    const topic = module.topics[topicIndex];
-    if (!topic) {
-      return res.status(404).json({ message: "Topic not found" });
-    }
-
-    const task = {
-      type: payload.type,
-      xp: Number(payload.xp) || 0,
-    };
-
-    if (payload.type === "quiz") {
-      task.question = payload.question || "";
-      task.options = payload.options || [];
-      task.correctAnswer = payload.correctAnswer || "";
-    } 
-    else if (payload.type === "coding") {
-      task.codingPrompt = payload.codingPrompt || "";
-      task.starterCode = payload.starterCode || "";
-      task.testCases = Array.isArray(payload.testCases) ? payload.testCases : [];
-      task.language = payload.language || "html";
-      task.gradingRules = payload.gradingRules || {};
-    } 
-    else if (payload.type === "bugfix") {
-      task.buggyCode = payload.buggyCode || "";
-      task.expectedFix = payload.expectedFix || "";
-      task.hint = payload.hint || "";
-      task.language = payload.language || "js";
-    }
-    else {
-      return res.status(400).json({ message: "Invalid task type" });
-    }
-
-    topic.tasks.push(task);
-    await module.save();
-
-    res.json({ message: "Task added", task });
-  } catch (error) {
-    console.error("Add task error:", error);
-    res.status(500).json({ message: "Server error" });
-  }
-};
-
-/* ======================================================
-   5) GET TASKS OF A TOPIC
-====================================================== */
-exports.getTopicTasks = async (req, res) => {
-  try {
-    const { moduleId, topicIndex } = req.params;
-
-    const module = await Module.findById(moduleId);
-    if (!module) return res.status(404).json({ message: "Module not found" });
-
-    const topic = module.topics[topicIndex];
-    if (!topic) return res.status(404).json({ message: "Topic not found" });
-
-    res.json({ tasks: topic.tasks || [] });
-  } catch (error) {
-    console.error("Get topic tasks error:", error);
-    res.status(500).json({ message: "Server error" });
-  }
-};
-
-/* ======================================================
-   6) DELETE TASK
-====================================================== */
-exports.deleteTaskFromTopic = async (req, res) => {
-  try {
-    const { moduleId, topicIndex, taskIndex } = req.params;
-
-    const module = await Module.findById(moduleId);
-    if (!module) return res.status(404).json({ message: "Module not found" });
-
-    const topic = module.topics[topicIndex];
-    if (!topic || !topic.tasks[taskIndex]) {
-      return res.status(404).json({ message: "Task not found" });
-    }
-
-    topic.tasks.splice(taskIndex, 1);
-    await module.save();
-
-    res.json({ message: "Task removed" });
-  } catch (error) {
-    console.error("Delete task error:", error);
-    res.status(500).json({ message: "Server error" });
-  }
-};
-
-/* ======================================================
-   🏆 CREATE ACHIEVEMENT
-====================================================== */
-exports.createAchievement = async (req, res) => {
-  try {
-    const { title, description, icon, type, moduleId, targetValue } = req.body;
-
-    const achievement = await Achievement.create({
+    const {
+      type,
       title,
       description,
-      icon,
-      type,
-      moduleId,
-      targetValue,
-      createdBy: req.user._id,
-    });
-
-    res.json({ message: "Achievement created", achievement });
-  } catch (err) {
-    console.error("Create achievement error:", err);
-    res.status(500).json({ message: "Server error" });
-  }
-};
-
-/* ======================================================
-   🐲 ASSIGN BOSS TO MODULE (GAME SYSTEM)
-====================================================== */
-exports.assignBossToModule = async (req, res) => {
-  try {
-    const { moduleId } = req.params;
-    const { bossId } = req.body;
+      starterCode,
+      buggyCode,
+      options,
+      correctOption
+    } = req.body;
 
     const module = await Module.findById(moduleId);
-    if (!module) return res.status(404).json({ message: "Module not found" });
+    if (!module) return res.status(404).json({ success: false });
 
-    module.boss = bossId;
+    const topic = module.topics[topicIndex];
+    if (!topic) return res.status(404).json({ success: false });
+
+    let content = {};
+
+    if (type === "coding") {
+      content.coding = {
+        prompt: description,
+        starterCode: starterCode || "",
+        testCases: []
+      };
+    }
+
+    if (type === "quiz") {
+      content.quiz = {
+        question: description,
+        options,
+        correctIndex: correctOption
+      };
+    }
+
+    if (type === "bugfix") {
+      const buggy = buggyCode || starterCode;
+
+      if (!buggy || !buggy.trim())
+        return res.status(400).json({
+          success: false,
+          message: "Buggy code required"
+        });
+
+      content.bugfix = {
+        buggyCode: buggy,
+        hint: description,
+        testCases: []   // ✅ IMPORTANT
+      };
+    }
+
+    topic.tasks.push({
+      type,
+      title,
+      content,
+      xp: 10
+    });
+
     await module.save();
 
-    res.json({
-      success: true,
-      message: "Boss assigned successfully",
-      module,
-    });
+    res.json({ success: true, tasks: topic.tasks });
+
   } catch (err) {
-    console.error("Assign boss error:", err);
-    res.status(500).json({ message: "Server error" });
+    console.error("Add task error:", err);
+    res.status(500).json({ success: false });
   }
 };
-d
+
+/* ================= GET TASKS ================= */
+
+exports.getTopicTasks = async (req, res) => {
+  const module = await Module.findById(req.params.moduleId);
+  const topic = module?.topics[req.params.topicIndex];
+
+  if (!topic) return res.status(404).json({ success: false });
+
+  res.json({ success: true, tasks: topic.tasks });
+};
+
+/* ================= DELETE TASK ================= */
+
+exports.deleteTaskFromTopic = async (req, res) => {
+  const { moduleId, topicIndex, taskIndex } = req.params;
+
+  const module = await Module.findById(moduleId);
+  if (!module) return res.status(404).json({ success: false });
+
+  module.topics[topicIndex].tasks.splice(taskIndex, 1);
+
+  await module.save({ validateBeforeSave: false });
+
+  res.json({ success: true });
+};
+
+/* ================= ADD TEST CASE ================= */
+
+exports.addTestCase = async (req, res) => {
+  const { moduleId, topicIndex, taskIndex } = req.params;
+  const { input, output } = req.body;
+
+  const module = await Module.findById(moduleId);
+  const task = module?.topics?.[topicIndex]?.tasks?.[taskIndex];
+
+  if (!task) return res.status(404).json({ success: false });
+
+  if (task.type === "coding") {
+    task.content.coding.testCases.push({ input, output });
+  }
+
+  if (task.type === "bugfix") {
+    task.content.bugfix.testCases.push({ input, output });
+  }
+
+  await module.save();
+
+  res.json({
+    success: true,
+    tasks: module.topics[topicIndex].tasks
+  });
+};
+
+/* ================= UPDATE TASK ================= */
+
+exports.updateTaskInTopic = async (req, res) => {
+  const { moduleId, topicIndex, taskIndex } = req.params;
+  const { title, description, starterCode, options, correctOption } = req.body;
+
+  const module = await Module.findById(moduleId);
+  const task = module.topics[topicIndex].tasks[taskIndex];
+
+  task.title = title;
+
+  if (task.type === "coding") {
+    task.content.coding.prompt = description;
+    task.content.coding.starterCode = starterCode;
+  }
+
+  if (task.type === "quiz") {
+    task.content.quiz.question = description;
+    task.content.quiz.options = options;
+    task.content.quiz.correctIndex = correctOption;
+  }
+
+  if (task.type === "bugfix") {
+    task.content.bugfix.buggyCode = starterCode;
+    task.content.bugfix.hint = description;
+  }
+
+  await module.save();
+
+  res.json({
+    success: true,
+    tasks: module.topics[topicIndex].tasks
+  });
+};
+
+/* ================= ACHIEVEMENT ================= */
+
+exports.createAchievement = async (req, res) => {
+  const achievement = await Achievement.create({
+    ...req.body,
+    createdBy: req.user._id
+  });
+
+  res.json({ success: true, achievement });
+};
+
+/* ================= ASSIGN BOSS ================= */
+
+exports.assignBossToModule = async (req, res) => {
+  const module = await Module.findById(req.params.moduleId);
+  module.boss = req.body.bossId;
+
+  await module.save();
+  res.json({ success: true, module });
+};

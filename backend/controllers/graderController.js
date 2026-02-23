@@ -1,101 +1,61 @@
 const Module = require("../models/module");
-const Progress = require("../models/progress");
-const gradeSubmission = require("../graders");
+const { runJS } = require("../services/jsRunner");
 
-/* ======================================================
-   📌 AUTO GRADER – DYNAMIC (ALL LANGUAGES READY)
-====================================================== */
-exports.gradeCodingTask = async (req, res) => {
+exports.gradeCode = async (req, res) => {
   try {
     const { moduleId, topicIndex, taskIndex, code } = req.body;
-    const userId = req.user._id;
 
-    /* ================= BASIC VALIDATION ================= */
-    if (!code || code.trim().length === 0) {
-      return res.json({
-        success: false,
-        message: "Code cannot be empty",
-      });
-    }
-
-    if (
-      moduleId === undefined ||
-      topicIndex === undefined ||
-      taskIndex === undefined
-    ) {
-      return res.json({
-        success: false,
-        message: "Invalid grading request",
-      });
-    }
-
-    /* ================= FETCH MODULE / TASK ================= */
-    const module = await Module.findById(moduleId).lean();
-    if (!module) {
+    const module = await Module.findById(moduleId);
+    if (!module)
       return res.json({ success: false, message: "Module not found" });
+
+    const task = module?.topics?.[topicIndex]?.tasks?.[taskIndex];
+    if (!task)
+      return res.json({ success: false, message: "Task not found" });
+
+    let testCases = [];
+
+    if (task.type === "coding") {
+      testCases = task.content?.coding?.testCases || [];
     }
 
-    const topic = module.topics?.[Number(topicIndex)];
-    if (!topic) {
-      return res.json({ success: false, message: "Topic not found" });
+    if (task.type === "bugfix") {
+      testCases = task.content?.bugfix?.testCases || [];
     }
 
-    const task = topic.tasks?.[Number(taskIndex)];
-    if (!task || task.type !== "coding") {
+    if (testCases.length === 0)
       return res.json({
         success: false,
-        message: "Invalid coding task",
+        message: "No test cases found"
       });
-    }
 
-    /* ================= DYNAMIC GRADING ================= */
-    const result = gradeSubmission(code, task);
+    const result = await runJS(code, testCases);
 
-    if (!result.passed) {
+    if (result.error)
       return res.json({
         success: false,
-        message: "❌ Code validation failed",
-        errors: result.errors,
+        message: result.error
       });
-    }
 
-    /* ================= UPDATE PROGRESS ================= */
-    let progress = await Progress.findOne({ userId });
-    if (!progress) {
-      progress = await Progress.create({ userId });
-    }
+    const results = testCases.map((tc, i) => ({
+      input: tc.input,
+      expected: String(tc.output),
+      actual: String(result.output[i]),
+      pass: String(tc.output) === String(result.output[i])
+    }));
 
-    let topicProgress = progress.topics.find(
-      (t) =>
-        String(t.moduleId) === String(moduleId) &&
-        t.topicIndex === Number(topicIndex)
-    );
+    const allPassed = results.every(r => r.pass);
 
-    if (!topicProgress) {
-      progress.topics.push({
-        moduleId,
-        topicIndex: Number(topicIndex),
-        videoCompleted: false,
-        quizCompleted: false,
-        codingCompleted: true,
-        xpAwarded: false,
-      });
-    } else {
-      topicProgress.codingCompleted = true;
-    }
-
-    await progress.save();
-
-    /* ================= SUCCESS ================= */
-    return res.json({
-      success: true,
-      message: "✅ Code is correct. Well done!",
+    res.json({
+      success: allPassed,
+      results
     });
+
   } catch (err) {
     console.error("Grader error:", err);
-    return res.status(500).json({
+    res.status(500).json({
       success: false,
-      message: "Grading failed",
+      message: "Grading failed"
     });
   }
 };
