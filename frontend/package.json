@@ -4,6 +4,8 @@
   "private": true,
   "dependencies": {
     "@monaco-editor/react": "^4.7.0",
+    "@react-three/drei": "^10.7.7",
+    "@react-three/fiber": "^9.5.0",
     "@testing-library/dom": "^10.4.1",
     "@testing-library/jest-dom": "^6.8.0",
     "@testing-library/react": "^16.3.0",
@@ -11,7 +13,7 @@
     "@uiw/react-markdown-preview": "^5.1.5",
     "@uiw/react-md-editor": "^4.0.11",
     "easymde": "^2.20.0",
-    "framer-motion": "^12.23.24",
+    "framer-motion": "^12.34.5",
     "lucide-react": "^0.544.0",
     "quill": "^2.0.3",
     "react": "^19.1.1",
@@ -21,6 +23,7 @@
     "react-simplemde-editor": "^5.2.0",
     "react-youtube": "^10.1.0",
     "recharts": "^3.6.0",
+    "three": "^0.183.2",
     "web-vitals": "^2.1.4"
   },
   "scripts": {

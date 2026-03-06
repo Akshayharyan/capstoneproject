@@ -2,6 +2,44 @@ import React, { useEffect, useState } from "react";
 import { useAuth } from "../../context/AuthContext";
 import { useNavigate } from "react-router-dom";
 
+/* ================= NAVBAR ================= */
+
+function TrainerNavbar() {
+  const navigate = useNavigate();
+
+  const logout = () => {
+    localStorage.clear();
+    navigate("/login");
+  };
+
+  return (
+    <nav className="bg-white border-b border-gray-200 px-12 py-4 flex justify-between items-center sticky top-0 z-50">
+
+      <div className="flex items-center gap-8">
+        <h1 className="text-2xl font-bold text-indigo-600 tracking-tight">
+          SkillQuest
+        </h1>
+
+        <button
+          onClick={() => navigate("/trainer")}
+          className="px-4 py-2 rounded-lg text-sm font-semibold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 transition"
+        >
+          My Modules
+        </button>
+      </div>
+
+      <button
+        onClick={logout}
+        className="text-sm font-semibold text-red-500 hover:text-red-600 transition"
+      >
+        Logout
+      </button>
+    </nav>
+  );
+}
+
+/* ================= MAIN PAGE ================= */
+
 export default function TrainerModulesPage() {
   const { token } = useAuth();
   const navigate = useNavigate();
@@ -62,7 +100,6 @@ export default function TrainerModulesPage() {
     );
 
     const data = await res.json();
-
     if (!data?.success) return;
 
     setAchievementsByModule((prev) => ({
@@ -71,100 +108,121 @@ export default function TrainerModulesPage() {
     }));
   };
 
-  /* ================= UI ================= */
-
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center text-gray-500">
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 text-gray-500">
         Loading modules...
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#f7f8fc] px-10 py-12">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-indigo-50">
 
-      {/* HEADER */}
-      <div className="mb-12">
-        <h1 className="text-4xl font-extrabold text-orange-500">
-          Trainer Command Center
-        </h1>
-        <p className="text-gray-600 mt-2">
-          Manage your learning modules and achievements.
-        </p>
-      </div>
+      <TrainerNavbar />
 
-      {/* EMPTY STATE */}
-      {modules.length === 0 && (
-        <div className="bg-white p-8 rounded-2xl shadow border text-center text-gray-500">
-          No modules assigned yet.
+      <div className="px-14 py-16 max-w-7xl mx-auto">
+
+        {/* HEADER */}
+        <div className="mb-14">
+          <h1 className="text-4xl font-bold text-gray-900 tracking-tight">
+            Trainer Command Center
+          </h1>
+          <p className="text-gray-600 mt-3 text-lg">
+            Configure modules, bosses and achievements.
+          </p>
         </div>
-      )}
 
-      {/* MODULE GRID */}
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
-        {modules.map((m) => (
-          <div
-            key={m.moduleId}
-            className="bg-white rounded-3xl p-6 border shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col justify-between"
-          >
+        {modules.length === 0 && (
+          <div className="bg-white p-10 rounded-2xl shadow border text-center text-gray-500">
+            No modules assigned yet.
+          </div>
+        )}
 
-            {/* MODULE INFO */}
-            <div>
-              <div className="flex justify-between items-center mb-4">
-                <h2 className="text-xl font-bold text-gray-800">
-                  {m.title}
-                </h2>
+        {/* MODULE GRID */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-8">
 
-                <span className="text-xs px-3 py-1 rounded-full bg-indigo-100 text-indigo-700 font-semibold">
-                  {m.topicsCount || 0} Topics
-                </span>
+          {modules.map((m) => (
+            <div
+              key={m.moduleId}
+              className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col"
+            >
+
+              {/* MODULE INFO */}
+              <div className="flex-1">
+
+                <div className="flex justify-between items-start mb-3">
+                  <h2 className="text-lg font-semibold text-gray-900 leading-snug">
+                    {m.title}
+                  </h2>
+
+                  <span className="text-xs px-3 py-1 rounded-full bg-indigo-100 text-indigo-600 font-semibold">
+                    {m.topicsCount || 0}
+                  </span>
+                </div>
+
+                <p className="text-sm text-gray-500 mb-6 line-clamp-2">
+                  {m.description || "No description provided."}
+                </p>
+
               </div>
 
-              <p className="text-sm text-gray-600 mb-6">
-                {m.description || "No description provided."}
-              </p>
-            </div>
+              {/* ACTION BUTTONS */}
+              <div className="space-y-3">
 
-            {/* ACTION BUTTON */}
-            <button
-              onClick={() =>
-                navigate(`/trainer/modules/${m.moduleId}/edit`)
-              }
-              className="w-full py-2.5 rounded-xl bg-orange-500 hover:bg-orange-600 text-white font-semibold transition"
-            >
-              Manage Module
-            </button>
-
-            {/* ACHIEVEMENT SECTION */}
-            <div className="border-t pt-5 mt-6">
-              <h3 className="font-semibold text-gray-800 mb-3">
-                🏆 Module Achievement
-              </h3>
-
-              {achievementsByModule[m.moduleId]?.length > 0 ? (
-                <div className="rounded-2xl p-4 bg-gradient-to-br from-indigo-500 to-purple-600 text-white shadow">
-                  <div className="text-3xl mb-1">
-                    {achievementsByModule[m.moduleId][0].icon}
-                  </div>
-                  <h4 className="font-bold">
-                    {achievementsByModule[m.moduleId][0].title}
-                  </h4>
-                  <p className="text-xs opacity-90">
-                    {achievementsByModule[m.moduleId][0].description}
-                  </p>
-                </div>
-              ) : (
-                <AddAchievementForm
-                  onCreate={(data) =>
-                    createAchievement(m.moduleId, data)
+                <button
+                  onClick={() =>
+                    navigate(`/trainer/modules/${m.moduleId}/edit`)
                   }
-                />
-              )}
-            </div>
+                  className="w-full py-2.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold transition"
+                >
+                  Manage Topics
+                </button>
 
-          </div>
-        ))}
+                <button
+                  onClick={() =>
+                    navigate(`/trainer/modules/${m.moduleId}/boss`)
+                  }
+                  className="w-full py-2.5 rounded-lg border border-indigo-600 text-indigo-600 hover:bg-indigo-50 text-sm font-semibold transition"
+                >
+                  Configure Boss
+                </button>
+
+              </div>
+
+              {/* ACHIEVEMENT SECTION */}
+              <div className="border-t mt-6 pt-5">
+
+                <h4 className="text-xs font-semibold text-gray-400 uppercase mb-3">
+                  Module Achievement
+                </h4>
+
+                {achievementsByModule[m.moduleId]?.length > 0 ? (
+                  <div className="rounded-xl p-4 bg-gradient-to-br from-indigo-500 to-purple-600 text-white text-sm shadow">
+                    <div className="text-2xl mb-1">
+                      {achievementsByModule[m.moduleId][0].icon}
+                    </div>
+                    <h4 className="font-semibold">
+                      {achievementsByModule[m.moduleId][0].title}
+                    </h4>
+                    <p className="text-xs opacity-90">
+                      {achievementsByModule[m.moduleId][0].description}
+                    </p>
+                  </div>
+                ) : (
+                  <AddAchievementForm
+                    onCreate={(data) =>
+                      createAchievement(m.moduleId, data)
+                    }
+                  />
+                )}
+
+              </div>
+
+            </div>
+          ))}
+
+        </div>
       </div>
     </div>
   );
@@ -189,25 +247,25 @@ function AddAchievementForm({ onCreate }) {
   };
 
   return (
-    <div className="bg-gray-50 rounded-2xl p-4 border">
+    <div className="bg-gray-50 rounded-xl p-4 border">
 
       <input
-        className="w-full mb-2 p-2 border rounded-lg text-sm"
-        placeholder="Achievement title"
+        className="w-full mb-2 p-2 border rounded-lg text-xs"
+        placeholder="Title"
         value={title}
         onChange={(e) => setTitle(e.target.value)}
       />
 
       <input
-        className="w-full mb-2 p-2 border rounded-lg text-sm"
-        placeholder="Short description"
+        className="w-full mb-2 p-2 border rounded-lg text-xs"
+        placeholder="Description"
         value={description}
         onChange={(e) => setDescription(e.target.value)}
       />
 
       <input
-        className="w-full mb-3 p-2 border rounded-lg text-sm"
-        placeholder="Icon emoji"
+        className="w-full mb-3 p-2 border rounded-lg text-xs"
+        placeholder="Icon"
         value={icon}
         onChange={(e) => setIcon(e.target.value)}
       />
@@ -215,11 +273,10 @@ function AddAchievementForm({ onCreate }) {
       <button
         onClick={submit}
         disabled={loading}
-        className="w-full py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-semibold transition"
+        className="w-full py-2 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold transition"
       >
-        {loading ? "Creating..." : "Create Achievement"}
+        {loading ? "Creating..." : "Create"}
       </button>
-
     </div>
   );
 }

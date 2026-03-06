@@ -2,216 +2,284 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 
-function Modules() {
-  const { token } = useAuth();
-  const navigate = useNavigate();
+export default function Modules() {
 
-  const [modules, setModules] = useState([]);
-  const [loading, setLoading] = useState(true);
+const { token } = useAuth();
+const navigate = useNavigate();
 
-  /* ================= FETCH MODULES ================= */
-  const fetchModules = async () => {
-    try {
-      if (!token) return;
+const [modules, setModules] = useState([]);
+const [loading, setLoading] = useState(true);
 
-      setLoading(true);
+/* ================= FETCH ================= */
 
-      const res = await fetch(
-        "http://localhost:5000/api/modules/status",
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
+useEffect(() => {
 
-      const data = await res.json();
+const fetchModules = async () => {
+  try {
 
-      const normalized = Array.isArray(data)
-        ? data
-        : Array.isArray(data?.modules)
-        ? data.modules
-        : [];
-
-      setModules(normalized);
-    } catch (err) {
-      console.error("❌ Failed to fetch modules:", err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  /* ================= INITIAL LOAD ================= */
-  useEffect(() => {
-    fetchModules();
-    // eslint-disable-next-line
-  }, []);
-
-  /* ================= ACTION ================= */
-  const handleAction = async (mod) => {
-    if (mod.status === "not_started") {
-      await fetch("http://localhost:5000/api/modules/start", {
-        method: "POST",
+    const res = await fetch(
+      "http://localhost:5000/api/modules/status",
+      {
         headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ moduleId: mod._id }),
-      });
-
-      // 🔥 REFRESH AFTER START
-      await fetchModules();
-      navigate(`/modules/${mod._id}/topics`);
-    } else {
-      navigate(`/modules/${mod._id}/topics`);
-    }
-  };
-
-  /* ================= LOADING ================= */
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <p className="text-lg text-slate-500 animate-pulse">
-          Loading modules…
-        </p>
-      </div>
+          Authorization: `Bearer ${token}`
+        }
+      }
     );
+
+    const data = await res.json();
+    setModules(data.modules || []);
+
+  } catch (err) {
+    console.error(err);
+  } finally {
+    setLoading(false);
   }
+};
 
-  /* ================= UI ================= */
-  return (
-    <div className="min-h-screen bg-[#f8fbfb] px-10 py-8">
-      {/* HEADER */}
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-slate-900">
-          Learning Modules
-        </h1>
-        <p className="text-slate-600 mt-1">
-          Start learning, continue where you left off 🚀
-        </p>
-      </div>
-
-      {/* STATS */}
-      <div className="mb-10 bg-white rounded-2xl shadow-sm p-5 flex items-center gap-10">
-        <div className="text-slate-700 font-medium">
-          📘 {modules.length} Total Modules
-        </div>
-        <div className="text-slate-700 font-medium">
-          ⚡ {modules.reduce((a, m) => a + (m.xp || 0), 0)} XP Available
-        </div>
-      </div>
-
-      {/* EMPTY */}
-      {modules.length === 0 && (
-        <p className="text-center text-slate-500">
-          No modules available.
-        </p>
-      )}
-
-      {/* MODULE CARDS */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-        {modules.map((mod) => {
-          const status = mod.status; // trust backend
-          const completed = status === "completed";
-          const progress = mod.progress || 0;
-
-          return (
-            <div
-              key={mod._id}
-              className={`
-                bg-[#f3fbfa]
-                border rounded-2xl p-6
-                shadow-sm hover:shadow-lg
-                hover:-translate-y-1 transition-all
-                ${completed ? "border-green-300" : "border-teal-200"}
-              `}
-            >
-              {/* TOP */}
-              <div className="flex items-center justify-between mb-4">
-                <span className="text-sm text-slate-600 font-medium">
-                  {mod.category || "General"}
-                </span>
-
-                <span
-                  className={`px-3 py-1 text-xs rounded-full font-semibold
-                    ${
-                      status === "completed"
-                        ? "bg-green-100 text-green-700"
-                        : status === "not_started"
-                        ? "bg-gray-100 text-gray-600"
-                        : "bg-teal-100 text-teal-700"
-                    }
-                  `}
-                >
-                  {status === "completed"
-                    ? "Completed"
-                    : status === "not_started"
-                    ? "Not Started"
-                    : "In Progress"}
-                </span>
-              </div>
-
-              {/* TITLE */}
-              <h3 className="text-xl font-bold text-slate-900 mb-2">
-                {mod.title}
-              </h3>
-
-              {/* DESCRIPTION */}
-              <p className="text-slate-600 text-sm mb-4 line-clamp-2">
-                {mod.description}
-              </p>
-
-              {/* PROGRESS */}
-              <div className="mb-2 flex justify-between text-sm text-slate-600">
-                <span>Progress</span>
-                <span>{progress}%</span>
-              </div>
-
-              <div className="h-2 bg-teal-100 rounded-full overflow-hidden mb-5">
-                <div
-                  className={`h-full rounded-full transition-all
-                    ${
-                      completed
-                        ? "bg-green-500"
-                        : progress > 0
-                        ? "bg-teal-500"
-                        : "bg-gray-300"
-                    }
-                  `}
-                  style={{ width: `${progress}%` }}
-                />
-              </div>
-
-              {/* FOOTER */}
-              <div className="flex items-center justify-between">
-                <span className="px-4 py-1.5 rounded-full bg-yellow-400 text-white text-sm font-semibold">
-                  ⚡ {mod.xp || 0} XP
-                </span>
-
-                <button
-                  onClick={() => handleAction(mod)}
-                  className={`
-                    px-5 py-2 rounded-xl text-sm font-semibold
-                    ${
-                      status === "completed"
-                        ? "text-slate-600 hover:text-slate-900"
-                        : status === "not_started"
-                        ? "bg-green-500 hover:bg-green-600 text-white"
-                        : "bg-teal-500 hover:bg-teal-600 text-white"
-                    }
-                  `}
-                >
-                  {status === "completed"
-                    ? "Review"
-                    : status === "not_started"
-                    ? "Start"
-                    : "Continue"}
-                </button>
-              </div>
-            </div>
-          );
-        })}
-      </div>
-    </div>
-  );
+if (token) {
+  fetchModules();
 }
 
-export default Modules;
+}, [token]);
+
+/* ================= ACTION ================= */
+
+const handleAction = async (mod) => {
+
+if (!mod.started) {
+  await fetch("http://localhost:5000/api/modules/start", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({ moduleId: mod._id })
+  });
+}
+
+navigate(`/modules/${mod._id}/topics`);
+
+};
+
+/* ================= LOADING ================= */
+
+if (loading) {
+return (
+<div className="h-screen flex items-center justify-center bg-gradient-to-br from-indigo-50 to-purple-50">
+<div className="animate-pulse text-xl font-semibold text-indigo-600">
+Loading Learning Universe...
+</div>
+</div>
+);
+}
+
+/* ================= UI ================= */
+
+return (
+<div
+className="
+min-h-screen
+bg-gradient-to-br
+from-indigo-50 via-sky-50 to-purple-100
+px-10 py-12
+"
+>
+
+  {/* HEADER */}
+
+  <div className="mb-12">
+
+    <h1
+      className="
+      text-5xl font-extrabold
+      bg-gradient-to-r
+      from-indigo-600 to-purple-600
+      bg-clip-text text-transparent
+      "
+    >
+      🚀 Learning Command Center
+    </h1>
+
+    <p className="text-gray-600 mt-3 text-lg">
+      Level up your skills. Defeat modules. Unlock bosses.
+    </p>
+
+  </div>
+
+  {/* GRID */}
+
+  <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-10">
+
+    {modules.map((mod) => {
+
+      let status = "not_started";
+      if (mod.completed) status = "completed";
+      else if (mod.started) status = "in_progress";
+
+      const progress = mod.progressPercent || 0;
+
+      return (
+
+        <div
+          key={mod._id}
+          className="
+          group relative
+          rounded-3xl
+          backdrop-blur-xl
+          bg-white/70
+          border border-white/40
+          shadow-xl
+          hover:shadow-2xl
+          transition-all duration-500
+          hover:-translate-y-3
+          overflow-hidden
+          "
+        >
+
+          {/* GLOW EFFECT */}
+
+          <div
+            className="
+            absolute inset-0 opacity-0
+            group-hover:opacity-100
+            transition duration-500
+            bg-gradient-to-br
+            from-indigo-200/20
+            to-purple-300/20
+            "
+          />
+
+          <div className="relative p-7">
+
+            {/* STATUS */}
+
+            <div className="flex justify-between mb-5">
+
+              <span className="text-sm text-gray-500">
+                Skill Module
+              </span>
+
+              <span
+                className={`
+                px-3 py-1 rounded-full text-xs font-bold
+                ${
+                  status === "completed"
+                    ? "bg-green-100 text-green-700"
+                    : status === "in_progress"
+                    ? "bg-indigo-100 text-indigo-700"
+                    : "bg-gray-100 text-gray-600"
+                }
+                `}
+              >
+                {status === "completed"
+                  ? "Completed"
+                  : status === "in_progress"
+                  ? "In Progress"
+                  : "Not Started"}
+              </span>
+
+            </div>
+
+            {/* TITLE */}
+
+            <h2
+              className="
+              text-2xl font-bold text-gray-900
+              group-hover:text-indigo-600
+              transition
+              "
+            >
+              {mod.title}
+            </h2>
+
+            <p className="text-gray-600 mt-2 text-sm min-h-[40px]">
+              {mod.description}
+            </p>
+
+            {/* PROGRESS */}
+
+            <div className="mt-6">
+
+              <div className="flex justify-between text-sm mb-2">
+
+                <span className="font-medium text-gray-600">
+                  Progress
+                </span>
+
+                <span className="font-bold text-indigo-600">
+                  {progress}%
+                </span>
+
+              </div>
+
+              <div className="h-3 bg-gray-200 rounded-full overflow-hidden">
+
+                <div
+                  style={{ width: `${progress}%` }}
+                  className="
+                  h-full rounded-full
+                  bg-gradient-to-r
+                  from-indigo-500
+                  via-purple-500
+                  to-pink-500
+                  transition-all duration-700
+                  animate-pulse
+                  "
+                />
+
+              </div>
+
+            </div>
+
+            {/* XP BADGE */}
+
+            <div className="mt-6 flex justify-between items-center">
+
+              <div
+                className="
+                px-4 py-2 rounded-full
+                bg-yellow-400 text-white
+                font-bold text-sm
+                shadow-md
+                "
+              >
+                ⚡ {mod.totalXp || 100} XP
+              </div>
+
+              <button
+                onClick={() => handleAction(mod)}
+                className="
+                px-6 py-2
+                rounded-xl
+                font-semibold
+                text-white
+                bg-gradient-to-r
+                from-indigo-600
+                to-purple-600
+                hover:scale-105
+                hover:shadow-lg
+                transition
+                "
+              >
+                {status === "completed"
+                  ? "Review"
+                  : status === "not_started"
+                  ? "Start"
+                  : "Continue"}
+              </button>
+
+            </div>
+
+          </div>
+
+        </div>
+
+      );
+    })}
+
+  </div>
+
+</div>
+
+);
+}

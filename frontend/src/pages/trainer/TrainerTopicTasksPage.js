@@ -170,21 +170,29 @@ export default function TrainerTopicTasksPage() {
     }
   };
 
-  if (loading) return <p className="p-10">Loading tasks...</p>;
+  if (loading)
+    return <p className="p-10 text-gray-500">Loading tasks...</p>;
 
   /* ================= UI ================= */
 
   return (
-    <div className="space-y-10">
+    <div className="max-w-6xl mx-auto py-14 px-10 space-y-12">
 
-      <h1 className="text-3xl font-bold text-indigo-600">🧪 Topic Tasks</h1>
+      <div>
+        <h1 className="text-3xl font-bold text-gray-900">
+          Topic Task Builder
+        </h1>
+        <p className="text-gray-500 mt-2">
+          Create coding, quiz, and bug-fix challenges.
+        </p>
+      </div>
 
       {/* ================= FORM ================= */}
 
-      <div className="bg-white p-6 rounded-xl border shadow space-y-3">
+      <div className="bg-white p-8 rounded-2xl shadow-sm border border-gray-100 space-y-4">
 
         <select
-          className="w-full p-3 border rounded"
+          className="w-full p-3 border rounded-lg"
           value={form.type}
           onChange={(e) => setForm({ ...form, type: e.target.value })}
         >
@@ -194,14 +202,14 @@ export default function TrainerTopicTasksPage() {
         </select>
 
         <input
-          className="w-full p-3 border rounded"
+          className="w-full p-3 border rounded-lg"
           placeholder="Task title"
           value={form.title}
           onChange={(e) => setForm({ ...form, title: e.target.value })}
         />
 
         <textarea
-          className="w-full p-3 border rounded h-28"
+          className="w-full p-3 border rounded-lg h-24"
           placeholder="Task description / hint"
           value={form.description}
           onChange={(e) => setForm({ ...form, description: e.target.value })}
@@ -209,7 +217,7 @@ export default function TrainerTopicTasksPage() {
 
         {form.type !== "quiz" && (
           <textarea
-            className="w-full p-3 border rounded h-28"
+            className="w-full p-3 border rounded-lg h-32 font-mono text-sm"
             placeholder={form.type === "bugfix" ? "Buggy code" : "Starter code"}
             value={form.starterCode}
             onChange={(e) => setForm({ ...form, starterCode: e.target.value })}
@@ -218,9 +226,9 @@ export default function TrainerTopicTasksPage() {
 
         {form.type === "quiz" &&
           form.options.map((opt, i) => (
-            <div key={i} className="flex gap-2 items-center">
+            <div key={i} className="flex gap-3 items-center">
               <input
-                className="flex-1 p-2 border rounded"
+                className="flex-1 p-2 border rounded-lg"
                 placeholder={`Option ${i + 1}`}
                 value={opt}
                 onChange={(e) => {
@@ -239,7 +247,7 @@ export default function TrainerTopicTasksPage() {
 
         <button
           onClick={submitTask}
-          className="bg-indigo-600 text-white px-6 py-3 rounded-lg"
+          className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-xl font-semibold transition"
         >
           {editingIndex !== null ? "Update Task" : "Add Task"}
         </button>
@@ -258,23 +266,29 @@ export default function TrainerTopicTasksPage() {
               : [];
 
           return (
-            <div key={i} className="bg-white p-6 rounded-xl border shadow space-y-3">
+            <div
+              key={i}
+              className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm space-y-4"
+            >
 
-              <div className="flex justify-between">
-                <h3 className="font-bold">
-                  {task.title} ({task.type})
+              <div className="flex justify-between items-center">
+                <h3 className="font-semibold text-gray-900">
+                  {task.title}
+                  <span className="ml-2 text-xs px-2 py-1 bg-indigo-100 text-indigo-600 rounded-full">
+                    {task.type}
+                  </span>
                 </h3>
 
-                <div className="flex gap-2">
+                <div className="flex gap-3">
                   <button
                     onClick={() => startEdit(task, i)}
-                    className="bg-yellow-400 px-3 py-1 rounded"
+                    className="text-yellow-600 text-sm font-medium"
                   >
                     Edit
                   </button>
                   <button
                     onClick={() => deleteTask(i)}
-                    className="bg-red-500 text-white px-3 py-1 rounded"
+                    className="text-red-500 text-sm font-medium"
                   >
                     Delete
                   </button>
@@ -282,43 +296,47 @@ export default function TrainerTopicTasksPage() {
               </div>
 
               {(task.type === "coding" || task.type === "bugfix") && (
-                <div className="bg-gray-50 p-4 rounded space-y-2">
+                <div className="bg-gray-50 p-4 rounded-xl space-y-3">
 
-                  <input
-                    className="w-full p-2 border rounded"
-                    placeholder="Input"
-                    value={testCaseDrafts[i]?.input || ""}
-                    onChange={(e) =>
-                      setTestCaseDrafts(p => ({
-                        ...p,
-                        [i]: { ...p[i], input: e.target.value }
-                      }))
-                    }
-                  />
+                  <div className="grid grid-cols-2 gap-3">
+                    <input
+                      className="p-2 border rounded-lg text-sm"
+                      placeholder="Input"
+                      value={testCaseDrafts[i]?.input || ""}
+                      onChange={(e) =>
+                        setTestCaseDrafts(p => ({
+                          ...p,
+                          [i]: { ...p[i], input: e.target.value }
+                        }))
+                      }
+                    />
 
-                  <input
-                    className="w-full p-2 border rounded"
-                    placeholder="Output"
-                    value={testCaseDrafts[i]?.output || ""}
-                    onChange={(e) =>
-                      setTestCaseDrafts(p => ({
-                        ...p,
-                        [i]: { ...p[i], output: e.target.value }
-                      }))
-                    }
-                  />
+                    <input
+                      className="p-2 border rounded-lg text-sm"
+                      placeholder="Output"
+                      value={testCaseDrafts[i]?.output || ""}
+                      onChange={(e) =>
+                        setTestCaseDrafts(p => ({
+                          ...p,
+                          [i]: { ...p[i], output: e.target.value }
+                        }))
+                      }
+                    />
+                  </div>
 
                   <button
                     onClick={() => addTestCase(i)}
-                    className="bg-green-600 text-white px-4 py-2 rounded"
+                    className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm"
                   >
-                    Save Test Case
+                    Add Test Case
                   </button>
 
                   {testCases?.length > 0 && (
-                    <div className="text-sm mt-2">
+                    <div className="text-sm text-gray-600 space-y-1">
                       {testCases.map((tc, idx) => (
-                        <p key={idx}>{tc.input} → {tc.output}</p>
+                        <p key={idx}>
+                          {tc.input} → {tc.output}
+                        </p>
                       ))}
                     </div>
                   )}
@@ -327,6 +345,7 @@ export default function TrainerTopicTasksPage() {
             </div>
           );
         })}
+
       </div>
     </div>
   );

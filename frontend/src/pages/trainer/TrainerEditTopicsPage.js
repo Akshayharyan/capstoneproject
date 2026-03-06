@@ -93,37 +93,51 @@ export default function TrainerEditTopicsPage() {
 
     const updated = [...moduleData.topics];
     updated.splice(index, 1);
-
     setModuleData({ ...moduleData, topics: updated });
-
-    // Optional: you can add backend delete later
   };
 
   /* ================= EDIT TOPIC ================= */
 
   const saveEdit = () => {
     setEditingIndex(null);
-    // Optional: add backend PUT later
   };
 
   if (loading)
-    return <p className="p-10 text-gray-500">Loading module...</p>;
+    return <p className="p-12 text-gray-500">Loading module...</p>;
 
   return (
-    <div className="p-10 min-h-screen bg-[#f7f8fc] space-y-10">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-indigo-50 px-12 py-14 space-y-14 max-w-6xl mx-auto">
 
-      <div>
-        <h1 className="text-4xl font-extrabold text-orange-500">
-          Manage Topics
-        </h1>
-        <p className="text-gray-600 mt-2">
-          {moduleData.topics.length} topics in this module
-        </p>
+      {/* ================= HEADER ================= */}
+
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 flex justify-between items-center">
+
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900">
+            {moduleData.title}
+          </h1>
+          <p className="text-gray-500 mt-2">
+            {moduleData.topics.length} Topics •{" "}
+            {moduleData.topics.reduce((sum, t) => sum + (t.xp || 0), 0)} XP
+          </p>
+        </div>
+
+        <button
+          onClick={() => navigate("/trainer")}
+          className="px-5 py-2.5 bg-gray-100 hover:bg-gray-200 rounded-xl text-sm font-semibold transition"
+        >
+          Back
+        </button>
+
       </div>
 
-      {/* ================= ADD TOPIC ================= */}
+      {/* ================= ADD TOPIC CARD ================= */}
 
-      <div className="bg-white rounded-2xl p-6 shadow border space-y-4 max-w-xl">
+      <div className="bg-white rounded-2xl p-8 shadow-sm border border-gray-100 space-y-4 max-w-xl">
+
+        <h2 className="text-lg font-semibold text-gray-900">
+          Create New Topic
+        </h2>
 
         <input
           className="w-full p-3 border rounded-lg"
@@ -156,32 +170,33 @@ export default function TrainerEditTopicsPage() {
         <button
           disabled={adding}
           onClick={addTopic}
-          className="bg-orange-500 hover:bg-orange-600
-                     text-white font-bold px-6 py-3 rounded-lg w-full"
+          className="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-6 py-3 rounded-xl w-full transition"
         >
           {adding ? "Adding..." : "Add Topic"}
         </button>
+
       </div>
 
       {/* ================= TOPIC LIST ================= */}
 
-      <div className="space-y-4">
+      <div className="space-y-6">
 
         {moduleData.topics.length === 0 && (
-          <div className="bg-white p-6 rounded-xl border text-gray-500 text-center">
-            No topics yet. Start by creating one above.
+          <div className="bg-white p-8 rounded-2xl border border-gray-100 text-gray-500 text-center shadow-sm">
+            No topics yet. Create your first one above.
           </div>
         )}
 
         {moduleData.topics.map((topic, index) => (
           <div
             key={index}
-            className="bg-white p-4 rounded-xl border shadow-sm flex justify-between items-center"
+            className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-all flex justify-between items-center"
           >
+
             {editingIndex === index ? (
-              <div className="flex-1 space-y-2">
+              <div className="flex-1 space-y-3">
                 <input
-                  className="w-full p-2 border rounded"
+                  className="w-full p-2 border rounded-lg"
                   value={topic.title}
                   onChange={(e) => {
                     const updated = [...moduleData.topics];
@@ -199,25 +214,26 @@ export default function TrainerEditTopicsPage() {
             ) : (
               <>
                 <div>
-                  <h3 className="font-bold text-gray-800">
+                  <h3 className="font-semibold text-gray-900">
                     {topic.title}
                   </h3>
-                  <p className="text-sm text-gray-600">
+                  <p className="text-sm text-gray-500 mt-1">
                     XP: {topic.xp}
                   </p>
                 </div>
 
-                <div className="flex gap-4 items-center">
+                <div className="flex gap-6 items-center">
+
                   <button
                     onClick={() => setEditingIndex(index)}
-                    className="text-blue-500 text-sm"
+                    className="text-indigo-600 text-sm font-medium hover:underline"
                   >
                     Edit
                   </button>
 
                   <button
                     onClick={() => deleteTopic(index)}
-                    className="text-red-500 text-sm"
+                    className="text-red-500 text-sm font-medium hover:underline"
                   >
                     Delete
                   </button>
@@ -228,16 +244,20 @@ export default function TrainerEditTopicsPage() {
                         `/trainer/modules/${moduleId}/topic/${index}/tasks`
                       )
                     }
-                    className="text-orange-500 font-semibold hover:underline"
+                    className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-sm font-semibold transition"
                   >
-                    Manage Tasks →
+                    Manage Tasks
                   </button>
+
                 </div>
               </>
             )}
+
           </div>
         ))}
+
       </div>
+
     </div>
   );
 }

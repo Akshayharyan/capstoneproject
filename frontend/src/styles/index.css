@@ -111,3 +111,75 @@ body {
 .animate-fade-in {
   animation: fadeIn 0.6s ease forwards;
 }
+
+@keyframes shake {
+  0% { transform: translate(0px,0px); }
+  25% { transform: translate(6px,-6px); }
+  50% { transform: translate(-6px,6px); }
+  75% { transform: translate(6px,6px); }
+  100% { transform: translate(0px,0px); }
+}
+
+
+
+/* SLASH ATTACK EFFECT */
+
+@keyframes slash {
+
+  0% {
+    transform: scaleX(0.2) translateX(-60px) rotate(12deg);
+    opacity: 0;
+  }
+
+  40% {
+    opacity: 1;
+  }
+
+  100% {
+    transform: scaleX(1.2) translateX(60px) rotate(12deg);
+    opacity: 0;
+  }
+
+}
+
+
+
+
+
+
+@keyframes projectile {
+
+  0% {
+    transform: translateX(0);
+    opacity: 1;
+  }
+
+  80% {
+    opacity: 1;
+  }
+
+  100% {
+    transform: translateX(-600px);
+    opacity: 0;
+  }
+
+}
+
+@keyframes rage {
+
+  0% {
+    transform: scale(1);
+    filter: drop-shadow(0 0 0px red);
+  }
+
+  50% {
+    transform: scale(1.1);
+    filter: drop-shadow(0 0 20px red);
+  }
+
+  100% {
+    transform: scale(1);
+    filter: drop-shadow(0 0 0px red);
+  }
+
+}

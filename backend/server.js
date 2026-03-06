@@ -16,7 +16,7 @@ const app = express();
 connectDB();
 
 // ===============================
-// DEBUG (optional)
+// DEBUG
 // ===============================
 console.log("ENV LOADED:", process.env.OPENAI_API_KEY ? "YES" : "NO");
 
@@ -35,12 +35,15 @@ const adminRoutes = require("./routes/adminRoutes");
 const graderRoutes = require("./routes/graderRoutes");
 const achievementRoutes = require("./routes/achievementRoutes");
 const moduleProgressRoutes = require("./routes/moduleProgressRoutes");
-const bossBattleRoutes = require("./routes/bossBattleRoutes");
-const bossChallengeRoutes = require("./routes/bossChallengeRoutes");
 const judgeRoutes = require("./routes/judgeRoutes");
-const bossRoutes = require("./routes/bossRoutes");
 const codeRoutes = require("./routes/codeRoutes");
 const aiRoutes = require("./routes/aiRoutes");
+
+// 🔥 NEW CLEAN BOSS ROUTES
+console.log("Loading trainerBossRoutes...");
+const trainerBossRoutes = require("./routes/trainerBossRoutes");
+console.log("trainerBossRoutes loaded:", typeof trainerBossRoutes);
+const bossBattleRoutes = require("./routes/bossRoutes");         // Employee battle side
 
 // ===============================
 // MIDDLEWARE
@@ -75,17 +78,24 @@ app.use("/api/modules", moduleRoutes);
 app.use("/api/activity", activityRoutes);
 app.use("/api/admin", adminRoutes);
 
-app.use("/api/grader", graderRoutes);        // ✅ ONLY ONCE
-app.use("/api/code", codeRoutes);            // sandbox engine
+app.use("/api/grader", graderRoutes);
+app.use("/api/code", codeRoutes);
 app.use("/api/ai", aiRoutes);
 
 app.use("/api/achievements", achievementRoutes);
 app.use("/api/judge", judgeRoutes);
 
-app.use("/api/bosses", bossRoutes);
-app.use("/api/boss", bossBattleRoutes);
-app.use("/api/boss", bossChallengeRoutes);
+// ===============================
+// 🔥 BOSS SYSTEM (CLEAN STRUCTURE)
+// ===============================
 
+// Trainer Boss Designer
+app.use("/api/trainer/boss", trainerBossRoutes);
+
+// Employee Boss Battle
+app.use("/api/boss", bossBattleRoutes);
+
+// Module progress (keep near end)
 app.use("/api", moduleProgressRoutes);
 
 // ===============================

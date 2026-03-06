@@ -17,31 +17,52 @@ exports.getModulesWithStatus = async (req, res) => {
     if (!progress) progress = await Progress.create({ userId });
 
     const completedSet = new Set(
-      progress.completedModules.map((id) => String(id))
+      progress.completedModules.map(id => String(id))
     );
 
     const startedSet = new Set(
-      progress.startedModules.map((id) => String(id))
+      progress.startedModules.map(id => String(id))
     );
 
-    const formatted = modules.map((m) => ({
-      _id: m._id,
-      title: m.title,
-      description: m.description || "",
-      topicCount: m.topics.length,
-      started: startedSet.has(String(m._id)),
-      completed: completedSet.has(String(m._id)),
-      boss: m.boss || null,
-    }));
+    const formatted = modules.map((m) => {
+
+      // ✅ count completed topics for this module
+      const completedTopics = progress.topics.filter(
+        t =>
+          String(t.moduleId) === String(m._id) &&
+          t.xpAwarded === true
+      ).length;
+
+      const progressPercent =
+        m.topics.length === 0
+          ? 0
+          : Math.round(
+              (completedTopics / m.topics.length) * 100
+            );
+
+      return {
+        _id: m._id,
+        title: m.title,
+        description: m.description || "",
+        topicCount: m.topics.length,
+
+        // ✅ NEW
+        progressPercent,
+
+        started: startedSet.has(String(m._id)),
+        completed: completedSet.has(String(m._id)),
+        boss: m.boss || null,
+      };
+    });
 
     res.set("Cache-Control", "no-store");
     res.json({ modules: formatted });
+
   } catch (err) {
     console.error("Get modules status error:", err);
     res.status(500).json({ message: "Server error" });
   }
 };
-
 /* ===============================
    GET MODULE TOPICS WITH STATUS
    (AUTHORITATIVE UNLOCK LOGIC)
