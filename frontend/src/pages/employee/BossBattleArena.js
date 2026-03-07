@@ -1,9 +1,13 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 import BossIntro from "../../battle/BossIntro";
 import BattleArena from "../../battle/BattleArena";
 import { bossAbility } from "../../battle/BossAI";
 
 export default function BossBattleArena() {
+
+  const navigate = useNavigate();
+  const { moduleId } = useParams();
 
   const [boss, setBoss] = useState({
     name: "Async Overload",
@@ -23,6 +27,8 @@ export default function BossBattleArena() {
   const [damagePopup, setDamagePopup] = useState(null);
   const [phaseMessage, setPhaseMessage] = useState("");
   const [victory, setVictory] = useState(false);
+  const [defeat, setDefeat] = useState(false);
+
   const [selectedAnswer, setSelectedAnswer] = useState("");
 
   const [screenFlash, setScreenFlash] = useState(false);
@@ -34,6 +40,43 @@ export default function BossBattleArena() {
 
   const [bossPhase, setBossPhase] = useState(1);
   const [bossDialog, setBossDialog] = useState("");
+
+  /* ================= MUSIC ================= */
+
+  const [musicOn, setMusicOn] = useState(true);
+  const audioRef = useRef(null);
+
+  useEffect(() => {
+
+    const audio = new Audio("/assets/audio/boss-theme.mp3");
+    audio.loop = true;
+    audio.volume = 0.35;
+
+    audioRef.current = audio;
+
+    if (musicOn) {
+      audio.play().catch(()=>{});
+    }
+
+    return () => {
+      audio.pause();
+      audio.currentTime = 0;
+    };
+
+  }, []);
+
+  useEffect(() => {
+
+    const audio = audioRef.current;
+    if (!audio) return;
+
+    if (musicOn) {
+      audio.play().catch(()=>{});
+    } else {
+      audio.pause();
+    }
+
+  }, [musicOn]);
 
   /* ================= BOSS TAUNTS ================= */
 
@@ -48,19 +91,16 @@ export default function BossBattleArena() {
     "I control the execution stack!"
   ];
 
-  const getRandomTaunt = () => {
-    return bossTaunts[Math.floor(Math.random() * bossTaunts.length)];
-  };
+  const getRandomTaunt = () =>
+    bossTaunts[Math.floor(Math.random() * bossTaunts.length)];
 
-  /* ================= INITIAL DIALOG ================= */
+  /* ================= INTRO DIALOG ================= */
 
   useEffect(() => {
     if (!showIntro) {
       setBossDialog("So... another developer challenges me?");
     }
   }, [showIntro]);
-
-  /* ================= AUTO HIDE DIALOG ================= */
 
   useEffect(() => {
 
@@ -73,6 +113,8 @@ export default function BossBattleArena() {
     return () => clearTimeout(timer);
 
   }, [bossDialog]);
+
+  /* ================= QUESTION ================= */
 
   const challenge = {
     question: "What does async/await return?",
@@ -90,9 +132,7 @@ export default function BossBattleArena() {
       setPhaseMessage("💀 FINAL PHASE");
       setBossDialog("Impossible... I will not be defeated!");
 
-    }
-
-    else if (hp <= boss.maxHp * 0.7 && bossPhase !== 2) {
+    } else if (hp <= boss.maxHp * 0.7 && bossPhase !== 2) {
 
       setBossPhase(2);
       setPhaseMessage("🔥 PHASE 2 - BOSS RAGE");
@@ -101,7 +141,6 @@ export default function BossBattleArena() {
     }
 
     setTimeout(() => setPhaseMessage(""), 2000);
-
   };
 
   /* ================= BOSS ATTACK ================= */
@@ -112,28 +151,41 @@ export default function BossBattleArena() {
 
     setBossDialog(getRandomTaunt());
 
-    setBossAttackTrigger(true);
+    setBossAttackTrigger(false);
 
     setTimeout(() => {
-      setBossAttackTrigger(false);
-    }, 700);
 
-    const newHp = Math.max(player.hp - ability.damage, 0);
+      setBossAttackTrigger(true);
 
-    setPlayer(prev => ({
-      ...prev,
-      hp: newHp
-    }));
+      setTimeout(() => {
 
-    setBattleLog(prev => [
-      `${ability.name} hits you for ${ability.damage}`,
-      ...prev
-    ]);
+        const newHp = Math.max(player.hp - ability.damage, 0);
 
-    setDamagePopup(`-${ability.damage}`);
+        setPlayer(prev => ({
+          ...prev,
+          hp: newHp
+        }));
 
-    setTimeout(() => setDamagePopup(null), 900);
+        if (newHp === 0) {
+          setDefeat(true);
+        }
 
+        setBattleLog(prev => [
+          `${ability.name} hits you for ${ability.damage}`,
+          ...prev
+        ]);
+
+        setDamagePopup({
+          value: ability.damage,
+          critical: false,
+          type: "boss"
+        });
+
+        setTimeout(() => setDamagePopup(null), 900);
+
+      }, 850);
+
+    }, 30);
   };
 
   /* ================= PLAYER ATTACK ================= */
@@ -144,26 +196,31 @@ export default function BossBattleArena() {
 
     if (selectedAnswer === challenge.correct) {
 
-      /* PLAYER ATTACK */
-
-      setPlayerAttack(true);
+      setPlayerAttack(false);
 
       setTimeout(() => {
-        setScreenFlash(true);
-        setShake(true);
-      }, 200);
 
-      setTimeout(() => {
-        setShake(false);
-      }, 450);
+        setPlayerAttack(true);
 
-      setTimeout(() => {
-        setScreenFlash(false);
-        setPlayerAttack(false);
-      }, 650);
+        setTimeout(() => {
+          setScreenFlash(true);
+          setShake(true);
+        }, 200);
+
+        setTimeout(() => setShake(false), 450);
+
+        setTimeout(() => {
+          setScreenFlash(false);
+          setPlayerAttack(false);
+        }, 650);
+
+      }, 30);
 
       const damage = Math.floor(Math.random() * 20) + 25;
-      const newHp = Math.max(boss.currentHp - damage, 0);
+      const isCritical = Math.random() < 0.25;
+      const finalDamage = isCritical ? damage * 2 : damage;
+
+      const newHp = Math.max(boss.currentHp - finalDamage, 0);
 
       setTimeout(() => {
 
@@ -172,29 +229,30 @@ export default function BossBattleArena() {
           currentHp: newHp
         }));
 
+        if (newHp === 0) {
+          setVictory(true);
+        }
+
         setBossDialog("No! How did you solve that challenge?");
 
-        setDamagePopup(`🔥 ${damage}`);
+        setDamagePopup({
+          value: finalDamage,
+          critical: isCritical,
+          type: "player"
+        });
+
+        setTimeout(() => setDamagePopup(null), 1000);
 
         setBattleLog(prev => [
-          `⚔ You dealt ${damage} damage`,
+          `⚔ You dealt ${finalDamage} damage`,
           ...prev
         ]);
 
         checkPhase(newHp);
 
-        if (newHp === 0) {
-          setVictory(true);
-          return;
-        }
-
       }, 300);
 
-    }
-
-    else {
-
-      /* BOSS ATTACK */
+    } else {
 
       setTimeout(() => {
 
@@ -208,47 +266,101 @@ export default function BossBattleArena() {
         bossAttack();
 
       }, 300);
-
     }
 
     setSelectedAnswer("");
-
   };
+
+  /* ================= DEFEAT SCREEN ================= */
+
+  if (defeat) {
+
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-black text-white text-center">
+
+        <h1 className="text-7xl text-red-500 font-bold mb-6">
+          💀 YOU WERE DEFEATED
+        </h1>
+
+        <p className="text-xl text-gray-400 mb-10">
+          The boss proved too powerful...
+        </p>
+
+        <div className="flex gap-6">
+
+          <button
+            onClick={() => window.location.reload()}
+            className="px-6 py-3 bg-red-600 rounded-xl hover:bg-red-700"
+          >
+            🔁 Retry Battle
+          </button>
+
+          <button
+  onClick={() => navigate(`/modules/${moduleId}/topics`)}
+  className="px-6 py-3 bg-purple-600 rounded-xl hover:bg-purple-700"
+>
+  📚 Back to Topics
+</button>
+
+        </div>
+
+      </div>
+    );
+  }
 
   /* ================= VICTORY SCREEN ================= */
 
   if (victory) {
 
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-black text-white">
+      <div className="min-h-screen flex flex-col items-center justify-center bg-black text-white text-center">
 
-        <h1 className="text-6xl font-bold text-yellow-400 mb-6 animate-bounce">
+        <h1 className="text-7xl text-yellow-400 font-bold mb-6 animate-bounce">
           🏆 BOSS DEFEATED
         </h1>
 
-        <p className="text-2xl text-gray-300">
+        <p className="text-2xl text-gray-300 mb-4">
           +300 XP Earned
         </p>
 
-        <p className="mt-4 text-gray-500">
+        <p className="text-gray-500 mb-10">
           Module Completed
         </p>
+
+        <div className="flex gap-6">
+
+          <button
+            onClick={() => window.location.reload()}
+            className="px-6 py-3 bg-blue-600 rounded-xl hover:bg-blue-700"
+          >
+            🔁 Restart Battle
+          </button>
+
+          <button
+  onClick={() => navigate(`/modules/${moduleId}/topics`)}
+  className="px-6 py-3 bg-purple-600 rounded-xl hover:bg-purple-700"
+>
+  📚 Back to Topics
+</button>
+
+        </div>
 
       </div>
     );
   }
 
-  /* ================= BOSS INTRO ================= */
+  /* ================= INTRO ================= */
 
   if (showIntro) {
-
     return (
       <BossIntro
         bossName={boss.name}
+        bossImage="/assets/battle/boss.png"
+        bossTitle="Master of Asynchronous Chaos"
+        color="red"
         onFinish={() => setShowIntro(false)}
       />
     );
-
   }
 
   /* ================= MAIN ARENA ================= */
@@ -260,13 +372,18 @@ export default function BossBattleArena() {
       ${shake ? "animate-[shake_0.3s]" : ""}`}
     >
 
+      <button
+        onClick={() => setMusicOn(prev => !prev)}
+        className="absolute top-4 right-4 z-50 bg-black/60 p-3 rounded-full text-xl hover:scale-110 hover:bg-purple-700 transition"
+      >
+        {musicOn ? "🔊" : "🔇"}
+      </button>
+
       {screenFlash && (
         <div className="absolute inset-0 bg-white opacity-20 animate-ping" />
       )}
 
       <div className="max-w-7xl mx-auto grid lg:grid-cols-3 gap-8">
-
-        {/* LEFT SIDE */}
 
         <div className="lg:col-span-2 space-y-6">
 
@@ -282,8 +399,6 @@ export default function BossBattleArena() {
             />
 
           </div>
-
-          {/* BATTLE LOG */}
 
           <div className="bg-gray-900 border border-gray-700 rounded-2xl p-4 h-48 overflow-y-auto">
 
@@ -301,23 +416,20 @@ export default function BossBattleArena() {
 
         </div>
 
-        {/* RIGHT SIDE */}
-
         <div className="bg-gray-900 border border-purple-700 rounded-2xl p-8">
-
-          {/* BOSS DIALOG */}
 
           <div className="bg-black border border-red-600 rounded-xl p-4 mb-6 shadow-lg min-h-[80px] flex flex-col justify-center">
 
-  <p className="text-red-400 font-bold mb-1">
-    {boss.name}
-  </p>
+            <p className="text-red-400 font-bold mb-1">
+              {boss.name}
+            </p>
 
-  <p className="text-gray-300 text-sm">
-    {bossDialog || "..."}
-  </p>
+            <p className="text-gray-300 text-sm">
+              {bossDialog || "..."}
+            </p>
 
-</div>
+          </div>
+
           <h2 className="text-xl font-bold text-purple-400 mb-6">
             🔥 Attack Challenge
           </h2>
@@ -366,5 +478,4 @@ export default function BossBattleArena() {
     </div>
 
   );
-
 }

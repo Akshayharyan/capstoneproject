@@ -222,4 +222,4 @@ module.exports = {
   generateChallenge,
   processTurn,
   initializeBattle
-};w
+};

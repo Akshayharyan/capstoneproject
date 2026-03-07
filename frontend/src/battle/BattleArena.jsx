@@ -13,63 +13,97 @@ export default function BattleArena({
   const [playerDash, setPlayerDash] = useState(false);
   const [slashEffect, setSlashEffect] = useState(false);
   const [bossProjectile, setBossProjectile] = useState(false);
+  const [bossCharge, setBossCharge] = useState(false);
+  const [impact, setImpact] = useState(false);
+  const [playerHit, setPlayerHit] = useState(false);
 
   const bossHpPercent = (boss.currentHp / boss.maxHp) * 100;
   const playerHpPercent = (player.hp / player.maxHp) * 100;
 
   /* ================= PLAYER ATTACK ================= */
 
-  useEffect(() => {
+useEffect(() => {
 
-    if (playerAttack) {
+  if (!playerAttack) return;
 
-      setPlayerDash(true);
+  setPlayerDash(false);
+  setSlashEffect(false);
 
-      setTimeout(() => {
-        setSlashEffect(true);
-      }, 150);
+  const start = setTimeout(() => {
 
-      setTimeout(() => {
-        setPlayerDash(false);
-      }, 450);
+    setPlayerDash(true);
 
-      setTimeout(() => {
-        setSlashEffect(false);
-      }, 750);
+    const slash = setTimeout(() => {
+      setSlashEffect(true);
+    }, 140);
 
-    }
+    const dashEnd = setTimeout(() => {
+      setPlayerDash(false);
+    }, 420);
 
-  }, [playerAttack]);
+    const slashEnd = setTimeout(() => {
+      setSlashEffect(false);
+    }, 700);
+
+    /* cleanup timers */
+
+    return () => {
+      clearTimeout(slash);
+      clearTimeout(dashEnd);
+      clearTimeout(slashEnd);
+    };
+
+  }, 10);
+
+  return () => clearTimeout(start);
+
+}, [playerAttack]);
 
   /* ================= BOSS HIT ================= */
 
   useEffect(() => {
 
-    if (damagePopup) {
+    if (!damagePopup || damagePopup.type !== "player") return;
 
-      setBossHit(true);
+    setBossHit(true);
 
-      setTimeout(() => {
-        setBossHit(false);
-      }, 350);
+    const timer = setTimeout(() => {
+      setBossHit(false);
+    }, 350);
 
-    }
+    return () => clearTimeout(timer);
 
   }, [damagePopup]);
 
-  /* ================= BOSS PROJECTILE ================= */
+  /* ================= BOSS ATTACK ================= */
 
   useEffect(() => {
 
-    if (bossAttackTrigger) {
+    if (!bossAttackTrigger) return;
 
+    setBossCharge(true);
+
+    const chargeTimer = setTimeout(() => {
+      setBossCharge(false);
       setBossProjectile(true);
+    }, 300);
 
-      setTimeout(() => {
-        setBossProjectile(false);
-      }, 800);
+    const impactTimer = setTimeout(() => {
+      setBossProjectile(false);
+      setImpact(true);
+      setPlayerHit(true);
+    }, 850);
 
-    }
+    const resetTimer = setTimeout(() => {
+      setImpact(false);
+      setPlayerHit(false);
+    }, 1150);
+
+    return () => {
+      clearTimeout(chargeTimer);
+      clearTimeout(impactTimer);
+      clearTimeout(resetTimer);
+    };
 
   }, [bossAttackTrigger]);
 
@@ -77,7 +111,7 @@ export default function BattleArena({
 
     <div className="relative w-full h-full rounded-2xl overflow-hidden border border-gray-700">
 
-      {/* ARENA BACKGROUND VIDEO */}
+      {/* ARENA VIDEO BACKGROUND */}
 
       <video
         autoPlay
@@ -96,23 +130,23 @@ export default function BattleArena({
 
       <div
         className={`
-        absolute
-        bottom-12
-        left-16
-        flex
-        flex-col
-        items-center
-        transition-transform
-        duration-300
+        absolute bottom-12 left-16
+        flex flex-col items-center
+        transition-transform duration-200
         ${playerDash ? "translate-x-44 scale-110 rotate-2" : ""}
+        ${playerHit ? "animate-[playerHit_0.3s]" : ""}
         `}
       >
 
-        <img
-          src="/assets/battle/player.png"
-          alt="Player"
-          className="h-32 object-contain drop-shadow-xl"
-        />
+       {/* PLAYER ENERGY */}
+
+<div className="absolute w-24 h-24 bg-blue-400 blur-2xl rounded-full animate-[playerEnergy_3s_infinite]" />
+
+<img
+  src="/assets/battle/player.png"
+  alt="Player"
+  className="h-32 object-contain drop-shadow-xl animate-[idleFloat_3s_ease-in-out_infinite]"
+/>
 
         {/* PLAYER HP */}
 
@@ -140,74 +174,99 @@ export default function BattleArena({
 
       {slashEffect && (
 
-        <div
-          className="
-          absolute
-          top-[43%]
-          left-[53%]
-          w-72
-          h-3
-          z-50
-          bg-gradient-to-r
-          from-red-900
-          via-red-700
-          to-transparent
-          blur-sm
-          rotate-12
-          animate-[slash_0.7s]
-          "
-        />
+        <>
+          {/* MAIN SLASH */}
+          <div
+            className="
+            absolute
+            top-[43%]
+            left-[53%]
+            w-72
+            h-3
+            z-50
+            bg-gradient-to-r
+            from-red-900
+            via-red-700
+            to-transparent
+            blur-sm
+            rotate-12
+            animate-[slash_0.7s]
+            "
+          />
+
+          {/* TRAIL SLASH */}
+          <div
+            className="
+            absolute
+            top-[44%]
+            left-[50%]
+            w-72
+            h-3
+            z-40
+            opacity-60
+            bg-gradient-to-r
+            from-red-800
+            via-red-600
+            to-transparent
+            blur-md
+            rotate-12
+            animate-[slash_0.7s]
+            "
+          />
+        </>
 
       )}
 
 
-      {/* BOSS */}
+{/* BOSS */}
+
+<div
+  className={`
+  absolute top-16 right-20
+  flex flex-col items-center
+  transition-transform duration-200
+  ${bossHit ? "-translate-x-8 scale-110 brightness-150" : ""}
+  ${bossPhase === 2 ? "animate-pulse brightness-125" : ""}
+  ${bossPhase === 3 ? "animate-[rage_1s_infinite] brightness-150" : ""}
+  `}
+>
+
+  {/* BOSS AURA */}
+  <div
+    className="absolute w-56 h-56 bg-red-500 blur-3xl rounded-full animate-[bossAura_3s_infinite]"
+  />
+
+  <img
+    src="/assets/battle/boss.png"
+    alt="Boss"
+    className={`h-48 object-contain drop-shadow-2xl animate-[idleFloat_4s_ease-in-out_infinite]
+    ${bossCharge ? "brightness-150 animate-pulse" : ""}`}
+  />
+
+  {/* BOSS HP */}
+
+  <div className="bg-black/70 px-4 py-2 rounded-lg mt-2 w-44 text-center">
+
+    <p className="text-red-400 font-semibold text-sm">
+      {boss.name}
+    </p>
+
+    <div className="bg-gray-700 rounded-full h-2 mt-1">
 
       <div
-        className={`
-        absolute
-        top-16
-        right-20
-        flex
-        flex-col
-        items-center
-        transition-transform
-        duration-200
-        ${bossHit ? "-translate-x-8 scale-110 brightness-150" : ""}
-        ${bossPhase === 2 ? "animate-pulse brightness-125" : ""}
-        ${bossPhase === 3 ? "animate-[rage_1s_infinite] brightness-150" : ""}
-        `}
-      >
+        className="bg-red-500 h-2 rounded-full transition-all duration-500"
+        style={{ width: `${bossHpPercent}%` }}
+      />
 
-        <img
-          src="/assets/battle/boss.png"
-          alt="Boss"
-          className="h-48 object-contain drop-shadow-2xl"
-        />
+    </div>
 
-        {/* BOSS HP */}
+  </div>
+  
 
-        <div className="bg-black/70 px-4 py-2 rounded-lg mt-2 w-44 text-center">
-
-          <p className="text-red-400 font-semibold text-sm">
-            {boss.name}
-          </p>
-
-          <div className="bg-gray-700 rounded-full h-2 mt-1">
-
-            <div
-              className="bg-red-500 h-2 rounded-full transition-all duration-500"
-              style={{ width: `${bossHpPercent}%` }}
-            />
-
-          </div>
-
-        </div>
-
-      </div>
+</div>
 
 
-      {/* BOSS PROJECTILE */}
+      {/* BOSS ENERGY BEAM */}
 
       {bossProjectile && (
 
@@ -215,15 +274,40 @@ export default function BattleArena({
           className="
           absolute
           top-[55%]
-          right-[180px]
-          text-green-400
-          text-3xl
-          animate-[projectile_0.8s_linear_forwards]
-          drop-shadow-lg
+          right-[200px]
+          w-56
+          h-3
+          bg-gradient-to-l
+          from-green-400
+          via-green-300
+          to-transparent
+          blur-sm
+          animate-[projectile_0.7s_linear_forwards]
+          z-40
           "
-        >
-          💻
-        </div>
+        />
+
+      )}
+
+
+      {/* IMPACT EXPLOSION */}
+
+      {impact && (
+
+        <div
+          className="
+          absolute
+          bottom-24
+          left-[170px]
+          w-16
+          h-16
+          bg-green-400
+          rounded-full
+          blur-xl
+          opacity-70
+          animate-ping
+          "
+        />
 
       )}
 
@@ -233,19 +317,26 @@ export default function BattleArena({
       {damagePopup && (
 
         <div
-          className="
+          className={`
           absolute
           top-28
           right-52
-          text-yellow-400
-          text-3xl
-          font-bold
-          animate-bounce
+          text-4xl
+          font-extrabold
+          animate-[damageFloat_1s]
+          pointer-events-none
           drop-shadow-xl
-          "
+          ${
+            damagePopup.type === "player"
+              ? damagePopup.critical
+                ? "text-orange-400 scale-125"
+                : "text-yellow-400"
+              : "text-red-500"
+          }
+          `}
         >
 
-          {damagePopup}
+          {damagePopup.critical ? "CRIT " : ""}-{damagePopup.value}
 
         </div>
 
