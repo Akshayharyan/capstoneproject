@@ -40,6 +40,7 @@ export default function BossBattleArena() {
 
   const [bossPhase, setBossPhase] = useState(1);
   const [bossDialog, setBossDialog] = useState("");
+  const [bossDefeating, setBossDefeating] = useState(false);
 
   /* ================= MUSIC ================= */
 
@@ -230,8 +231,14 @@ export default function BossBattleArena() {
         }));
 
         if (newHp === 0) {
-          setVictory(true);
-        }
+
+  setBossDefeating(true);
+
+  setTimeout(() => {
+    setVictory(true);
+  }, 2000);
+
+}
 
         setBossDialog("No! How did you solve that challenge?");
 
@@ -382,6 +389,18 @@ export default function BossBattleArena() {
       {screenFlash && (
         <div className="absolute inset-0 bg-white opacity-20 animate-ping" />
       )}
+      {bossDefeating && (
+
+  <div className="absolute inset-0 flex items-center justify-center z-50 pointer-events-none">
+
+    <div className="text-yellow-400 text-6xl font-bold animate-bounce">
+      +300 XP
+    </div>
+
+  </div>
+
+)}
+      
 
       <div className="max-w-7xl mx-auto grid lg:grid-cols-3 gap-8">
 

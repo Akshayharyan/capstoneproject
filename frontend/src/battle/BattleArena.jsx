@@ -228,6 +228,7 @@ useEffect(() => {
   ${bossHit ? "-translate-x-8 scale-110 brightness-150" : ""}
   ${bossPhase === 2 ? "animate-pulse brightness-125" : ""}
   ${bossPhase === 3 ? "animate-[rage_1s_infinite] brightness-150" : ""}
+  ${boss.currentHp === 0 ? "animate-[shake_0.6s_infinite]" : ""}
   `}
 >
 
