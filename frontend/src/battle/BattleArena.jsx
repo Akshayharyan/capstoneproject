@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 
 export default function BattleArena({
   boss,
@@ -17,47 +17,69 @@ export default function BattleArena({
   const [impact, setImpact] = useState(false);
   const [playerHit, setPlayerHit] = useState(false);
 
+  /* SOUND REFERENCES */
+
+  const slashSound = useRef(null);
+  const beamSound = useRef(null);
+
   const bossHpPercent = (boss.currentHp / boss.maxHp) * 100;
   const playerHpPercent = (player.hp / player.maxHp) * 100;
 
+  /* ================= LOAD SOUNDS ================= */
+
+  useEffect(() => {
+
+    slashSound.current = new Audio("/assets/audio/slash.mp3");
+    slashSound.current.volume = 0.6;
+
+    beamSound.current = new Audio("/assets/audio/beam.mp3");
+    beamSound.current.volume = 0.7;
+
+  }, []);
+
   /* ================= PLAYER ATTACK ================= */
 
-useEffect(() => {
+  useEffect(() => {
 
-  if (!playerAttack) return;
+    if (!playerAttack) return;
 
-  setPlayerDash(false);
-  setSlashEffect(false);
+    /* PLAY SLASH SOUND */
 
-  const start = setTimeout(() => {
+    if (slashSound.current) {
+      slashSound.current.currentTime = 0;
+      slashSound.current.play().catch(()=>{});
+    }
 
-    setPlayerDash(true);
+    setPlayerDash(false);
+    setSlashEffect(false);
 
-    const slash = setTimeout(() => {
-      setSlashEffect(true);
-    }, 140);
+    const start = setTimeout(() => {
 
-    const dashEnd = setTimeout(() => {
-      setPlayerDash(false);
-    }, 420);
+      setPlayerDash(true);
 
-    const slashEnd = setTimeout(() => {
-      setSlashEffect(false);
-    }, 700);
+      const slash = setTimeout(() => {
+        setSlashEffect(true);
+      }, 140);
 
-    /* cleanup timers */
+      const dashEnd = setTimeout(() => {
+        setPlayerDash(false);
+      }, 420);
 
-    return () => {
-      clearTimeout(slash);
-      clearTimeout(dashEnd);
-      clearTimeout(slashEnd);
-    };
+      const slashEnd = setTimeout(() => {
+        setSlashEffect(false);
+      }, 700);
 
-  }, 10);
+      return () => {
+        clearTimeout(slash);
+        clearTimeout(dashEnd);
+        clearTimeout(slashEnd);
+      };
 
-  return () => clearTimeout(start);
+    }, 10);
 
-}, [playerAttack]);
+    return () => clearTimeout(start);
+
+  }, [playerAttack]);
 
   /* ================= BOSS HIT ================= */
 
@@ -80,6 +102,13 @@ useEffect(() => {
   useEffect(() => {
 
     if (!bossAttackTrigger) return;
+
+    /* PLAY BEAM SOUND */
+
+    if (beamSound.current) {
+      beamSound.current.currentTime = 0;
+      beamSound.current.play().catch(()=>{});
+    }
 
     setBossCharge(true);
 
@@ -125,7 +154,6 @@ useEffect(() => {
 
       <div className="absolute inset-0 bg-black/40"></div>
 
-
       {/* PLAYER */}
 
       <div
@@ -138,15 +166,15 @@ useEffect(() => {
         `}
       >
 
-       {/* PLAYER ENERGY */}
+        {/* PLAYER ENERGY */}
 
-<div className="absolute w-24 h-24 bg-blue-400 blur-2xl rounded-full animate-[playerEnergy_3s_infinite]" />
+        <div className="absolute w-24 h-24 bg-blue-400 blur-2xl rounded-full animate-[playerEnergy_3s_infinite]" />
 
-<img
-  src="/assets/battle/player.png"
-  alt="Player"
-  className="h-32 object-contain drop-shadow-xl animate-[idleFloat_3s_ease-in-out_infinite]"
-/>
+        <img
+          src="/assets/battle/player.png"
+          alt="Player"
+          className="h-32 object-contain drop-shadow-xl animate-[idleFloat_3s_ease-in-out_infinite]"
+        />
 
         {/* PLAYER HP */}
 
@@ -169,13 +197,11 @@ useEffect(() => {
 
       </div>
 
-
       {/* PLAYER SLASH */}
 
       {slashEffect && (
 
         <>
-          {/* MAIN SLASH */}
           <div
             className="
             absolute
@@ -194,7 +220,6 @@ useEffect(() => {
             "
           />
 
-          {/* TRAIL SLASH */}
           <div
             className="
             absolute
@@ -217,81 +242,88 @@ useEffect(() => {
 
       )}
 
-
-{/* BOSS */}
-
-<div
-  className={`
-  absolute top-16 right-20
-  flex flex-col items-center
-  transition-transform duration-200
-  ${bossHit ? "-translate-x-8 scale-110 brightness-150" : ""}
-  ${bossPhase === 2 ? "animate-pulse brightness-125" : ""}
-  ${bossPhase === 3 ? "animate-[rage_1s_infinite] brightness-150" : ""}
-  ${boss.currentHp === 0 ? "animate-[shake_0.6s_infinite]" : ""}
-  `}
->
-
-  {/* BOSS AURA */}
-  <div
-    className="absolute w-56 h-56 bg-red-500 blur-3xl rounded-full animate-[bossAura_3s_infinite]"
-  />
-
-  <img
-    src="/assets/battle/boss.png"
-    alt="Boss"
-    className={`h-48 object-contain drop-shadow-2xl animate-[idleFloat_4s_ease-in-out_infinite]
-    ${bossCharge ? "brightness-150 animate-pulse" : ""}`}
-  />
-
-  {/* BOSS HP */}
-
-  <div className="bg-black/70 px-4 py-2 rounded-lg mt-2 w-44 text-center">
-
-    <p className="text-red-400 font-semibold text-sm">
-      {boss.name}
-    </p>
-
-    <div className="bg-gray-700 rounded-full h-2 mt-1">
+      {/* BOSS */}
 
       <div
-        className="bg-red-500 h-2 rounded-full transition-all duration-500"
-        style={{ width: `${bossHpPercent}%` }}
-      />
+        className={`
+        absolute top-16 right-20
+        flex flex-col items-center
+        transition-transform duration-200
+        ${bossHit ? "-translate-x-8 scale-110 brightness-150" : ""}
+        ${bossPhase === 2 ? "animate-pulse brightness-125" : ""}
+        ${bossPhase === 3 ? "animate-[rage_1s_infinite] brightness-150" : ""}
+        ${boss.currentHp === 0 ? "animate-[shake_0.6s_infinite]" : ""}
+        `}
+      >
 
-    </div>
+        <div className="absolute w-56 h-56 bg-red-500 blur-3xl rounded-full animate-[bossAura_3s_infinite]" />
 
-  </div>
-  
+        <img
+          src="/assets/battle/boss.png"
+          alt="Boss"
+          className={`h-48 object-contain drop-shadow-2xl animate-[idleFloat_4s_ease-in-out_infinite]
+          ${bossCharge ? "brightness-150 animate-pulse" : ""}`}
+        />
 
-</div>
+        {/* BOSS HP */}
 
+        <div className="bg-black/70 px-4 py-2 rounded-lg mt-2 w-44 text-center">
+
+          <p className="text-red-400 font-semibold text-sm">
+            {boss.name}
+          </p>
+
+          <div className="bg-gray-700 rounded-full h-2 mt-1">
+
+            <div
+              className="bg-red-500 h-2 rounded-full transition-all duration-500"
+              style={{ width: `${bossHpPercent}%` }}
+            />
+
+          </div>
+
+        </div>
+
+      </div>
 
       {/* BOSS ENERGY BEAM */}
 
-      {bossProjectile && (
+     {bossProjectile && (
 
-        <div
-          className="
-          absolute
-          top-[55%]
-          right-[200px]
-          w-56
-          h-3
-          bg-gradient-to-l
-          from-green-400
-          via-green-300
-          to-transparent
-          blur-sm
-          animate-[projectile_0.7s_linear_forwards]
-          z-40
-          "
-        />
+  <div className="absolute top-[55%] right-[200px] z-40 animate-[projectile_0.6s_linear_forwards]">
 
-      )}
+    {/* OUTER ENERGY AURA */}
+    <div className="absolute w-[420px] h-14 bg-green-400 blur-3xl opacity-60 rounded-full"></div>
 
+    {/* MAIN BEAM BODY */}
+    <div className="
+      absolute
+      w-[420px]
+      h-6
+      bg-gradient-to-l
+      from-green-400
+      via-green-300
+      to-transparent
+      rounded-full
+      shadow-[0_0_40px_10px_rgba(34,197,94,0.8)]
+    "></div>
 
-      {/* IMPACT EXPLOSION */}
+    {/* BEAM CORE */}
+    <div className="
+      absolute
+      w-[420px]
+      h-2
+      top-[8px]
+      bg-white
+      opacity-90
+      rounded-full
+    "></div>
+
+  </div>
+
+)}
+
+      {/* IMPACT */}
 
       {impact && (
 
@@ -311,7 +343,6 @@ useEffect(() => {
         />
 
       )}
-
 
       {/* DAMAGE POPUP */}
 
