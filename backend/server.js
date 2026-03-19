@@ -38,6 +38,7 @@ const moduleProgressRoutes = require("./routes/moduleProgressRoutes");
 const judgeRoutes = require("./routes/judgeRoutes");
 const codeRoutes = require("./routes/codeRoutes");
 const aiRoutes = require("./routes/aiRoutes");
+const leaderboardRoutes = require("./routes/leaderboardRoutes");
 
 // 🔥 NEW CLEAN BOSS ROUTES
 console.log("Loading trainerBossRoutes...");
@@ -81,6 +82,7 @@ app.use("/api/admin", adminRoutes);
 app.use("/api/grader", graderRoutes);
 app.use("/api/code", codeRoutes);
 app.use("/api/ai", aiRoutes);
+app.use("/api/leaderboard", leaderboardRoutes);
 
 app.use("/api/achievements", achievementRoutes);
 app.use("/api/judge", judgeRoutes);

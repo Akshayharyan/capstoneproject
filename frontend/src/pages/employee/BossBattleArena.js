@@ -55,10 +55,6 @@ export default function BossBattleArena() {
 
     audioRef.current = audio;
 
-    if (musicOn) {
-      audio.play().catch(()=>{});
-    }
-
     return () => {
       audio.pause();
       audio.currentTime = 0;

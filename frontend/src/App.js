@@ -27,6 +27,7 @@ import TopicChallengesPage from "./pages/employee/TopicChallengesPage";
 import Profile from "./pages/Profile";
 import AchievementPage from "./pages/AchievementPage";
 import BossBattleArena from "./pages/employee/BossBattleArena"; // ✅ NEW GAME ARENA
+import Leaderboard from "./pages/leaderboard";
 
 /* ================= ADMIN ================= */
 import AdminDashboard from "./pages/admin/AdminDashboard";
@@ -99,6 +100,15 @@ return (
           element={
             <ProtectedRoute allow={["employee"]}>
               <Modules />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/leaderboard"
+          element={
+            <ProtectedRoute allow={["employee"]}>
+              <Leaderboard />
             </ProtectedRoute>
           }
         />

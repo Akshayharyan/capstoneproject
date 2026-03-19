@@ -345,3 +345,264 @@ body {
   to { opacity: 1; }
 
 }
+
+/* =========================
+   BOSS BEAM FX
+   ========================= */
+
+.boss-beam-wrapper {
+  position: absolute;
+  height: 60px;
+  pointer-events: none;
+  z-index: 60;
+  transform-origin: left center;
+}
+
+.boss-beam-track {
+  position: absolute;
+  left: 0;
+  top: 50%;
+  width: 100%;
+  height: 18px;
+  transform: translateY(-50%);
+  overflow: visible;
+}
+
+@keyframes bossBeamGrow {
+  0% { transform: scaleX(0); opacity: 0; }
+  40% { opacity: 1; }
+  100% { transform: scaleX(1); opacity: 1; }
+}
+
+.boss-beam-glow {
+  position: absolute;
+  inset: -20px -40px;
+  background: radial-gradient(circle at 100% 50%, rgba(34,197,94,0.8), transparent 55%);
+  filter: blur(18px);
+  opacity: 0.85;
+  border-radius: 9999px;
+  transform-origin: right center;
+  animation: bossBeamGrow 0.6s ease-out forwards;
+}
+
+.boss-beam-core {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(270deg, rgba(34,197,94,1), rgba(134,239,172,0.9), rgba(255,255,255,0.95));
+  border-radius: 9999px;
+  filter: drop-shadow(0 0 30px rgba(74,222,128,0.9));
+  transform-origin: right center;
+  animation: bossBeamGrow 0.55s ease-out forwards;
+}
+
+.boss-beam-noise {
+  position: absolute;
+  inset: -2px;
+  background: repeating-linear-gradient(90deg, rgba(255,255,255,0.75), rgba(255,255,255,0.15) 12px);
+  mix-blend-mode: screen;
+  border-radius: 9999px;
+  opacity: 0.35;
+  animation: bossBeamNoise 0.3s linear infinite;
+}
+
+@keyframes bossBeamNoise {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-40px); }
+}
+
+.boss-beam-muzzle {
+  position: absolute;
+  width: 80px;
+  height: 80px;
+  left: -20px;
+  top: 50%;
+  transform: translate(-60%, -50%);
+  background: radial-gradient(circle, rgba(34,197,94,0.95), rgba(34,197,94,0));
+  filter: blur(6px);
+  animation: bossMuzzlePulse 0.6s ease-out forwards;
+}
+
+@keyframes bossMuzzlePulse {
+  0% { opacity: 0; transform: translate(-60%, -50%) scale(0.4); }
+  30% { opacity: 1; }
+  100% { opacity: 0; transform: translate(-60%, -50%) scale(1.3); }
+}
+
+.boss-beam-hit {
+  position: absolute;
+  right: -70px;
+  top: 50%;
+  width: 88px;
+  height: 88px;
+  transform: translate(50%, -50%);
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(34,197,94,0.7), rgba(34,197,94,0));
+  opacity: 0;
+  animation: bossBeamHit 0.6s ease-out forwards;
+}
+
+@keyframes bossBeamHit {
+  0% { opacity: 0; transform: translate(50%, -50%) scale(0.4); }
+  60% { opacity: 0.9; }
+  100% { opacity: 0; transform: translate(50%, -50%) scale(1.4); }
+}
+
+.boss-impact {
+  position: absolute;
+  width: 80px;
+  height: 80px;
+  transform: translate(-40px, -40px);
+  border-radius: 9999px;
+  background: radial-gradient(circle, rgba(34,197,94,0.8), rgba(34,197,94,0));
+  filter: blur(6px);
+  opacity: 0.8;
+  animation: bossImpactPulse 0.6s ease-out forwards;
+}
+
+@keyframes bossImpactPulse {
+  0% { opacity: 0; transform: translate(-40px, -40px) scale(0.5); }
+  70% { opacity: 1; }
+  100% { opacity: 0; transform: translate(-40px, -40px) scale(1.5); }
+}
+
+/* =========================
+   ADVANCED BATTLE FX
+   ========================= */
+
+@keyframes playerLunge {
+  0% { transform: translate(0,0) scale(1); }
+  30% { transform: translate(70px,-35px) scale(1.1); }
+  100% { transform: translate(0,0) scale(1); }
+}
+
+@keyframes bossLunge {
+  0% { transform: translate(0,0) scale(1); }
+  20% { transform: translate(-100px,50px) scale(1.18); }
+  40% { transform: translate(-120px,60px) scale(1.22); }
+  100% { transform: translate(0,0) scale(1); }
+}
+
+@keyframes bossCharge {
+  0% { transform: scale(1); filter: brightness(1); }
+  30% { transform: scale(1.08); filter: brightness(1.6) drop-shadow(0 0 30px rgba(255,60,60,.8)); }
+  60% { transform: scale(1.05); filter: brightness(1.3) drop-shadow(0 0 20px rgba(255,60,60,.5)); }
+  100% { transform: scale(1.1); filter: brightness(1.8) drop-shadow(0 0 40px rgba(255,40,40,1)); }
+}
+
+@keyframes elecShock {
+  0% { transform: translate(0,0); filter: brightness(1); }
+  6% { transform: translate(-10px,4px); filter: brightness(2.5) drop-shadow(0 0 12px rgba(255,232,64,.9)); }
+  12% { transform: translate(12px,-6px); filter: brightness(1); }
+  18% { transform: translate(-14px,2px); filter: brightness(2.2) drop-shadow(0 0 16px rgba(255,200,0,.8)); }
+  24% { transform: translate(8px,-4px); filter: brightness(1); }
+  32% { transform: translate(-6px,8px); filter: brightness(2.8) drop-shadow(0 0 20px rgba(255,255,100,1)); }
+  40% { transform: translate(10px,-2px); filter: brightness(1); }
+  48% { transform: translate(-8px,-6px); filter: brightness(2) drop-shadow(0 0 10px rgba(255,220,40,.7)); }
+  56% { transform: translate(6px,4px); filter: brightness(1.2); }
+  65% { transform: translate(-4px,2px); filter: brightness(1.8) drop-shadow(0 0 8px rgba(255,232,64,.5)); }
+  75% { transform: translate(3px,-2px); filter: brightness(1); }
+  85% { transform: translate(-2px,1px); filter: brightness(1.4); }
+  100% { transform: translate(0,0); filter: brightness(1); }
+}
+
+@keyframes slashSwipe {
+  0% { clip-path: inset(100% 100% 0 0); opacity: 0; }
+  40% { clip-path: inset(0 0 0 0); opacity: 1; }
+  70% { opacity: 0.7; }
+  100% { clip-path: inset(0 0 100% 100%); opacity: 0; }
+}
+
+@keyframes slashTravel {
+  0% { transform: translate(0,0) scale(0.7); opacity: 1; }
+  50% { transform: translate(28vw,-16vh) scale(1.2); opacity: 1; }
+  100% { transform: translate(42vw,-24vh) scale(0.4); opacity: 0; }
+}
+
+@keyframes screenDarken {
+  0% { opacity: 0; }
+  30% { opacity: 1; }
+  80% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+@keyframes thunderBolt {
+  0% { transform: translateY(-120%) scaleY(0); opacity: 0; }
+  10% { transform: translateY(-10%) scaleY(0.9); opacity: 1; }
+  18% { transform: translateY(0) scaleY(1); opacity: 1; }
+  55% { opacity: 1; }
+  70% { opacity: 0.6; }
+  100% { opacity: 0; }
+}
+
+@keyframes thunderFlicker {
+  0% { opacity: 0.9; }
+  8% { opacity: 0.15; }
+  16% { opacity: 1; }
+  24% { opacity: 0.2; }
+  32% { opacity: 0.95; }
+  44% { opacity: 0.1; }
+  52% { opacity: 1; }
+  64% { opacity: 0.3; }
+  76% { opacity: 0.85; }
+  88% { opacity: 0.15; }
+  100% { opacity: 0; }
+}
+
+@keyframes elecArc {
+  0% { opacity: 0; transform: scaleX(0.6) scaleY(0.8); }
+  15% { opacity: 1; transform: scaleX(1.4) scaleY(1.1); }
+  35% { opacity: 0.6; transform: scaleX(0.7) scaleY(0.9); }
+  55% { opacity: 1; transform: scaleX(1.2) scaleY(1.05); }
+  75% { opacity: 0.8; transform: scaleX(1.5) scaleY(1.15); }
+  100% { opacity: 0; transform: scaleX(0) scaleY(0.5); }
+}
+
+@keyframes elecGlow {
+  0% { opacity: 0; transform: scale(0.3); }
+  20% { opacity: 1; transform: scale(1.2); }
+  50% { opacity: 0.7; transform: scale(1.5); }
+  100% { opacity: 0; transform: scale(2.2); }
+}
+
+@keyframes elecSpark {
+  0% { opacity: 1; transform: translate(0,0) scale(1); }
+  100% { opacity: 0; transform: translate(var(--sx), var(--sy)) scale(0); }
+}
+
+@keyframes groundPulse {
+  0% { opacity: 0; transform: scaleX(0.5); }
+  20% { opacity: 0.7; transform: scaleX(1); }
+  60% { opacity: 0.4; transform: scaleX(1.3); }
+  100% { opacity: 0; transform: scaleX(1.6); }
+}
+
+@keyframes impactFlash {
+  0% { opacity: 0; }
+  12% { opacity: 1; }
+  35% { opacity: 0.7; }
+  100% { opacity: 0; }
+}
+
+@keyframes bossChargeRing {
+  0% { transform: scale(0); opacity: 0.8; }
+  50% { opacity: 0.5; }
+  100% { transform: scale(3.5); opacity: 0; }
+}
+
+@keyframes cyberPulse {
+  0%,100% { opacity: 0.25; }
+  50% { opacity: 0.45; }
+}
+
+.animate-playerLunge { animation: playerLunge 500ms cubic-bezier(.2,.8,.3,1); }
+.animate-bossLunge { animation: bossLunge 600ms cubic-bezier(.15,.9,.3,1); }
+.animate-bossCharge { animation: bossCharge 500ms ease-out forwards; }
+.animate-elecShock { animation: elecShock 550ms cubic-bezier(.2,.8,.3,1); }
+.animate-slashSwipe { animation: slashSwipe 380ms ease-out forwards; }
+.animate-slashTravel { animation: slashTravel 420ms ease-out forwards; }
+.animate-screenDarken { animation: screenDarken 500ms ease-out forwards; }
+.animate-thunderBolt { animation: thunderBolt 650ms cubic-bezier(.05,.8,.3,1) forwards; }
+.animate-thunderFlicker { animation: thunderFlicker 650ms step-end forwards; }
+.animate-elecArc { animation: elecArc 600ms ease-out forwards; }
+.animate-elecGlow { animation: elecGlow 700ms ease-out forwards; }
+.animate-impactFlash { animation: impactFlash 420ms ease-out forwards; }

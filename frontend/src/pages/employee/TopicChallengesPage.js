@@ -36,18 +36,43 @@ export default function TopicChallengesPage() {
   }, [current]);
 
   if (loading)
-    return <div className="text-center text-xl mt-40 text-gray-600">Loading challenges...</div>;
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-white via-indigo-50 to-purple-50 flex items-center justify-center">
+        <div className="text-center space-y-3">
+          <div className="h-16 w-16 rounded-full border-4 border-indigo-200 border-t-indigo-500 animate-spin mx-auto" />
+          <p className="text-sm uppercase tracking-[0.4em] text-indigo-400">Preparing</p>
+          <p className="text-lg font-semibold text-slate-600">Loading challenges...</p>
+        </div>
+      </div>
+    );
 
   if (!topic || !topic.tasks.length)
-    return <div className="text-center text-gray-500 mt-40">No challenges found</div>;
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-white via-indigo-50 to-purple-50 flex items-center justify-center">
+        <div className="text-center space-y-4 max-w-md">
+          <p className="text-xs uppercase tracking-[0.45em] text-indigo-400">Challenge Track</p>
+          <h2 className="text-3xl font-semibold text-slate-800">No challenges available yet</h2>
+          <p className="text-slate-500">Ask your trainer to publish tasks for this topic or switch to a different module.</p>
+          <button
+            onClick={() => navigate(`/modules/${moduleId}/topics`)}
+            className="inline-flex items-center gap-2 rounded-full bg-indigo-600 px-6 py-3 text-white text-sm font-semibold shadow-lg"
+          >
+            Back to roadmap
+          </button>
+        </div>
+      </div>
+    );
 
   const tasks = topic.tasks;
-  const task = tasks[current];
+  const task = tasks[current] || {};
   const isLast = current === tasks.length - 1;
 
   const coding = task.content?.coding;
   const quiz = task.content?.quiz;
   const bugfix = task.content?.bugfix;
+  const hasCoding = task.type === "coding" && Boolean(coding);
+  const hasBugfix = task.type === "bugfix" && Boolean(bugfix);
+  const hasQuiz = task.type === "quiz" && Boolean(quiz);
 
   const progress = ((current + 1) / tasks.length) * 100;
 
@@ -56,6 +81,9 @@ export default function TopicChallengesPage() {
   const submitQuiz = () => {
     if (answerIndex === null)
       return setFeedback("⚠️ Select an option");
+
+    if (!quiz || !quiz.options?.length)
+      return setFeedback("Challenge data incomplete. Please try a different task.");
 
     if (answerIndex !== quiz.correctIndex)
       return setFeedback("❌ Incorrect – try again!");
@@ -89,107 +117,160 @@ export default function TopicChallengesPage() {
   /* ================= UI ================= */
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-blue-50 to-purple-50 px-6 py-24">
+    <div className="min-h-screen bg-gradient-to-b from-white via-indigo-50 to-purple-50 px-4 pt-16 pb-24">
 
-      <div className="max-w-7xl mx-auto space-y-8">
+      <div className="max-w-6xl mx-auto space-y-10">
 
-        {/* PROGRESS */}
-
-        <div className="h-3 bg-gray-200 rounded-full overflow-hidden">
-          <div
-            style={{ width: `${progress}%` }}
-            className="h-full bg-gradient-to-r from-indigo-500 to-purple-600 transition-all"
-          />
+        {/* HEADER */}
+        <div className="relative overflow-hidden rounded-[32px] border border-white/60 bg-gradient-to-r from-indigo-500 via-purple-500 to-fuchsia-500 p-[1px] shadow-[0_30px_60px_rgba(79,70,229,0.2)]">
+          <div className="relative rounded-[30px] bg-white/90 backdrop-blur-xl px-6 py-8 sm:px-10">
+            <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-[0.5em] text-indigo-500">Challenge Track</p>
+                <h1 className="text-3xl sm:text-4xl font-black text-slate-900 mt-3">
+                  {topic.title}
+                </h1>
+                <p className="text-sm text-slate-500">
+                  Challenge {current + 1} of {tasks.length}
+                </p>
+              </div>
+              <div className="flex items-center gap-4">
+                <div className="hidden sm:flex flex-col text-right">
+                  <span className="text-xs uppercase tracking-[0.4em] text-slate-400">Progress</span>
+                  <span className="text-3xl font-black text-slate-900">{Math.round(progress)}%</span>
+                </div>
+                <button
+                  onClick={() => navigate(`/modules/${moduleId}/topics`)}
+                  className="inline-flex items-center gap-2 rounded-full border border-slate-200 px-5 py-2 text-sm font-semibold text-slate-700 hover:bg-white"
+                >
+                  Back to roadmap
+                </button>
+              </div>
+            </div>
+            <div className="mt-6 h-2 rounded-full bg-slate-200 overflow-hidden">
+              <div
+                style={{ width: `${progress}%` }}
+                className="h-full rounded-full bg-gradient-to-r from-indigo-500 to-purple-500 transition-all"
+              />
+            </div>
+          </div>
         </div>
 
-        <div className="grid md:grid-cols-2 gap-10">
+        <div className="grid gap-8 lg:grid-cols-[1.15fr,0.85fr]">
 
           {/* LEFT */}
-
-          <div className="bg-white/80 backdrop-blur-lg border shadow-2xl rounded-3xl p-8 space-y-6">
-
-            <div>
-              <h1 className="text-3xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
-                {topic.title}
-              </h1>
-              <p className="text-gray-500 mt-1">
-                Challenge {current + 1} / {tasks.length}
-              </p>
+          <div className="rounded-[30px] bg-white border border-slate-100 shadow-2xl p-8 space-y-6 relative overflow-hidden">
+            <div className="absolute inset-0 opacity-10 pointer-events-none bg-[radial-gradient(circle_at_top,_rgba(99,102,241,0.4),_transparent_55%)]" />
+            <div className="relative space-y-1">
+              <p className="text-sm font-semibold text-indigo-500 uppercase tracking-[0.35em]">{task.type || "challenge"}</p>
+              <h2 className="text-3xl font-semibold text-slate-900">{task.title || "Untitled challenge"}</h2>
+              <p className="text-sm text-slate-500">Earn {task.xp || 20} XP</p>
             </div>
 
-            <h2 className="text-xl font-semibold text-gray-800">
-              {task.title} <span className="text-indigo-600">({task.type})</span>
-            </h2>
-
-            {/* CODING */}
-
-            {task.type === "coding" && (
-              <div className="bg-indigo-100 border-l-4 border-indigo-500 p-4 rounded-xl text-gray-800">
-                {coding.prompt}
-              </div>
-            )}
-
-            {/* BUGFIX */}
-
-            {task.type === "bugfix" && (
-              <div className="space-y-3">
-                <pre className="bg-gray-900 text-green-400 p-4 rounded-xl text-sm">
-{bugfix.buggyCode}
-                </pre>
-                {bugfix.hint && (
-                  <p className="text-indigo-600 font-medium">
-                    💡 Hint: {bugfix.hint}
+            {hasCoding && (
+              <div className="relative rounded-[24px] border border-indigo-100 bg-gradient-to-br from-indigo-50 via-white to-purple-50 p-6 shadow-inner text-slate-800">
+                <div className="absolute -top-4 right-6 flex items-center gap-2 rounded-full bg-white px-3 py-1 text-xs font-semibold text-indigo-600 shadow">
+                  <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-indigo-600 text-white">{current + 1}</span>
+                  Coding Brief
+                </div>
+                <p className="text-sm font-semibold uppercase tracking-[0.35em] text-indigo-400 mb-2">Objective</p>
+                <p className="text-lg leading-relaxed whitespace-pre-line">{coding.prompt}</p>
+                {coding.language && (
+                  <p className="mt-4 inline-flex items-center rounded-full bg-indigo-100 px-3 py-1 text-xs font-semibold text-indigo-600">
+                    Language · {coding.language}
                   </p>
                 )}
               </div>
             )}
 
-            {/* QUIZ */}
-
-            {task.type === "quiz" && (
+            {hasBugfix && (
               <div className="space-y-3">
-                <p className="font-medium text-gray-800">{quiz.question}</p>
+                <pre className="rounded-2xl bg-slate-900 text-green-300 p-4 text-sm overflow-auto shadow-inner">
+{bugfix.buggyCode}
+                </pre>
+                {bugfix.hint && (
+                  <p className="text-sm font-medium text-indigo-600">💡 Hint: {bugfix.hint}</p>
+                )}
+              </div>
+            )}
 
-                {quiz.options.map((opt, i) => (
+            {hasQuiz && (
+              <div className="space-y-4">
+                <p className="font-medium text-slate-800 text-lg">{quiz.question}</p>
+
+                {quiz.options?.map((opt, i) => (
                   <button
                     key={i}
                     onClick={() => setAnswerIndex(i)}
-                    className={`w-full text-left p-3 rounded-xl border transition
-                    ${answerIndex === i
-                        ? "bg-indigo-200 border-indigo-500"
-                        : "bg-white hover:bg-gray-100"
-                      }`}
+                    className={`w-full text-left rounded-2xl border px-4 py-3 text-base font-semibold transition flex items-center gap-3 ${
+                      answerIndex === i
+                        ? "border-indigo-500 bg-indigo-50 text-indigo-900 shadow"
+                        : "border-slate-200 bg-white text-slate-800 hover:border-indigo-200"
+                    }`}
                   >
+                    <span className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-current text-xs font-bold">
+                      {String.fromCharCode(65 + i)}
+                    </span>
                     {opt}
                   </button>
                 ))}
               </div>
             )}
 
+            {!hasCoding && !hasBugfix && !hasQuiz && (
+              <p className="text-sm text-slate-500">Challenge data is still loading. Try moving to the next task.</p>
+            )}
+
             {feedback && (
               <p className="font-semibold text-red-600">{feedback}</p>
             )}
 
-            {task.type === "quiz" && (
+            {hasQuiz && (
               <button
                 onClick={submitQuiz}
-                className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white px-8 py-3 rounded-xl shadow hover:scale-105 transition"
+                className="rounded-2xl bg-slate-900 px-6 py-3 text-sm font-semibold text-white shadow hover:bg-slate-800"
               >
                 Submit Answer
               </button>
             )}
 
+            <div className="flex gap-3">
+              <button
+                onClick={() => setCurrent((c) => Math.max(0, c - 1))}
+                disabled={current === 0}
+                className="rounded-2xl border border-slate-200 px-5 py-2 text-sm font-semibold text-slate-600 disabled:opacity-40"
+              >
+                Previous
+              </button>
+              <button
+                onClick={next}
+                disabled={hasQuiz && answerIndex === null}
+                className="rounded-2xl border border-slate-900 px-5 py-2 text-sm font-semibold text-slate-900 disabled:opacity-40"
+              >
+                {isLast ? "Finish" : "Skip"}
+              </button>
+            </div>
           </div>
 
           {/* RIGHT */}
-
-          {(task.type === "coding" || task.type === "bugfix") && (
-            <div className="bg-white/90 backdrop-blur border shadow-2xl rounded-3xl p-6">
-
+          {(hasCoding || hasBugfix) && (
+            <div className="rounded-[30px] border border-slate-800 bg-[radial-gradient(circle_at_top,_#1e1b4b,_#020617)] p-6 text-white shadow-[0_30px_60px_rgba(15,23,42,0.45)] flex flex-col overflow-hidden">
+              <div className="flex items-center justify-between mb-4">
+                <div>
+                  <p className="text-[11px] uppercase tracking-[0.5em] text-indigo-300">Solution Studio</p>
+                  <p className="text-xl font-semibold">Write & Test</p>
+                </div>
+                <div className="rounded-full border border-white/20 px-4 py-1 text-xs uppercase tracking-[0.35em] text-white/70">
+                  {hasCoding ? "Code" : "Fix"}
+                </div>
+              </div>
               <CodeSandbox
+                height={360}
+                containerClass="flex-1"
+                outputClass="max-h-24"
                 language="javascript"
                 starterCode={
-                  task.type === "coding"
+                  hasCoding
                     ? coding.starterCode
                     : bugfix.buggyCode
                 }
@@ -239,7 +320,6 @@ export default function TopicChallengesPage() {
                   return "🎉 All test cases passed!";
                 }}
               />
-
             </div>
           )}
 
