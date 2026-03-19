@@ -36,7 +36,9 @@ export default function BossBattleArena() {
 
   const navigate = useNavigate();
   const { moduleId } = useParams();
-  const { token } = useAuth();
+  const { token, user } = useAuth();
+  
+  
 
   const [boss, setBoss] = useState({
     name: "Async Overload",
@@ -73,6 +75,10 @@ export default function BossBattleArena() {
   const [bossPhase, setBossPhase] = useState(1);
   const [bossDialog, setBossDialog] = useState("");
   const [bossDefeating, setBossDefeating] = useState(false);
+  const [certificate, setCertificate] = useState(null);
+  const [certificateLoading, setCertificateLoading] = useState(false);
+  const [certificateError, setCertificateError] = useState("");
+  const [showConfetti, setShowConfetti] = useState(false);
 
   const handleIntroFinish = useCallback(() => {
     setShowIntro(false);
@@ -174,6 +180,62 @@ export default function BossBattleArena() {
       setBossDialog("So... another developer challenges me?");
     }
   }, [showIntro]);
+
+  useEffect(() => {
+    if (!victory) return;
+    setShowConfetti(true);
+    const confettiTimer = setTimeout(() => setShowConfetti(false), 4500);
+    return () => clearTimeout(confettiTimer);
+  }, [victory]);
+
+  const ensureCertificate = useCallback(async (cancelToken) => {
+    if (!token || certificateLoading || certificate) return;
+
+    const isCancelled = () => Boolean(cancelToken?.cancelled);
+
+    try {
+      setCertificateLoading(true);
+      setCertificateError("");
+
+      const res = await fetch("http://localhost:5000/api/certificates/generate", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ moduleId })
+      });
+
+      const data = await res.json();
+
+      if (isCancelled()) return;
+
+      if (data.success) {
+        setCertificate(data.certificate);
+      } else {
+        setCertificateError(data.message || "Certificate unavailable");
+      }
+    } catch (err) {
+      if (!isCancelled()) {
+        setCertificateError("Unable to prepare certificate. Please retry.");
+      }
+    } finally {
+      if (!isCancelled()) {
+        setCertificateLoading(false);
+      }
+    }
+  }, [token, moduleId, certificate, certificateLoading]);
+
+  useEffect(() => {
+    if (!victory) return;
+
+    const cancelToken = { cancelled: false };
+    ensureCertificate(cancelToken);
+
+    return () => {
+      cancelToken.cancelled = true;
+    };
+  }, [victory, ensureCertificate]);
 
   useEffect(() => {
 
@@ -297,14 +359,13 @@ export default function BossBattleArena() {
         }));
 
         if (newHp === 0) {
+          ensureCertificate();
+          setBossDefeating(true);
 
-  setBossDefeating(true);
-
-  setTimeout(() => {
-    setVictory(true);
-  }, 2000);
-
-}
+          setTimeout(() => {
+            setVictory(true);
+          }, 2000);
+        }
 
         setBossDialog("No! How did you solve that challenge?");
 
@@ -343,6 +404,36 @@ export default function BossBattleArena() {
 
     setSelectedAnswer(null);
     refreshChallenge();
+  };
+
+  const downloadCertificatePdf = async () => {
+    if (!certificate || !token) return;
+
+    try {
+      setCertificateError("");
+      const res = await fetch(
+        `http://localhost:5000/api/certificates/download/${certificate.certificateId}`,
+        {
+          headers: { Authorization: `Bearer ${token}` }
+        }
+      );
+
+      if (!res.ok) {
+        throw new Error("Download failed");
+      }
+
+      const blob = await res.blob();
+      const downloadUrl = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = downloadUrl;
+      link.download = `${certificate.certificateId}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(downloadUrl);
+    } catch (err) {
+      setCertificateError("Unable to download the certificate. Please try again.");
+    }
   };
 
   /* ================= DEFEAT SCREEN ================= */
@@ -385,40 +476,129 @@ export default function BossBattleArena() {
   /* ================= VICTORY SCREEN ================= */
 
   if (victory) {
+    const previewName = user?.name || "Valiant Employee";
+    const previewModule = certificate?.moduleTitle || boss.name;
+    const previewDate = certificate?.issuedAt || new Date().toISOString();
+    const previewXp = certificate?.earnedXp ?? boss.maxHp;
+    const previewId = certificate?.certificateId || "CERT-PENDING";
 
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-black text-white text-center">
-
-        <h1 className="text-7xl text-yellow-400 font-bold mb-6 animate-bounce">
-          🏆 BOSS DEFEATED
-        </h1>
-
-        <p className="text-2xl text-gray-300 mb-4">
-          +300 XP Earned
-        </p>
-
-        <p className="text-gray-500 mb-10">
-          Module Completed
-        </p>
-
-        <div className="flex gap-6">
-
-          <button
-            onClick={() => window.location.reload()}
-            className="px-6 py-3 bg-blue-600 rounded-xl hover:bg-blue-700"
-          >
-            🔁 Restart Battle
-          </button>
-
-          <button
-  onClick={() => navigate(`/modules/${moduleId}/topics`)}
-  className="px-6 py-3 bg-purple-600 rounded-xl hover:bg-purple-700"
->
-  📚 Back to Topics
-</button>
-
+      <div className="relative min-h-screen overflow-hidden bg-gradient-to-br from-[#03040c] via-[#050c20] to-[#02040a] text-white">
+        <div className="absolute inset-0 pointer-events-none">
+          <div className="absolute -top-24 left-10 w-72 h-72 bg-amber-400/35 blur-3xl animate-pulse" />
+          <div className="absolute top-10 right-[-10%] w-[28rem] h-[28rem] bg-indigo-500/25 blur-[120px] animate-[spin_25s_linear_infinite]" />
+          <div className="absolute bottom-0 left-1/2 w-[60rem] h-[60rem] -translate-x-1/2 bg-[radial-gradient(circle,_rgba(14,165,233,0.15),_transparent_65%)]" />
         </div>
+        {showConfetti && (
+          <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(251,191,36,0.3),_transparent_65%)] animate-pulse" />
+        )}
 
+        <div className="relative z-10 max-w-6xl mx-auto px-6 py-16 space-y-12">
+          <div className="flex flex-col items-center text-center gap-4">
+            <div className="inline-flex items-center gap-3 rounded-full border border-white/30 bg-white/10 px-6 py-2 backdrop-blur">
+              <span className="text-amber-300 text-xl animate-bounce">🏆</span>
+              <span className="text-xs uppercase tracking-[0.45em] text-amber-100">Boss defeated</span>
+            </div>
+            <h1 className="text-5xl sm:text-6xl font-black drop-shadow-[0_20px_60px_rgba(251,191,36,0.25)]">
+              Victory Unlocked
+            </h1>
+            <p className="text-lg text-slate-200 max-w-3xl">
+              Async Overload is dust. Bask in the glow while we forge your official SkillQuest certificate and broadcast your legend across the training grounds.
+            </p>
+          </div>
+
+          <div className="relative">
+            <div className="absolute inset-0 rounded-[40px] bg-gradient-to-br from-amber-400/40 via-yellow-300/5 to-transparent blur-3xl opacity-70" />
+            <div className="relative rounded-[38px] border border-white/10 bg-white/95 text-slate-900 px-8 py-12 shadow-[0_70px_180px_rgba(15,23,42,0.75)]">
+              {certificateLoading ? (
+                <div className="flex flex-col items-center gap-5 py-10">
+                  <div className="h-16 w-16 rounded-full border-4 border-indigo-200 border-t-indigo-600 animate-spin" />
+                  <p className="text-sm text-slate-500">Preparing your certificate...</p>
+                </div>
+              ) : (
+                <>
+                  <div className="space-y-2">
+                    <p className="text-xs uppercase tracking-[0.6em] text-slate-400">SkillQuest</p>
+                    <h2 className="text-3xl font-black text-slate-900">Certificate of Completion</h2>
+                  </div>
+                  <p className="text-sm text-slate-500">Awarded to</p>
+                  <p className="text-3xl font-serif text-slate-900">{previewName}</p>
+                  <p className="text-sm text-slate-500">
+                    for conquering the module <span className="font-semibold">{previewModule}</span>
+                  </p>
+                  <div className="mt-6 grid gap-5 text-sm text-slate-600 sm:grid-cols-3">
+                    <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
+                      <p className="uppercase tracking-[0.35em] text-xs text-slate-400">XP Earned</p>
+                      <p className="text-xl font-semibold text-slate-900">{previewXp} XP</p>
+                    </div>
+                    <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
+                      <p className="uppercase tracking-[0.35em] text-xs text-slate-400">Completion</p>
+                      <p className="text-xl font-semibold text-slate-900">{new Date(previewDate).toLocaleDateString()}</p>
+                    </div>
+                    <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
+                      <p className="uppercase tracking-[0.35em] text-xs text-slate-400">Certificate ID</p>
+                      <p className="text-xl font-semibold text-slate-900">{previewId}</p>
+                    </div>
+                  </div>
+                  <div className="mt-6 flex items-center justify-between text-xs uppercase tracking-[0.35em] text-slate-400">
+                    <span>Training Authority</span>
+                    <span>SkillQuest Academy</span>
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="rounded-2xl border border-white/15 bg-white/5 p-5 shadow-[0_25px_60px_rgba(15,23,42,0.45)] backdrop-blur">
+              <p className="text-xs uppercase tracking-[0.5em] text-amber-200">Hero</p>
+              <p className="text-2xl font-bold text-white mt-1">{previewName}</p>
+              <p className="text-sm text-slate-300">Unlocked mastery badge</p>
+            </div>
+            <div className="rounded-2xl border border-white/15 bg-white/5 p-5 shadow-[0_25px_60px_rgba(15,23,42,0.45)] backdrop-blur">
+              <p className="text-xs uppercase tracking-[0.5em] text-emerald-200">Module</p>
+              <p className="text-2xl font-bold text-white mt-1">{previewModule}</p>
+              <p className="text-sm text-slate-300">Boss cleared</p>
+            </div>
+            <div className="rounded-2xl border border-white/15 bg-white/5 p-5 shadow-[0_25px_60px_rgba(15,23,42,0.45)] backdrop-blur">
+              <p className="text-xs uppercase tracking-[0.5em] text-sky-200">Certificate ID</p>
+              <p className="text-2xl font-bold text-white mt-1">{previewId}</p>
+              <p className="text-sm text-slate-300">Shareable proof</p>
+            </div>
+            <div className="rounded-2xl border border-white/15 bg-white/5 p-5 shadow-[0_25px_60px_rgba(15,23,42,0.45)] backdrop-blur">
+              <p className="text-xs uppercase tracking-[0.5em] text-pink-200">XP Bonus</p>
+              <p className="text-2xl font-bold text-white mt-1">+{boss.maxHp}</p>
+              <p className="text-sm text-slate-300">Victory payout</p>
+            </div>
+          </div>
+
+          {certificateError && (
+            <p className="text-center text-rose-300 text-sm">{certificateError}</p>
+          )}
+
+          <div className="flex flex-wrap justify-center gap-4">
+            <button
+              onClick={downloadCertificatePdf}
+              disabled={!certificate || certificateLoading}
+              className="group relative overflow-hidden rounded-2xl bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 px-8 py-3 text-slate-900 font-bold uppercase tracking-[0.3em] shadow-[0_25px_70px_rgba(250,204,21,0.4)] disabled:opacity-50"
+            >
+              <span className="relative z-10">{certificateLoading ? "Preparing..." : "Download Certificate"}</span>
+              <span className="absolute inset-0 bg-white/30 opacity-0 transition group-hover:opacity-30" />
+            </button>
+            <button
+              onClick={() => navigate("/profile")}
+              className="rounded-2xl border border-white/30 bg-white/5 px-8 py-3 font-semibold text-white shadow-[0_20px_50px_rgba(15,23,42,0.4)] hover:bg-white/10"
+            >
+              View Profile
+            </button>
+            <button
+              onClick={() => navigate(`/modules/${moduleId}/topics`)}
+              className="rounded-2xl border border-white/30 bg-transparent px-8 py-3 font-semibold text-white hover:bg-white/10"
+            >
+              Back to Topics
+            </button>
+          </div>
+        </div>
       </div>
     );
   }

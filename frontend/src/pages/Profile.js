@@ -64,6 +64,8 @@ const Profile = () => {
 
   const [backendAchievements, setBackendAchievements] = useState([]);
   const [loadingAchievements, setLoadingAchievements] = useState(true);
+  const [certificates, setCertificates] = useState([]);
+  const [loadingCertificates, setLoadingCertificates] = useState(true);
 
   /* ================= FETCH USER ================= */
   useEffect(() => {
@@ -112,6 +114,28 @@ const Profile = () => {
     };
 
     fetchAchievements();
+  }, []);
+
+  useEffect(() => {
+    const fetchCertificates = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        const res = await fetch("http://localhost:5000/api/certificates/mine", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
+        const data = await res.json();
+        if (data.success) setCertificates(data.certificates || []);
+        else setCertificates([]);
+      } catch (err) {
+        console.error("Failed to load certificates", err);
+        setCertificates([]);
+      } finally {
+        setLoadingCertificates(false);
+      }
+    };
+
+    fetchCertificates();
   }, []);
 
   if (!user) {
@@ -211,6 +235,48 @@ const Profile = () => {
             <Stat label="Total XP" value={user.xp} />
             <Stat label="Modules Started" value={modulesStarted} />
             <Stat label="Modules Completed" value={modulesCompleted} />
+          </div>
+
+          {/* CERTIFICATES */}
+          <div className="relative overflow-hidden rounded-[32px] border border-slate-200 bg-gradient-to-br from-white via-emerald-50 to-slate-100 p-8 shadow-[0_35px_90px_rgba(16,185,129,0.18)]">
+            <div className="absolute -top-24 right-0 h-72 w-72 rounded-full bg-emerald-200/40 blur-3xl" />
+            <div className="absolute -bottom-16 left-4 h-64 w-64 rounded-full bg-slate-200/40 blur-3xl" />
+
+            <div className="relative space-y-6">
+              <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+                <div>
+                  <p className="text-xs uppercase tracking-[0.6em] text-emerald-500">Mastery Certificates</p>
+                  <h3 className="text-3xl font-black text-slate-900 mt-2 flex items-center gap-3">
+                    <span className="text-4xl">📜</span> Official Recognition
+                  </h3>
+                  <p className="text-slate-600 mt-2 max-w-2xl">
+                    Every defeated boss unlocks a shareable certificate. Download PDFs anytime or tap a card to verify your accomplishment.
+                  </p>
+                </div>
+                <div className="text-right">
+                  <p className="text-sm font-semibold text-slate-500">Total certificates</p>
+                  <p className="text-3xl font-black text-slate-900">{certificates.length}</p>
+                </div>
+              </div>
+
+              {loadingCertificates ? (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {Array.from({ length: 2 }).map((_, idx) => (
+                    <div key={idx} className="h-48 rounded-3xl bg-white/70 animate-pulse" />
+                  ))}
+                </div>
+              ) : certificates.length === 0 ? (
+                <div className="rounded-3xl border border-dashed border-emerald-200 bg-white/80 px-6 py-10 text-center text-slate-500">
+                  Defeat a module boss to unlock your first certificate.
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                  {certificates.map((certificate) => (
+                    <CertificateCard key={certificate.certificateId} certificate={certificate} />
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
 
           {/* ACHIEVEMENT SHOWCASE */}
@@ -361,6 +427,79 @@ const Stat = ({ label, value }) => (
     <p className="text-sm text-slate-500">{label}</p>
   </div>
 );
+
+const CertificateCard = ({ certificate }) => {
+  if (!certificate) return null;
+  const issuedAt = certificate.issuedAt
+    ? new Date(certificate.issuedAt)
+    : new Date();
+
+  const downloadPdf = async () => {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      alert("Please sign in again to download your certificate.");
+      return;
+    }
+
+    try {
+      const res = await fetch(
+        `http://localhost:5000/api/certificates/download/${certificate.certificateId}`,
+        {
+          headers: { Authorization: `Bearer ${token}` }
+        }
+      );
+
+      if (!res.ok) {
+        throw new Error("Download failed");
+      }
+
+      const blob = await res.blob();
+      const downloadUrl = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = downloadUrl;
+      link.download = `${certificate.certificateId}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(downloadUrl);
+    } catch (err) {
+      console.error("Certificate download failed", err);
+      alert("Unable to download the certificate right now. Please try again.");
+    }
+  };
+
+  return (
+    <div className="rounded-3xl border border-white/60 bg-white/90 backdrop-blur p-6 shadow-lg flex flex-col gap-4">
+      <div>
+        <p className="text-xs uppercase tracking-[0.5em] text-emerald-500">{certificate.certificateId}</p>
+        <h4 className="text-xl font-bold text-slate-900 mt-1">{certificate.moduleTitle}</h4>
+        <p className="text-sm text-slate-500">Issued {issuedAt.toLocaleDateString("en", { year: "numeric", month: "long", day: "numeric" })}</p>
+      </div>
+
+      <div className="flex items-center justify-between text-sm text-slate-600">
+        <span>XP: <span className="font-semibold text-slate-900">{certificate.earnedXp}</span></span>
+        <span>Certificate</span>
+      </div>
+
+      <div className="flex gap-3">
+        <button
+          onClick={downloadPdf}
+          className="flex-1 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-500 px-4 py-2 text-sm font-semibold text-white shadow"
+        >
+          Download PDF
+        </button>
+        <a
+          href={`http://localhost:5000/api/certificates/verify/${certificate.certificateId}`}
+          target="_blank"
+          rel="noreferrer"
+          className="rounded-2xl border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-600 hover:border-slate-400"
+        >
+          Verify
+        </a>
+      </div>
+    </div>
+  );
+};
 
 /* ================= ACHIEVEMENT UTILITIES ================= */
 const SpotlightProgress = ({ achievement }) => {

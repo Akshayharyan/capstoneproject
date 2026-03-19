@@ -122,34 +122,54 @@ px-10 py-12
 
         <div
           key={mod._id}
-          className="
-          group relative
-          rounded-3xl
-          backdrop-blur-xl
-          bg-white/70
-          border border-white/40
-          shadow-xl
-          hover:shadow-2xl
-          transition-all duration-500
-          hover:-translate-y-3
-          overflow-hidden
-          "
+          className="group relative"
         >
-
-          {/* GLOW EFFECT */}
 
           <div
             className="
-            absolute inset-0 opacity-0
-            group-hover:opacity-100
-            transition duration-500
-            bg-gradient-to-br
-            from-indigo-200/20
-            to-purple-300/20
+            pointer-events-none absolute inset-0 rounded-[2.75rem]
+            bg-gradient-to-r from-indigo-500/25 via-sky-400/15 to-fuchsia-500/25
+            opacity-0 blur-3xl
+            transition-all duration-700
+            group-hover:opacity-80
             "
+            aria-hidden="true"
           />
 
-          <div className="relative p-7">
+          <div
+            className="
+            relative rounded-[2.2rem] p-[1.5px]
+            bg-gradient-to-br from-white/70 via-white/10 to-white/40
+            border border-white/30
+            shadow-[0_20px_60px_rgba(15,23,42,0.08)]
+            group-hover:shadow-[0_25px_70px_rgba(79,70,229,0.25)]
+            transition-all duration-500
+            hover:-translate-y-3
+            overflow-hidden
+            "
+          >
+
+            <div className="relative rounded-[2rem] bg-white/85 backdrop-blur-2xl p-7 overflow-hidden">
+
+              <div
+                className="
+                pointer-events-none absolute inset-x-8 top-6 h-px
+                bg-gradient-to-r from-transparent via-indigo-300/80 to-transparent
+                opacity-0 group-hover:opacity-100
+                transition duration-500
+                "
+                aria-hidden="true"
+              />
+
+              <div
+                className="
+                pointer-events-none absolute -top-10 right-0 h-32 w-32
+                bg-indigo-400/30 blur-3xl rounded-full
+                opacity-0 group-hover:opacity-70
+                transition duration-700
+                "
+                aria-hidden="true"
+              />
 
             {/* STATUS */}
 
@@ -185,6 +205,7 @@ px-10 py-12
             <h2
               className="
               text-2xl font-bold text-gray-900
+              tracking-tight
               group-hover:text-indigo-600
               transition
               "
@@ -238,9 +259,8 @@ px-10 py-12
               <div
                 className="
                 px-4 py-2 rounded-full
-                bg-yellow-400 text-white
-                font-bold text-sm
-                shadow-md
+                bg-gradient-to-r from-amber-400 via-orange-400 to-amber-300
+                text-white font-bold text-sm shadow-[0_8px_25px_rgba(249,115,22,0.35)]
                 "
               >
                 ⚡ {mod.totalXp || 100} XP
@@ -270,8 +290,9 @@ px-10 py-12
 
             </div>
 
-          </div>
+            </div>
 
+          </div>
         </div>
 
       );
