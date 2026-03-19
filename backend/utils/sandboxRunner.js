@@ -12,12 +12,43 @@ function runInSandbox(userCode, testCases) {
   for (let tc of testCases) {
     try {
       const wrappedCode = `
-  ${userCode}
-  solution(${JSON.stringify(tc.input)})
-`;
+        let __result;
+        let __consoleHistory = [];
+        const console = {
+          log: (...args) => {
+            const msg = args.map(arg =>
+              typeof arg === "string" ? arg : JSON.stringify(arg)
+            ).join(" ");
+            __consoleHistory.push(args.length === 1 ? args[0] : msg);
+            return msg;
+          },
+          error: (...args) => console.log(...args),
+          warn: (...args) => console.log(...args)
+        };
 
-const output = vm.run(wrappedCode);
+        const input = ${JSON.stringify(tc.input)};
+        const INPUT = input;
 
+        ${userCode}
+
+        if (typeof solution === "function") {
+          __result = solution(input);
+        } else if (typeof module !== "undefined" && typeof module.exports === "function") {
+          __result = module.exports(input);
+        }
+
+        if (typeof __result === "undefined" && typeof result !== "undefined") {
+          __result = result;
+        }
+
+        if (typeof __result === "undefined" && __consoleHistory.length) {
+          __result = __consoleHistory[__consoleHistory.length - 1];
+        }
+
+        __result;
+      `;
+
+      const output = vm.run(wrappedCode);
 
       const success =
         String(output).trim() === String(tc.output).trim();

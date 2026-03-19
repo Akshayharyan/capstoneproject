@@ -13,6 +13,8 @@ const {
   getTopicTasks,
   deleteTaskFromTopic,
   addTestCase,
+  updateTestCase,
+  deleteTestCase,
 
   /* ACHIEVEMENTS & BOSS */
   createAchievement,
@@ -70,6 +72,16 @@ router.post(
   "/module/:moduleId/topic/:topicIndex/task/:taskIndex/testcase",
   protect,
   addTestCase
+);
+router.put(
+  "/module/:moduleId/topic/:topicIndex/task/:taskIndex/testcase/:testCaseIndex",
+  protect,
+  updateTestCase
+);
+router.delete(
+  "/module/:moduleId/topic/:topicIndex/task/:taskIndex/testcase/:testCaseIndex",
+  protect,
+  deleteTestCase
 );
 router.put(
   "/module/:moduleId/topic/:topicIndex/task/:taskIndex",

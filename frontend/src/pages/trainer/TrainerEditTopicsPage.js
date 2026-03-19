@@ -169,7 +169,7 @@ export default function TrainerEditTopicsPage() {
 
             <div className="mt-6 space-y-4">
               <input
-                className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm focus:border-indigo-400 focus:outline-none"
+                className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm text-slate-700 placeholder:text-slate-400 focus:border-indigo-400 focus:outline-none"
                 placeholder="Topic title"
                 value={newTopic.title}
                 onChange={(e) =>
@@ -178,7 +178,7 @@ export default function TrainerEditTopicsPage() {
               />
 
               <input
-                className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm focus:border-indigo-400 focus:outline-none"
+                className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm text-slate-700 placeholder:text-slate-400 focus:border-indigo-400 focus:outline-none"
                 placeholder="YouTube video URL"
                 value={newTopic.videoUrl}
                 onChange={(e) =>
@@ -188,7 +188,7 @@ export default function TrainerEditTopicsPage() {
 
               <input
                 type="number"
-                className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm focus:border-indigo-400 focus:outline-none"
+                className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm text-slate-700 placeholder:text-slate-400 focus:border-indigo-400 focus:outline-none"
                 placeholder="XP reward"
                 value={newTopic.xp}
                 onChange={(e) =>
@@ -199,7 +199,7 @@ export default function TrainerEditTopicsPage() {
               <button
                 disabled={adding}
                 onClick={addTopic}
-                className="w-full rounded-2xl bg-gradient-to-r from-indigo-500 to-purple-500 px-4 py-3 text-sm font-semibold uppercase tracking-[0.3em] text-white shadow hover:opacity-90 disabled:cursor-not-allowed"
+                className="w-full rounded-2xl bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 px-4 py-3 text-sm font-semibold uppercase tracking-[0.3em] text-white shadow-lg shadow-indigo-200/60 transition hover:-translate-y-0.5 hover:opacity-95 disabled:cursor-not-allowed"
               >
                 {adding ? "Minting lesson…" : "Add Topic"}
               </button>
@@ -226,14 +226,14 @@ export default function TrainerEditTopicsPage() {
           {moduleData.topics.map((topic, index) => (
             <div
               key={index}
-              className="relative overflow-hidden rounded-[28px] border border-slate-200 bg-white p-6 shadow-sm transition hover:shadow-xl"
+              className="relative overflow-hidden rounded-[28px] border border-slate-200 bg-white p-6 shadow-sm transition hover:-translate-y-1 hover:shadow-2xl"
             >
               <div className="pointer-events-none absolute -right-10 top-0 h-32 w-32 rounded-full bg-indigo-200/40 blur-2xl" />
               <div className="relative flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                 {editingIndex === index ? (
                   <div className="flex-1 space-y-3">
                     <input
-                      className="w-full rounded-2xl border border-slate-200 px-4 py-2 text-sm"
+                      className="w-full rounded-2xl border border-slate-200 px-4 py-2 text-sm text-slate-700 placeholder:text-slate-400 focus:border-indigo-400 focus:outline-none"
                       value={topic.title}
                       onChange={(e) => {
                         const updated = [...moduleData.topics];
@@ -259,7 +259,7 @@ export default function TrainerEditTopicsPage() {
                 <div className="flex flex-wrap gap-3 text-sm font-semibold">
                   <button
                     onClick={() => setEditingIndex(index)}
-                    className="rounded-full border border-slate-200 px-4 py-2 text-slate-600 hover:text-slate-900"
+                    className="rounded-full border border-slate-200 px-4 py-2 text-slate-600 transition hover:border-indigo-200 hover:text-indigo-600"
                   >
                     Edit title
                   </button>
@@ -273,7 +273,7 @@ export default function TrainerEditTopicsPage() {
                     onClick={() =>
                       navigate(`/trainer/modules/${moduleId}/topic/${index}/tasks`)
                     }
-                    className="inline-flex items-center gap-2 rounded-full border border-transparent bg-slate-900 px-5 py-2 text-white shadow"
+                    className="inline-flex items-center gap-2 rounded-full border border-transparent bg-gradient-to-r from-slate-900 via-indigo-800 to-purple-800 px-5 py-2 text-white shadow-lg"
                   >
                     Manage Tasks
                   </button>

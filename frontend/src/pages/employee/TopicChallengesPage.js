@@ -291,11 +291,13 @@ export default function TopicChallengesPage() {
                   });
 
                   const data = await res.json();
-                  if (!data.success) return data.message;
+                  if (!data.results) return data.message || "No output";
 
-                  return data.results
-                    .map(r => `Input ${r.input} → ${r.actual} ${r.pass ? "✅" : "❌"}`)
+                  const lines = data.results
+                    .map(r => `Input ${r.input} → ${r.actual} ${r.pass ? "✅" : `❌ (expected ${r.expected})`}`)
                     .join("\n");
+
+                  return data.success ? lines : `${data.message || "Tests failed"}\n${lines}`;
                 }}
 
                 onSubmit={async (code) => {

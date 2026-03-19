@@ -48,7 +48,8 @@ exports.gradeCode = async (req, res) => {
 
     res.json({
       success: allPassed,
-      results
+      results,
+      message: allPassed ? "All tests passed" : "Tests failed"
     });
 
   } catch (err) {

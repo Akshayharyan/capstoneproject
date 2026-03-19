@@ -166,6 +166,61 @@ exports.addTestCase = async (req, res) => {
   });
 };
 
+/* ================= UPDATE TEST CASE ================= */
+
+exports.updateTestCase = async (req, res) => {
+  const { moduleId, topicIndex, taskIndex, testCaseIndex } = req.params;
+  const { input, output } = req.body;
+
+  const module = await Module.findById(moduleId);
+  const task = module?.topics?.[topicIndex]?.tasks?.[taskIndex];
+
+  if (!task) return res.status(404).json({ success: false });
+
+  let testCases = [];
+  if (task.type === "coding") testCases = task.content.coding.testCases;
+  if (task.type === "bugfix") testCases = task.content.bugfix.testCases;
+
+  if (!testCases[testCaseIndex])
+    return res.status(404).json({ success: false, message: "Test case not found" });
+
+  testCases[testCaseIndex] = { input, output };
+
+  await module.save();
+
+  res.json({
+    success: true,
+    tasks: module.topics[topicIndex].tasks
+  });
+};
+
+/* ================= DELETE TEST CASE ================= */
+
+exports.deleteTestCase = async (req, res) => {
+  const { moduleId, topicIndex, taskIndex, testCaseIndex } = req.params;
+
+  const module = await Module.findById(moduleId);
+  const task = module?.topics?.[topicIndex]?.tasks?.[taskIndex];
+
+  if (!task) return res.status(404).json({ success: false });
+
+  let testCases = [];
+  if (task.type === "coding") testCases = task.content.coding.testCases;
+  if (task.type === "bugfix") testCases = task.content.bugfix.testCases;
+
+  if (!testCases[testCaseIndex])
+    return res.status(404).json({ success: false, message: "Test case not found" });
+
+  testCases.splice(testCaseIndex, 1);
+
+  await module.save();
+
+  res.json({
+    success: true,
+    tasks: module.topics[topicIndex].tasks
+  });
+};
+
 /* ================= UPDATE TASK ================= */
 
 exports.updateTaskInTopic = async (req, res) => {

@@ -9,6 +9,7 @@ const { createModule } = require("../controllers/moduleController");
 const {
   getModuleTopicsWithStatus,
   getModulesWithStatus, // 🔥 IMPORTANT
+  getModuleQuizPool,
 } = require("../controllers/moduleProgressController");
 
 const Module = require("../models/module");
@@ -27,6 +28,15 @@ router.get(
   "/status",
   protect,
   getModulesWithStatus
+);
+
+/* ======================================================
+   📌 GET RANDOM QUIZ POOL FOR A MODULE
+====================================================== */
+router.get(
+  "/:moduleId/quiz-pool",
+  protect,
+  getModuleQuizPool
 );
 
 /* ======================================================

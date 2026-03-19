@@ -140,6 +140,41 @@ exports.getModuleTopicsWithStatus = async (req, res) => {
 };
 
 /* ===============================
+   GET QUIZ POOL FOR A MODULE
+================================ */
+exports.getModuleQuizPool = async (req, res) => {
+  try {
+    const { moduleId } = req.params;
+
+    const module = await Module.findById(moduleId).lean();
+    if (!module) {
+      return res.status(404).json({ message: "Module not found", questions: [] });
+    }
+
+    const questions = [];
+
+    module.topics?.forEach((topic) => {
+      topic?.tasks?.forEach((task) => {
+        if (task?.type === "quiz" && task?.content?.quiz) {
+          questions.push({
+            question: task.content.quiz.question,
+            options: task.content.quiz.options,
+            correctIndex: task.content.quiz.correctIndex,
+            topicTitle: topic.title,
+            taskTitle: task.title,
+          });
+        }
+      });
+    });
+
+    res.json({ questions });
+  } catch (err) {
+    console.error("Get module quiz pool error:", err);
+    res.status(500).json({ message: "Server error", questions: [] });
+  }
+};
+
+/* ===============================
    START MODULE
 ================================ */
 exports.startModule = async (req, res) => {

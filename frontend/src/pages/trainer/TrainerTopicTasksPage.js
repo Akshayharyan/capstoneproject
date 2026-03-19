@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useCallback } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
-import { ArrowLeft, Blocks, Code2, ListChecks, Sparkles } from "lucide-react";
+import { ArrowLeft, Blocks, Code2, ListChecks, Save, Sparkles, Trash2 } from "lucide-react";
 
 export default function TrainerTopicTasksPage() {
   const { moduleId, topicIndex } = useParams();
@@ -12,6 +12,7 @@ export default function TrainerTopicTasksPage() {
   const [loading, setLoading] = useState(true);
   const [editingIndex, setEditingIndex] = useState(null);
   const [testCaseDrafts, setTestCaseDrafts] = useState({});
+  const [testCaseEdits, setTestCaseEdits] = useState({});
 
   const emptyForm = {
     type: "coding",
@@ -169,6 +170,70 @@ export default function TrainerTopicTasksPage() {
         ...prev,
         [taskIndex]: { input: "", output: "" }
       }));
+    }
+  };
+
+  const handleTestCaseEditChange = (taskIndex, testCaseIndex, field, value, fallback) => {
+    const key = `${taskIndex}-${testCaseIndex}`;
+    setTestCaseEdits((prev) => ({
+      ...prev,
+      [key]: {
+        ...(prev[key] || fallback),
+        [field]: value
+      }
+    }));
+  };
+
+  const saveTestCase = async (taskIndex, testCaseIndex, fallback) => {
+    const key = `${taskIndex}-${testCaseIndex}`;
+    const draft = testCaseEdits[key] || fallback;
+
+    if (!draft?.input?.trim() || !draft?.output?.trim())
+      return alert("Input & Output required");
+
+    const res = await fetch(
+      `http://localhost:5000/api/trainer/module/${moduleId}/topic/${topicIndex}/task/${taskIndex}/testcase/${testCaseIndex}`,
+      {
+        method: "PUT",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(draft)
+      }
+    );
+
+    const data = await res.json();
+
+    if (data.success) {
+      setTasks(data.tasks);
+      setTestCaseEdits((prev) => {
+        const next = { ...prev };
+        delete next[key];
+        return next;
+      });
+    }
+  };
+
+  const deleteTestCase = async (taskIndex, testCaseIndex) => {
+    if (!window.confirm("Remove this test case?")) return;
+
+    const res = await fetch(
+      `http://localhost:5000/api/trainer/module/${moduleId}/topic/${topicIndex}/task/${taskIndex}/testcase/${testCaseIndex}`,
+      {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` }
+      }
+    );
+
+    const data = await res.json();
+    if (data.success) {
+      setTasks(data.tasks);
+      setTestCaseEdits((prev) => {
+        const next = { ...prev };
+        delete next[`${taskIndex}-${testCaseIndex}`];
+        return next;
+      });
     }
   };
 
@@ -382,12 +447,63 @@ export default function TrainerTopicTasksPage() {
                     </button>
 
                     {testCases?.length > 0 && (
-                      <div className="space-y-1 text-sm text-slate-600">
-                        {testCases.map((tc, idx) => (
-                          <p key={idx}>
-                            {tc.input} -> {tc.output}
-                          </p>
-                        ))}
+                      <div className="space-y-3">
+                        {testCases.map((tc, idx) => {
+                          const key = `${i}-${idx}`;
+                          const draft = testCaseEdits[key] || tc;
+
+                          return (
+                            <div
+                              key={idx}
+                              className="space-y-3 rounded-2xl border border-white/60 bg-white/80 p-4 shadow-sm"
+                            >
+                              <div className="grid gap-3 md:grid-cols-2">
+                                <input
+                                  className="rounded-xl border border-slate-200 px-3 py-2 text-sm text-slate-700 placeholder:text-slate-400"
+                                  value={draft.input}
+                                  onChange={(e) =>
+                                    handleTestCaseEditChange(
+                                      i,
+                                      idx,
+                                      "input",
+                                      e.target.value,
+                                      draft
+                                    )
+                                  }
+                                />
+
+                                <input
+                                  className="rounded-xl border border-slate-200 px-3 py-2 text-sm text-slate-700 placeholder:text-slate-400"
+                                  value={draft.output}
+                                  onChange={(e) =>
+                                    handleTestCaseEditChange(
+                                      i,
+                                      idx,
+                                      "output",
+                                      e.target.value,
+                                      draft
+                                    )
+                                  }
+                                />
+                              </div>
+
+                              <div className="flex justify-end gap-2 text-xs font-semibold uppercase tracking-[0.2em]">
+                                <button
+                                  onClick={() => saveTestCase(i, idx, tc)}
+                                  className="inline-flex items-center gap-1 rounded-full border border-emerald-100 bg-emerald-500/10 px-4 py-2 text-emerald-600 hover:bg-emerald-500/20"
+                                >
+                                  <Save className="h-3.5 w-3.5" /> Save
+                                </button>
+                                <button
+                                  onClick={() => deleteTestCase(i, idx)}
+                                  className="inline-flex items-center gap-1 rounded-full border border-rose-100 bg-rose-500/10 px-4 py-2 text-rose-600 hover:bg-rose-500/20"
+                                >
+                                  <Trash2 className="h-3.5 w-3.5" /> Delete
+                                </button>
+                              </div>
+                            </div>
+                          );
+                        })}
                       </div>
                     )}
                   </div>
