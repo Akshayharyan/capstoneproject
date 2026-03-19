@@ -1,0 +1,32 @@
+module.exports = [
+  {
+    slug: "xp_beginner",
+    title: "XP Beginner",
+    description: "Earn 50 XP across any track.",
+    icon: "⚡",
+    type: "XP",
+    targetValue: 50,
+    rarity: "common",
+    theme: "indigo",
+  },
+  {
+    slug: "xp_explorer",
+    title: "XP Explorer",
+    description: "Reach 100 XP to prove your consistency.",
+    icon: "🔥",
+    type: "XP",
+    targetValue: 100,
+    rarity: "rare",
+    theme: "amber",
+  },
+  {
+    slug: "xp_grinder",
+    title: "XP Grinder",
+    description: "Stack up 200 XP like a pro.",
+    icon: "💎",
+    type: "XP",
+    targetValue: 200,
+    rarity: "epic",
+    theme: "emerald",
+  },
+];

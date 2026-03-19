@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import YouTube from "react-youtube";
 import { useAuth } from "../../context/AuthContext";
@@ -40,7 +40,7 @@ export default function TopicVideoPage() {
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
 
-  const safePlayerCall = (callback, fallbackValue = null) => {
+  const safePlayerCall = useCallback((callback, fallbackValue = null) => {
     try {
       if (!player || typeof callback !== "function") return fallbackValue;
       const value = callback(player);
@@ -48,7 +48,7 @@ export default function TopicVideoPage() {
     } catch (error) {
       return fallbackValue;
     }
-  };
+  }, [player]);
 
   useEffect(() => {
     const fetchTopic = async () => {
@@ -110,7 +110,7 @@ export default function TopicVideoPage() {
     }, 250);
 
     return () => clearInterval(interval);
-  }, [player, markedComplete, moduleId, topicIndex, token, refreshUser]);
+  }, [player, markedComplete, moduleId, topicIndex, token, refreshUser, safePlayerCall]);
 
   const getVideoSource = (url) => {
     if (!url) return null;

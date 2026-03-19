@@ -1,35 +1,74 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useAuth } from "../context/AuthContext";
+
+const TYPE_LABELS = {
+  XP: "XP Milestones",
+  MODULE_COMPLETE: "Module Mastery",
+  STREAK: "Streaks",
+  CUSTOM: "Special",
+};
+
+const rarityThemes = {
+  common: {
+    gradient: "from-white via-slate-100 to-slate-200",
+    border: "border-slate-200",
+    glow: "shadow-[0_18px_50px_rgba(148,163,184,0.35)]",
+    accent: "text-slate-500",
+    badge: "bg-white text-slate-600",
+    text: "text-slate-900",
+    ringBg: "bg-slate-100",
+  },
+  rare: {
+    gradient: "from-sky-50 via-sky-100 to-indigo-100",
+    border: "border-sky-200",
+    glow: "shadow-[0_18px_55px_rgba(14,165,233,0.35)]",
+    accent: "text-sky-600",
+    badge: "bg-sky-600/15 text-sky-700",
+    text: "text-slate-900",
+    ringBg: "bg-sky-100",
+  },
+  epic: {
+    gradient: "from-fuchsia-50 via-violet-50 to-indigo-100",
+    border: "border-fuchsia-200",
+    glow: "shadow-[0_18px_55px_rgba(192,132,252,0.35)]",
+    accent: "text-fuchsia-500",
+    badge: "bg-fuchsia-500/15 text-fuchsia-700",
+    text: "text-slate-900",
+    ringBg: "bg-fuchsia-50",
+  },
+  legendary: {
+    gradient: "from-amber-50 via-orange-50 to-rose-100",
+    border: "border-amber-200",
+    glow: "shadow-[0_18px_60px_rgba(251,191,36,0.45)]",
+    accent: "text-amber-500",
+    badge: "bg-amber-500/15 text-amber-700",
+    text: "text-slate-900",
+    ringBg: "bg-amber-50",
+  },
+};
 
 const AchievementPage = () => {
   const { user } = useAuth();
-
-  const [activeTab, setActiveTab] = useState("All");
-  const [moduleAchievements, setModuleAchievements] = useState([]);
+  const [achievements, setAchievements] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState("ALL");
 
-  /* ================= XP ================= */
   const totalXP = Number(user?.xp || 0);
 
-  /* ================= FETCH BACKEND ACHIEVEMENTS ================= */
   useEffect(() => {
     const fetchAchievements = async () => {
       try {
         const token = localStorage.getItem("token");
+        const response = await fetch("http://localhost:5000/api/achievements/me", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
 
-        const res = await fetch(
-          "http://localhost:5000/api/achievements/me",
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
-
-        const data = await res.json();
-        setModuleAchievements(Array.isArray(data) ? data : []);
-      } catch (err) {
-        console.error("Failed to load achievements", err);
+        const data = await response.json();
+        setAchievements(Array.isArray(data) ? data : []);
+      } catch (error) {
+        console.error("Failed to fetch achievements", error);
       } finally {
         setLoading(false);
       }
@@ -38,137 +77,87 @@ const AchievementPage = () => {
     fetchAchievements();
   }, []);
 
-  /* ================= SAFE GUARD ================= */
+  const availableTabs = useMemo(() => {
+    const uniqueTypes = new Set(achievements.map((achievement) => achievement.type).filter(Boolean));
+    return ["ALL", ...uniqueTypes];
+  }, [achievements]);
+
   if (!user) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <p className="text-gray-500">Loading achievements...</p>
+      <div className="min-h-screen flex items-center justify-center bg-slate-50 text-slate-700">
+        Loading achievements...
       </div>
     );
   }
 
-  /* ================= XP ACHIEVEMENTS (OPTIONAL) ================= */
-  const xpAchievements = [
-    {
-      id: "xp_50",
-      title: "XP Beginner",
-      description: "Earn 50 XP",
-      category: "XP",
-      icon: "⚡",
-      target: 50,
-      progress: totalXP,
-      unlocked: totalXP >= 50,
-    },
-    {
-      id: "xp_100",
-      title: "XP Explorer",
-      description: "Earn 100 XP",
-      category: "XP",
-      icon: "🔥",
-      target: 100,
-      progress: totalXP,
-      unlocked: totalXP >= 100,
-    },
-    {
-      id: "xp_200",
-      title: "XP Grinder",
-      description: "Earn 200 XP",
-      category: "XP",
-      icon: "💎",
-      target: 200,
-      progress: totalXP,
-      unlocked: totalXP >= 200,
-    },
-  ];
-
-  /* ================= NORMALIZE BACKEND ACHIEVEMENTS ================= */
-  const moduleAchievementCards = moduleAchievements.map((a) => ({
-    id: a._id,
-    title: a.title,
-    description: a.description,
-    icon: a.icon || "🏆",
-    category: "Modules",
-    unlocked: a.unlocked,
-    progress: a.unlocked ? 1 : 0,
-    target: 1,
-  }));
-
-  const allAchievements = [...xpAchievements, ...moduleAchievementCards];
+  const unlockedCount = achievements.filter((achievement) => achievement.unlocked).length;
+  const completionRate = achievements.length
+    ? Math.round((unlockedCount / achievements.length) * 100)
+    : 0;
 
   const filteredAchievements =
-    activeTab === "All"
-      ? allAchievements
-      : allAchievements.filter((a) => a.category === activeTab);
+    activeTab === "ALL"
+      ? achievements
+      : achievements.filter((achievement) => achievement.type === activeTab);
 
-  const unlockedCount = allAchievements.filter((a) => a.unlocked).length;
-  const completionRate = Math.round(
-    (unlockedCount / allAchievements.length) * 100
-  );
-
-  /* ================= UI ================= */
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50 p-6">
-      <div className="max-w-7xl mx-auto">
-        {/* HEADER */}
-        <div>
-          <h1 className="text-4xl font-extrabold text-gray-900 flex items-center gap-3">
-            <span className="text-5xl">🏆</span> Your Achievements
-          </h1>
-          <p className="text-gray-500 mt-2 max-w-xl">
-            Achievements are unlocked when you complete modules or reach XP milestones.
-          </p>
-        </div>
+    <div className="min-h-screen bg-gradient-to-b from-white via-indigo-50 to-sky-100 text-slate-900 px-4 py-16">
+      <div className="max-w-6xl mx-auto space-y-10">
+        <header className="rounded-[32px] border border-slate-200/80 bg-gradient-to-br from-white via-sky-50 to-indigo-100 p-8 shadow-[0_35px_90px_rgba(78,97,255,0.18)]">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+            <div>
+              <p className="text-xs uppercase tracking-[0.6em] text-indigo-500">Hall of Progress</p>
+              <h1 className="text-4xl font-black mt-2 flex items-center gap-3 text-slate-900">
+                <span className="text-5xl">🏆</span> Achievement Vault
+              </h1>
+              <p className="text-slate-600 max-w-2xl mt-3">
+                Each card represents an unlockable moment. Finish modules, rack up XP, and let SkillQuest keep the receipts.
+              </p>
+            </div>
+            <div className="grid grid-cols-3 gap-4">
+              <StatusCard label="Unlocked" value={`${unlockedCount}/${achievements.length || 0}`} />
+              <StatusCard label="XP Earned" value={totalXP} />
+              <StatusCard label="Completion" value={`${completionRate}%`} />
+            </div>
+          </div>
+        </header>
 
-        {/* STATUS */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mt-10">
-          <StatusCard
-            icon="🎯"
-            title="Unlocked"
-            value={`${unlockedCount}/${allAchievements.length}`}
-            gradient="from-indigo-500 to-purple-500"
-          />
-          <StatusCard
-            icon="⚡"
-            title="XP Earned"
-            value={totalXP}
-            gradient="from-green-400 to-emerald-500"
-          />
-          <StatusCard
-            icon="📊"
-            title="Completion"
-            value={`${completionRate}%`}
-            gradient="from-orange-400 to-pink-500"
-          />
-        </div>
-
-        {/* FILTERS */}
-        <div className="flex gap-3 mt-8">
-          {["All", "XP", "Modules"].map((tab) => (
+        <div className="flex flex-wrap gap-3">
+          {availableTabs.map((tab) => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
-              className={`px-5 py-2 rounded-full text-sm font-semibold transition
+              className={`px-5 py-2 rounded-full text-sm font-semibold transition border border-slate-200 shadow-sm
                 ${
                   activeTab === tab
-                    ? "bg-indigo-600 text-white shadow"
-                    : "bg-white border text-gray-600 hover:bg-gray-100"
+                    ? "bg-slate-900 text-white"
+                    : "bg-white text-slate-600 hover:text-slate-900"
                 }`}
             >
-              {tab}
+              {tab === "ALL" ? "All" : TYPE_LABELS[tab] || tab}
             </button>
           ))}
         </div>
 
-        {/* GRID */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mt-6">
+        <section className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+          {loading && (
+            <div className="col-span-full grid grid-cols-1 sm:grid-cols-2 gap-6">
+              {Array.from({ length: 4 }).map((_, index) => (
+                <div key={index} className="h-60 rounded-3xl bg-slate-200/70 animate-pulse" />
+              ))}
+            </div>
+          )}
+
+          {!loading && filteredAchievements.length === 0 && (
+            <div className="col-span-full text-center py-16 rounded-3xl border border-dashed border-slate-300 text-slate-500 bg-white">
+              No achievements in this category yet. Keep exploring!
+            </div>
+          )}
+
           {filteredAchievements.map((achievement) => (
-            <AchievementCard
-              key={achievement.id}
-              achievement={achievement}
-              loading={loading}
-            />
+            <AchievementCard key={achievement._id} achievement={achievement} loading={loading} />
           ))}
-        </div>
+        </section>
       </div>
     </div>
   );
@@ -176,69 +165,88 @@ const AchievementPage = () => {
 
 export default AchievementPage;
 
-/* ================= COMPONENTS ================= */
-
-const StatusCard = ({ icon, title, value, gradient }) => (
-  <div
-    className={`rounded-3xl p-6 text-white shadow-lg bg-gradient-to-br ${gradient}
-      hover:scale-[1.02] transition-all`}
-  >
-    <div className="flex items-center justify-between">
-      <div>
-        <p className="text-sm opacity-90">{title}</p>
-        <p className="text-4xl font-extrabold mt-1">{value}</p>
-      </div>
-      <div className="text-4xl opacity-90">{icon}</div>
-    </div>
+const StatusCard = ({ label, value }) => (
+  <div className="rounded-2xl border border-slate-200 bg-white px-5 py-4 text-center shadow-sm">
+    <p className="text-[11px] uppercase tracking-[0.5em] text-slate-500">{label}</p>
+    <p className="text-2xl font-bold mt-1 text-slate-900">{value}</p>
   </div>
 );
 
 const AchievementCard = ({ achievement, loading }) => {
-  const progressPercent = Math.min(
-    Math.round((achievement.progress / achievement.target) * 100),
+  const theme = rarityThemes[achievement.rarity] || rarityThemes.common;
+  const target = Number(achievement.targetValue || 0) || 1;
+  const progress = Math.min(
+    target > 0 ? Math.round((Number(achievement.progressValue || 0) / target) * 100) : 0,
     100
   );
+  const textClass = theme.text || "text-slate-900";
+  const ringBg = theme.ringBg || "bg-slate-100";
 
   return (
     <div
-      className={`relative rounded-3xl p-6 transition-all duration-300
-        ${
-          achievement.unlocked
-            ? "bg-gradient-to-br from-indigo-500 to-purple-600 text-white shadow-xl ring-4 ring-indigo-300 ring-offset-2 hover:scale-[1.03]"
-            : "bg-white/70 backdrop-blur border text-gray-600"
-        }`}
+      className={`relative overflow-hidden rounded-3xl border ${theme.border} ${theme.glow} bg-gradient-to-br ${theme.gradient} p-6 ${textClass}`}
     >
       {!achievement.unlocked && !loading && (
-        <div className="absolute inset-0 rounded-3xl bg-white/60 backdrop-blur-sm flex items-center justify-center z-10">
-          <span className="text-5xl opacity-70">🔒</span>
+        <div className="absolute inset-0 bg-white/70 backdrop-blur-sm flex flex-col items-center justify-center gap-3 text-slate-600">
+          <div className="relative flex items-center justify-center">
+            <span className="text-4xl animate-bounce">🔒</span>
+            <span className="absolute h-14 w-14 rounded-full border border-slate-300 animate-ping" />
+          </div>
+          <p className="text-xs font-semibold tracking-[0.4em] uppercase">Locked</p>
         </div>
       )}
 
-      <div
-        className={`w-14 h-14 rounded-2xl flex items-center justify-center text-3xl mb-4
-          ${achievement.unlocked ? "bg-white/20" : "bg-gray-200"}`}
-      >
-        {achievement.icon}
+      <div className="relative flex items-start justify-between">
+        <div className={`text-4xl ${theme.accent}`}>{achievement.icon || "🏆"}</div>
+        <span className={`text-xs font-semibold uppercase tracking-[0.4em] px-3 py-1 rounded-full ${theme.badge}`}>
+          {achievement.rarity || "common"}
+        </span>
       </div>
 
-      <h3 className="font-bold text-lg">{achievement.title}</h3>
-      <p className="text-sm mt-1 opacity-90">{achievement.description}</p>
+      <div className="relative mt-6 space-y-2">
+        <p className="text-sm uppercase tracking-[0.4em] text-slate-500">
+          {TYPE_LABELS[achievement.type] || achievement.type}
+        </p>
+        <h3 className="text-2xl font-bold">{achievement.title}</h3>
+        <p className="text-sm text-slate-600">{achievement.description}</p>
+      </div>
+
+      <div className="mt-6 flex items-center justify-between">
+        <div>
+          <p className="text-xs uppercase tracking-[0.4em] text-slate-500">Target</p>
+          <p className="text-lg font-semibold">
+            {achievement.type === "XP" ? `${target} XP` : "Complete once"}
+          </p>
+        </div>
+        <div className={`relative h-16 w-16 rounded-full ${ringBg} flex items-center justify-center`}>
+          <div
+            className="absolute inset-0 rounded-full"
+            style={{
+              background: `conic-gradient(#c084fc ${progress}%, rgba(15,23,42,0.12) ${progress}% 100%)`,
+            }}
+          />
+          <div className="relative h-12 w-12 rounded-full bg-white flex items-center justify-center text-sm font-bold text-slate-900">
+            {progress}%
+          </div>
+        </div>
+      </div>
 
       <div className="mt-5">
         {achievement.unlocked ? (
-          <span className="inline-block px-4 py-1 text-xs font-bold rounded-full bg-green-400 text-green-900">
-            🎉 UNLOCKED
+          <span className="inline-flex items-center gap-2 rounded-full bg-emerald-100 px-4 py-2 text-sm font-semibold text-emerald-700">
+            🎉 Unlocked
           </span>
         ) : (
           <>
-            <div className="h-2 bg-gray-300 rounded-full overflow-hidden">
-              <div
-                className="h-full bg-indigo-500 transition-all duration-700"
-                style={{ width: `${progressPercent}%` }}
-              />
+            <div className="h-2 rounded-full bg-slate-200 overflow-hidden">
+              <div className="h-full bg-slate-800/70" style={{ width: `${progress}%` }} />
             </div>
-            <p className="text-xs mt-1">
-              {achievement.progress} / {achievement.target}
+            <p className="text-xs text-slate-500 mt-1">
+              {achievement.type === "XP"
+                ? `${Math.min(Number(achievement.progressValue || 0), target)} / ${target} XP`
+                : achievement.unlocked
+                ? "Completed"
+                : "Pending completion"}
             </p>
           </>
         )}

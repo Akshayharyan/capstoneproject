@@ -1,11 +1,30 @@
-// backend/controllers/achievementController.js
-console.log(
-  "UserAchievement typeof:",
-  typeof require("../models/UserAchievement")
-);
-
 const UserAchievement = require("../models/UserAchievement");
 const Achievement = require("../models/Achievement");
+const User = require("../models/User");
+const { ensureDefaultAchievements } = require("../utils/ensureDefaultAchievements");
+
+const autoUnlockXpAchievements = async (userId, currentXp, achievements) => {
+  const xpAchievements = achievements.filter(
+    (achievement) =>
+      achievement.type === "XP" && Number(achievement.targetValue || 0) > 0
+  );
+
+  for (const achievement of xpAchievements) {
+    if (currentXp >= Number(achievement.targetValue)) {
+      await UserAchievement.updateOne(
+        { userId, achievementId: achievement._id },
+        {
+          $setOnInsert: {
+            userId,
+            achievementId: achievement._id,
+            unlockedAt: new Date(),
+          },
+        },
+        { upsert: true }
+      );
+    }
+  }
+};
 
 /**
  * GET achievements of logged-in user
@@ -15,30 +34,51 @@ const getMyAchievements = async (req, res) => {
   try {
     const userId = req.user._id;
 
-    // Achievements unlocked by user
-    const unlocked = await UserAchievement.find({ userId })
-      .populate("achievementId")
-      .lean();
+    await ensureDefaultAchievements(userId);
 
-    const unlockedIds = unlocked.map(
-      (u) => String(u.achievementId._id)
-    );
+    const user = await User.findById(userId).select("xp");
+    const totalXp = Number(user?.xp || 0);
 
-    // All active achievements
     const allAchievements = await Achievement.find({
       isActive: true,
     }).lean();
 
-    // Merge unlocked + locked
-    const result = allAchievements.map((a) => ({
-      _id: a._id,
-      title: a.title,
-      description: a.description,
-      icon: a.icon,
-      type: a.type,
-      moduleId: a.moduleId,
-      unlocked: unlockedIds.includes(String(a._id)),
-    }));
+    await autoUnlockXpAchievements(userId, totalXp, allAchievements);
+
+    const unlockedDocs = await UserAchievement.find({ userId })
+      .select("achievementId")
+      .lean();
+
+    const unlockedIds = new Set(
+      unlockedDocs.map((entry) => String(entry.achievementId))
+    );
+
+    const result = allAchievements.map((achievement) => {
+      const unlocked = unlockedIds.has(String(achievement._id));
+      const targetValue =
+        achievement.type === "XP" ? Number(achievement.targetValue || 0) : 1;
+      const progressValue =
+        achievement.type === "XP"
+          ? totalXp
+          : unlocked
+          ? 1
+          : 0;
+
+      return {
+        _id: achievement._id,
+        title: achievement.title,
+        description: achievement.description,
+        icon: achievement.icon,
+        type: achievement.type,
+        moduleId: achievement.moduleId,
+        targetValue,
+        progressValue,
+        rarity: achievement.rarity || "common",
+        theme: achievement.theme || "indigo",
+        unlocked,
+        rewardXp: achievement.rewardXp || 0,
+      };
+    });
 
     res.json(result);
   } catch (err) {

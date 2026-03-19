@@ -1,9 +1,65 @@
 import React, { useState, useEffect } from "react";
-import { useAuth } from "../context/AuthContext";
 import { Link } from "react-router-dom";
 
+const TYPE_LABELS = {
+  XP: "XP Milestones",
+  MODULE_COMPLETE: "Module Mastery",
+  STREAK: "Streaks",
+  CUSTOM: "Special",
+};
+
+const rarityThemes = {
+  common: {
+    gradient: "from-white via-slate-100 to-slate-200",
+    border: "border-slate-200",
+    glow: "shadow-[0_18px_45px_rgba(148,163,184,0.25)]",
+    accent: "text-slate-500",
+    badge: "bg-white text-slate-600",
+    text: "text-slate-900",
+    ringBg: "bg-slate-100",
+  },
+  rare: {
+    gradient: "from-sky-50 via-sky-100 to-indigo-100",
+    border: "border-sky-200",
+    glow: "shadow-[0_18px_50px_rgba(14,165,233,0.28)]",
+    accent: "text-sky-600",
+    badge: "bg-sky-600/15 text-sky-700",
+    text: "text-slate-900",
+    ringBg: "bg-sky-100",
+  },
+  epic: {
+    gradient: "from-fuchsia-50 via-violet-50 to-indigo-100",
+    border: "border-fuchsia-200",
+    glow: "shadow-[0_18px_55px_rgba(192,132,252,0.3)]",
+    accent: "text-fuchsia-500",
+    badge: "bg-fuchsia-500/15 text-fuchsia-700",
+    text: "text-slate-900",
+    ringBg: "bg-fuchsia-50",
+  },
+  legendary: {
+    gradient: "from-amber-50 via-orange-50 to-rose-100",
+    border: "border-amber-200",
+    glow: "shadow-[0_18px_60px_rgba(251,191,36,0.35)]",
+    accent: "text-amber-500",
+    badge: "bg-amber-500/15 text-amber-700",
+    text: "text-slate-900",
+    ringBg: "bg-amber-50",
+  },
+};
+
+const getAchievementProgress = (achievement = {}) => {
+  const target = Number(achievement.targetValue || 0) || 1;
+  const current = Number(achievement.progressValue || 0);
+  const percent = Math.min(target > 0 ? Math.round((current / target) * 100) : 0, 100);
+
+  return {
+    target,
+    current,
+    percent,
+  };
+};
+
 const Profile = () => {
-  const { user: authUser } = useAuth();
   const [user, setUser] = useState(null);
 
   const [backendAchievements, setBackendAchievements] = useState([]);
@@ -78,46 +134,27 @@ const Profile = () => {
     (m) => m.completedTopics?.length > 0
   ).length;
 
-  /* ================= XP ACHIEVEMENTS ================= */
-  const totalXP = Number(user?.xp || authUser?.xp || 0);
+  /* ================= ACHIEVEMENT SNAPSHOT ================= */
+  const achievements = backendAchievements;
+  const totalAchievements = achievements.length;
+  const unlockedCount = achievements.filter((a) => a.unlocked).length;
+  const completionRate = totalAchievements
+    ? Math.round((unlockedCount / totalAchievements) * 100)
+    : 0;
 
-  const xpAchievements = [
-    {
-      id: "xp_50",
-      title: "XP Beginner",
-      description: "Earn 50 XP",
-      icon: "⚡",
-      unlocked: totalXP >= 50,
-    },
-    {
-      id: "xp_100",
-      title: "XP Explorer",
-      description: "Earn 100 XP",
-      icon: "🔥",
-      unlocked: totalXP >= 100,
-    },
-    {
-      id: "xp_200",
-      title: "XP Grinder",
-      description: "Earn 200 XP",
-      icon: "💎",
-      unlocked: totalXP >= 200,
-    },
-  ];
+  const spotlightAchievement = achievements.find((a) => a.unlocked) || achievements[0] || null;
+  const nextLockedAchievement = achievements.find((a) => !a.unlocked) || null;
 
-  /* ================= MODULE ACHIEVEMENTS (BACKEND) ================= */
-  const moduleAchievements = backendAchievements.map((a) => ({
-    id: a._id,
-    title: a.title,
-    description: a.description,
-    icon: a.icon || "🏆",
-    unlocked: a.unlocked,
-  }));
-
-  /* ================= MERGED ACHIEVEMENTS ================= */
-  const allAchievements = [...xpAchievements, ...moduleAchievements];
-
-  const unlockedCount = allAchievements.filter((a) => a.unlocked).length;
+  const featuredAchievements = achievements.length
+    ? [...achievements]
+        .sort((a, b) => {
+          if (a.unlocked !== b.unlocked) return Number(b.unlocked) - Number(a.unlocked);
+          const aProgress = Number(a.progressValue || 0);
+          const bProgress = Number(b.progressValue || 0);
+          return bProgress - aProgress;
+        })
+        .slice(0, 4)
+    : [];
 
   /* ================= UI ================= */
   return (
@@ -176,41 +213,138 @@ const Profile = () => {
             <Stat label="Modules Completed" value={modulesCompleted} />
           </div>
 
-          {/* ACHIEVEMENTS */}
-          <div className="bg-white rounded-3xl p-6 shadow">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="font-bold text-slate-800">
-                🏆 Achievements
-              </h3>
+          {/* ACHIEVEMENT SHOWCASE */}
+          <div className="relative overflow-hidden rounded-[32px] border border-slate-200 bg-gradient-to-br from-white via-indigo-50 to-sky-100 p-8 shadow-[0_35px_90px_rgba(79,70,229,0.18)]">
+            <div className="absolute -top-24 -right-10 h-72 w-72 rounded-full bg-indigo-200/30 blur-3xl" />
+            <div className="absolute -bottom-16 left-4 h-64 w-64 rounded-full bg-amber-200/30 blur-3xl" />
 
-              <span className="text-xs bg-slate-100 px-3 py-1 rounded-full">
-                {unlockedCount}/{allAchievements.length}
-              </span>
-            </div>
+            <div className="relative space-y-8">
+              <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
+                <div>
+                  <p className="text-xs uppercase tracking-[0.6em] text-indigo-500">Achievement Highlights</p>
+                  <h3 className="text-3xl font-black text-slate-900 mt-2 flex items-center gap-3">
+                    <span className="text-4xl">🏆</span> Vault Snapshot
+                  </h3>
+                  <p className="text-slate-600 mt-2 max-w-xl">
+                    Track your rarest unlocks, see how close you are to the next milestone, and jump straight into the full achievement vault.
+                  </p>
+                </div>
 
-            {allAchievements.length === 0 && !loadingAchievements && (
-              <p className="text-slate-500 text-sm">
-                No achievements yet. Keep learning 💪
-              </p>
-            )}
+                <div className="grid grid-cols-3 gap-4 min-w-[260px]">
+                  <div className="rounded-2xl border border-white/60 bg-white/80 px-5 py-4 text-center backdrop-blur">
+                    <p className="text-[11px] uppercase tracking-[0.5em] text-slate-500">Unlocked</p>
+                    <p className="text-2xl font-bold text-slate-900 mt-1">
+                      {unlockedCount}/{totalAchievements || 0}
+                    </p>
+                  </div>
+                  <div className="rounded-2xl border border-white/60 bg-white/80 px-5 py-4 text-center backdrop-blur">
+                    <p className="text-[11px] uppercase tracking-[0.5em] text-slate-500">Completion</p>
+                    <p className="text-2xl font-bold text-slate-900 mt-1">{completionRate}%</p>
+                  </div>
+                  <div className="rounded-2xl border border-white/60 bg-white/80 px-5 py-4 text-center backdrop-blur">
+                    <p className="text-[11px] uppercase tracking-[0.5em] text-slate-500">XP</p>
+                    <p className="text-2xl font-bold text-slate-900 mt-1">{user.xp}</p>
+                  </div>
+                </div>
+              </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {allAchievements.slice(0, 6).map((achievement) => (
-                <AchievementCard
-                  key={achievement.id}
-                  achievement={achievement}
-                  loading={loadingAchievements}
-                />
-              ))}
-            </div>
+              {spotlightAchievement && (
+                <div className="grid gap-6 lg:grid-cols-[1.4fr_0.8fr]">
+                  <div className="rounded-3xl border border-white/60 bg-white/80 backdrop-blur p-6 shadow-lg">
+                    <p className="text-xs uppercase tracking-[0.5em] text-indigo-500">Spotlight Unlock</p>
+                    <div className="mt-4 flex flex-col gap-6 lg:flex-row lg:items-center">
+                      <div className="flex items-center gap-4">
+                        <div className="text-5xl drop-shadow-sm">
+                          {spotlightAchievement.icon || "🏆"}
+                        </div>
+                        <div>
+                          <h4 className="text-xl font-bold text-slate-900">
+                            {spotlightAchievement.title}
+                          </h4>
+                          <p className="text-sm text-slate-600 max-w-sm">
+                            {spotlightAchievement.description}
+                          </p>
+                          <p className="text-xs uppercase tracking-[0.4em] text-slate-500 mt-2">
+                            {TYPE_LABELS[spotlightAchievement.type] || spotlightAchievement.type || "Achievement"}
+                          </p>
+                        </div>
+                      </div>
 
-            <div className="mt-4 text-right">
-              <Link
-                to="/achievements"
-                className="text-sm font-semibold text-indigo-600 hover:underline"
-              >
-                View all →
-              </Link>
+                      <SpotlightProgress achievement={spotlightAchievement} />
+                    </div>
+                  </div>
+
+                  <div className="rounded-3xl border border-white/60 bg-white/80 backdrop-blur p-6 shadow-lg space-y-4">
+                    <p className="text-xs uppercase tracking-[0.5em] text-slate-500">Next Unlock</p>
+                    {nextLockedAchievement ? (
+                      <div>
+                        <div className="flex items-center gap-3">
+                          <div className="text-4xl">{nextLockedAchievement.icon || "🔒"}</div>
+                          <div>
+                            <h4 className="text-lg font-semibold text-slate-900">
+                              {nextLockedAchievement.title}
+                            </h4>
+                            <p className="text-sm text-slate-600">
+                              {nextLockedAchievement.description}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="mt-4">
+                          <ProgressMeter achievement={nextLockedAchievement} />
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="text-slate-600 text-sm">
+                        All current achievements unlocked — new challenges dropping soon!
+                      </div>
+                    )}
+
+                    <div className="pt-4 border-t border-slate-200">
+                      <p className="text-xs uppercase tracking-[0.5em] text-slate-500">Vault Completion</p>
+                      <div className="mt-2 h-2 rounded-full bg-slate-200 overflow-hidden">
+                        <div
+                          className="h-full rounded-full bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500"
+                          style={{ width: `${completionRate}%` }}
+                        />
+                      </div>
+                      <p className="text-xs text-slate-500 mt-1">{completionRate}% complete</p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              <div>
+                {loadingAchievements ? (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+                    {Array.from({ length: 4 }).map((_, index) => (
+                      <div key={index} className="h-60 rounded-3xl bg-white/60 animate-pulse" />
+                    ))}
+                  </div>
+                ) : achievements.length === 0 ? (
+                  <div className="rounded-3xl border border-dashed border-slate-300 bg-white text-center py-14 text-slate-500">
+                    No achievements yet. Keep exploring quests to unlock your first badge!
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+                    {featuredAchievements.map((achievement) => (
+                      <ProfileAchievementCard
+                        key={achievement._id || achievement.slug || achievement.title}
+                        achievement={achievement}
+                        loading={loadingAchievements}
+                      />
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              <div className="flex justify-end">
+                <Link
+                  to="/achievements"
+                  className="inline-flex items-center gap-2 rounded-full border border-slate-900/20 bg-slate-900 text-white px-5 py-2 text-sm font-semibold shadow hover:-translate-y-0.5 transition"
+                >
+                  Open Achievement Vault →
+                </Link>
+              </div>
             </div>
           </div>
 
@@ -228,40 +362,117 @@ const Stat = ({ label, value }) => (
   </div>
 );
 
-/* ================= ACHIEVEMENT CARD ================= */
-const AchievementCard = ({ achievement, loading }) => {
+/* ================= ACHIEVEMENT UTILITIES ================= */
+const SpotlightProgress = ({ achievement }) => {
+  if (!achievement) return null;
+  const { target, current, percent } = getAchievementProgress(achievement);
+  const theme = rarityThemes[achievement.rarity] || rarityThemes.common;
+
   return (
-    <div
-      className={`relative rounded-3xl p-6 transition-all duration-300
-        ${
-          achievement.unlocked
-            ? "bg-gradient-to-br from-indigo-500 to-purple-600 text-white shadow-xl ring-4 ring-indigo-300 ring-offset-2"
-            : "bg-white/70 backdrop-blur border text-gray-600"
-        }`}
-    >
+    <div className="flex items-center gap-5">
+      <div className={`relative h-24 w-24 rounded-full ${theme.ringBg} flex items-center justify-center`}>
+        <div
+          className="absolute inset-0 rounded-full"
+          style={{
+            background: `conic-gradient(#6366f1 ${percent}%, rgba(15,23,42,0.1) ${percent}% 100%)`,
+          }}
+        />
+        <div className="relative h-16 w-16 rounded-full bg-white flex flex-col items-center justify-center text-slate-900 shadow">
+          <span className="text-xl font-bold">{percent}%</span>
+          <span className="text-[10px] uppercase tracking-[0.4em] text-slate-400">Progress</span>
+        </div>
+      </div>
+      <div>
+        <p className="text-sm text-slate-600">
+          {achievement.type === "XP" ? `${Math.min(current, target)} / ${target} XP` : achievement.unlocked ? "Completed" : "Keep going"}
+        </p>
+        <p className="text-xs uppercase tracking-[0.4em] text-slate-400 mt-1">Target</p>
+        <p className="text-sm font-semibold text-slate-900">
+          {achievement.type === "XP" ? `${target} XP` : "Complete once"}
+        </p>
+      </div>
+    </div>
+  );
+};
+
+const ProgressMeter = ({ achievement }) => {
+  if (!achievement) return null;
+  const { target, current, percent } = getAchievementProgress(achievement);
+
+  return (
+    <div>
+      <div className="h-2 rounded-full bg-slate-200 overflow-hidden">
+        <div
+          className="h-full rounded-full bg-slate-900"
+          style={{ width: `${percent}%` }}
+        />
+      </div>
+      <p className="text-xs text-slate-500 mt-1">
+        {achievement.type === "XP"
+          ? `${Math.min(current, target)} / ${target} XP`
+          : percent === 100
+          ? "Completed"
+          : "Pending completion"}
+      </p>
+    </div>
+  );
+};
+
+const ProfileAchievementCard = ({ achievement, loading }) => {
+  if (!achievement) return null;
+  const theme = rarityThemes[achievement.rarity] || rarityThemes.common;
+  const { target, current, percent } = getAchievementProgress(achievement);
+  const textClass = theme.text || "text-slate-900";
+
+  return (
+    <div className={`relative overflow-hidden rounded-3xl border ${theme.border} ${theme.glow} bg-gradient-to-br ${theme.gradient} p-5 ${textClass}`}>
       {!achievement.unlocked && !loading && (
-        <div className="absolute inset-0 rounded-3xl bg-white/60 backdrop-blur-sm flex items-center justify-center z-10">
-          <span className="text-5xl opacity-70">🔒</span>
+        <div className="absolute inset-0 bg-white/75 backdrop-blur-sm flex flex-col items-center justify-center gap-2 text-slate-600">
+          <div className="relative flex items-center justify-center">
+            <span className="text-3xl animate-bounce">🔒</span>
+            <span className="absolute h-10 w-10 rounded-full border border-slate-300 animate-ping" />
+          </div>
+          <p className="text-[11px] font-semibold tracking-[0.4em] uppercase">Locked</p>
         </div>
       )}
 
-      <div
-        className={`w-14 h-14 rounded-2xl flex items-center justify-center text-3xl mb-4
-          ${achievement.unlocked ? "bg-white/20" : "bg-gray-200"}`}
-      >
-        {achievement.icon}
+      <div className="relative flex items-start justify-between">
+        <div className={`text-4xl ${theme.accent}`}>{achievement.icon || "🏆"}</div>
+        <span className={`text-[10px] font-semibold uppercase tracking-[0.4em] px-3 py-1 rounded-full ${theme.badge}`}>
+          {achievement.rarity || "common"}
+        </span>
       </div>
 
-      <h3 className="font-bold text-lg">{achievement.title}</h3>
-      <p className="text-sm mt-1 opacity-90">
-        {achievement.description}
+      <p className="text-[11px] uppercase tracking-[0.4em] text-slate-500 mt-4">
+        {TYPE_LABELS[achievement.type] || achievement.type || "Achievement"}
       </p>
+      <h4 className="text-xl font-bold mt-1">{achievement.title}</h4>
+      <p className="text-sm text-slate-600 mt-1">{achievement.description}</p>
 
-      {achievement.unlocked && (
-        <span className="inline-block mt-4 px-4 py-1 text-xs font-bold rounded-full bg-green-400 text-green-900">
-          🎉 UNLOCKED
-        </span>
-      )}
+      <div className="mt-5 flex items-center gap-4">
+        <div className={`relative h-14 w-14 rounded-full ${theme.ringBg} flex items-center justify-center`}>
+          <div
+            className="absolute inset-0 rounded-full"
+            style={{ background: `conic-gradient(#c084fc ${percent}%, rgba(15,23,42,0.12) ${percent}% 100%)` }}
+          />
+          <div className="relative h-10 w-10 rounded-full bg-white flex items-center justify-center text-sm font-bold text-slate-900">
+            {percent}%
+          </div>
+        </div>
+
+        <div className="flex-1">
+          <div className="h-2 rounded-full bg-slate-200 overflow-hidden">
+            <div className="h-full bg-slate-900/80" style={{ width: `${percent}%` }} />
+          </div>
+          <p className="text-xs text-slate-500 mt-1">
+            {achievement.type === "XP"
+              ? `${Math.min(current, target)} / ${target} XP`
+              : achievement.unlocked
+              ? "Completed"
+              : "Pending completion"}
+          </p>
+        </div>
+      </div>
     </div>
   );
 };

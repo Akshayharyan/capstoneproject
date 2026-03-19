@@ -1,9 +1,11 @@
 import React, { useEffect, useState, useCallback } from "react";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
+import { ArrowLeft, Blocks, Code2, ListChecks, Sparkles } from "lucide-react";
 
 export default function TrainerTopicTasksPage() {
   const { moduleId, topicIndex } = useParams();
+  const navigate = useNavigate();
   const { token } = useAuth();
 
   const [tasks, setTasks] = useState([]);
@@ -50,7 +52,7 @@ export default function TrainerTopicTasksPage() {
     if (!form.title.trim() || !form.description.trim())
       return alert("Title & description required");
 
-    if (form.type === "quiz" && form.options.some(o => !o.trim()))
+    if (form.type === "quiz" && form.options.some((o) => !o.trim()))
       return alert("Fill all quiz options");
 
     const payload = {
@@ -163,189 +165,237 @@ export default function TrainerTopicTasksPage() {
 
     if (data.success) {
       await loadTasks();
-      setTestCaseDrafts(p => ({
-        ...p,
+      setTestCaseDrafts((prev) => ({
+        ...prev,
         [taskIndex]: { input: "", output: "" }
       }));
     }
   };
 
   if (loading)
-    return <p className="p-10 text-gray-500">Loading tasks...</p>;
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center gap-3 bg-gradient-to-b from-white via-indigo-50 to-slate-100 text-slate-500">
+        <Sparkles className="h-8 w-8 animate-spin" />
+        <p className="text-sm font-semibold tracking-[0.4em] uppercase">Loading tasks...</p>
+      </div>
+    );
 
   /* ================= UI ================= */
 
   return (
-    <div className="max-w-6xl mx-auto py-14 px-10 space-y-12">
+    <div className="min-h-screen bg-gradient-to-b from-white via-indigo-50 to-slate-100 px-6 py-12">
+      <div className="mx-auto flex max-w-6xl flex-col gap-10">
+        <div className="relative overflow-hidden rounded-[32px] border border-slate-200 bg-white/90 p-8 shadow-[0_35px_90px_rgba(79,70,229,0.12)]">
+          <div className="pointer-events-none absolute -right-10 -top-12 h-56 w-56 rounded-full bg-indigo-200/50 blur-3xl" />
+          <div className="pointer-events-none absolute -bottom-16 left-4 h-56 w-56 rounded-full bg-emerald-200/40 blur-3xl" />
 
-      <div>
-        <h1 className="text-3xl font-bold text-gray-900">
-          Topic Task Builder
-        </h1>
-        <p className="text-gray-500 mt-2">
-          Create coding, quiz, and bug-fix challenges.
-        </p>
-      </div>
-
-      {/* ================= FORM ================= */}
-
-      <div className="bg-white p-8 rounded-2xl shadow-sm border border-gray-100 space-y-4">
-
-        <select
-          className="w-full p-3 border rounded-lg"
-          value={form.type}
-          onChange={(e) => setForm({ ...form, type: e.target.value })}
-        >
-          <option value="coding">Coding</option>
-          <option value="quiz">Quiz</option>
-          <option value="bugfix">Bug Fix</option>
-        </select>
-
-        <input
-          className="w-full p-3 border rounded-lg"
-          placeholder="Task title"
-          value={form.title}
-          onChange={(e) => setForm({ ...form, title: e.target.value })}
-        />
-
-        <textarea
-          className="w-full p-3 border rounded-lg h-24"
-          placeholder="Task description / hint"
-          value={form.description}
-          onChange={(e) => setForm({ ...form, description: e.target.value })}
-        />
-
-        {form.type !== "quiz" && (
-          <textarea
-            className="w-full p-3 border rounded-lg h-32 font-mono text-sm"
-            placeholder={form.type === "bugfix" ? "Buggy code" : "Starter code"}
-            value={form.starterCode}
-            onChange={(e) => setForm({ ...form, starterCode: e.target.value })}
-          />
-        )}
-
-        {form.type === "quiz" &&
-          form.options.map((opt, i) => (
-            <div key={i} className="flex gap-3 items-center">
-              <input
-                className="flex-1 p-2 border rounded-lg"
-                placeholder={`Option ${i + 1}`}
-                value={opt}
-                onChange={(e) => {
-                  const ops = [...form.options];
-                  ops[i] = e.target.value;
-                  setForm({ ...form, options: ops });
-                }}
-              />
-              <input
-                type="radio"
-                checked={form.correctOption === i}
-                onChange={() => setForm({ ...form, correctOption: i })}
-              />
+          <div className="relative flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
+            <div>
+              <p className="text-xs uppercase tracking-[0.6em] text-indigo-500">Task forge</p>
+              <h1 className="mt-3 flex items-center gap-3 text-4xl font-black text-slate-900">
+                <Code2 className="h-8 w-8 text-indigo-400" /> Topic Task Builder
+              </h1>
+              <p className="mt-2 max-w-2xl text-lg text-slate-600">
+                Draft cinematic coding prompts, rapid-fire quizzes, and bug-fix challenges - everything employees need to prove mastery.
+              </p>
             </div>
-          ))}
 
-        <button
-          onClick={submitTask}
-          className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-xl font-semibold transition"
-        >
-          {editingIndex !== null ? "Update Task" : "Add Task"}
-        </button>
-      </div>
-
-      {/* ================= TASK LIST ================= */}
-
-      <div className="space-y-6">
-
-        {tasks.map((task, i) => {
-          const testCases =
-            task.type === "coding"
-              ? task.content?.coding?.testCases
-              : task.type === "bugfix"
-              ? task.content?.bugfix?.testCases
-              : [];
-
-          return (
-            <div
-              key={i}
-              className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm space-y-4"
+            <button
+              onClick={() => navigate(`/trainer/modules/${moduleId}/edit`)}
+              className="inline-flex items-center gap-2 rounded-full border border-slate-300 bg-white px-5 py-2 font-semibold text-slate-700 shadow hover:border-slate-500"
             >
+              <ArrowLeft className="h-4 w-4" /> Back to topics
+            </button>
+          </div>
+        </div>
 
-              <div className="flex justify-between items-center">
-                <h3 className="font-semibold text-gray-900">
-                  {task.title}
-                  <span className="ml-2 text-xs px-2 py-1 bg-indigo-100 text-indigo-600 rounded-full">
-                    {task.type}
-                  </span>
-                </h3>
-
-                <div className="flex gap-3">
-                  <button
-                    onClick={() => startEdit(task, i)}
-                    className="text-yellow-600 text-sm font-medium"
-                  >
-                    Edit
-                  </button>
-                  <button
-                    onClick={() => deleteTask(i)}
-                    className="text-red-500 text-sm font-medium"
-                  >
-                    Delete
-                  </button>
-                </div>
+        <div className="grid gap-8 lg:grid-cols-[1.1fr_0.9fr]">
+          <div className="space-y-4 rounded-[28px] border border-indigo-100 bg-white p-8 shadow-sm">
+            <div className="flex items-center gap-3">
+              <span className="rounded-2xl bg-indigo-100 p-3 text-indigo-600">
+                <Blocks className="h-5 w-5" />
+              </span>
+              <div>
+                <p className="text-xs uppercase tracking-[0.4em] text-slate-500">New challenge</p>
+                <h2 className="text-2xl font-bold text-slate-900">Compose a task</h2>
               </div>
+            </div>
 
-              {(task.type === "coding" || task.type === "bugfix") && (
-                <div className="bg-gray-50 p-4 rounded-xl space-y-3">
+            <select
+              className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm text-slate-700 focus:border-indigo-400 focus:outline-none"
+              value={form.type}
+              onChange={(e) => setForm({ ...form, type: e.target.value })}
+            >
+              <option value="coding">Coding</option>
+              <option value="quiz">Quiz</option>
+              <option value="bugfix">Bug Fix</option>
+            </select>
 
-                  <div className="grid grid-cols-2 gap-3">
+            <input
+              className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm text-slate-700 placeholder:text-slate-400 focus:border-indigo-400 focus:outline-none"
+              placeholder="Task title"
+              value={form.title}
+              onChange={(e) => setForm({ ...form, title: e.target.value })}
+            />
+
+            <textarea
+              className="h-28 w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm text-slate-700 placeholder:text-slate-400 focus:border-indigo-400 focus:outline-none"
+              placeholder="Task description / hint"
+              value={form.description}
+              onChange={(e) => setForm({ ...form, description: e.target.value })}
+            />
+
+            {form.type !== "quiz" && (
+              <textarea
+                className="h-32 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 font-mono text-sm text-slate-700 placeholder:text-slate-400 focus:border-indigo-400 focus:outline-none"
+                placeholder={form.type === "bugfix" ? "Buggy code" : "Starter code"}
+                value={form.starterCode}
+                onChange={(e) => setForm({ ...form, starterCode: e.target.value })}
+              />
+            )}
+
+            {form.type === "quiz" && (
+              <div className="space-y-3">
+                {form.options.map((opt, i) => (
+                  <div key={i} className="flex items-center gap-3">
                     <input
-                      className="p-2 border rounded-lg text-sm"
-                      placeholder="Input"
-                      value={testCaseDrafts[i]?.input || ""}
-                      onChange={(e) =>
-                        setTestCaseDrafts(p => ({
-                          ...p,
-                          [i]: { ...p[i], input: e.target.value }
-                        }))
-                      }
+                      className="flex-1 rounded-2xl border border-slate-200 px-3 py-2 text-sm text-slate-700 placeholder:text-slate-400 focus:border-indigo-400 focus:outline-none"
+                      placeholder={`Option ${i + 1}`}
+                      value={opt}
+                      onChange={(e) => {
+                        const ops = [...form.options];
+                        ops[i] = e.target.value;
+                        setForm({ ...form, options: ops });
+                      }}
                     />
-
                     <input
-                      className="p-2 border rounded-lg text-sm"
-                      placeholder="Output"
-                      value={testCaseDrafts[i]?.output || ""}
-                      onChange={(e) =>
-                        setTestCaseDrafts(p => ({
-                          ...p,
-                          [i]: { ...p[i], output: e.target.value }
-                        }))
-                      }
+                      type="radio"
+                      checked={form.correctOption === i}
+                      onChange={() => setForm({ ...form, correctOption: i })}
                     />
                   </div>
+                ))}
+              </div>
+            )}
 
-                  <button
-                    onClick={() => addTestCase(i)}
-                    className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm"
-                  >
-                    Add Test Case
-                  </button>
+            <button
+              onClick={submitTask}
+              className="w-full rounded-2xl bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 px-4 py-3 text-sm font-semibold uppercase tracking-[0.3em] text-white shadow hover:opacity-90"
+            >
+              {editingIndex !== null ? "Update Task" : "Add Task"}
+            </button>
+          </div>
 
-                  {testCases?.length > 0 && (
-                    <div className="text-sm text-gray-600 space-y-1">
-                      {testCases.map((tc, idx) => (
-                        <p key={idx}>
-                          {tc.input} → {tc.output}
-                        </p>
-                      ))}
-                    </div>
-                  )}
+          <div className="rounded-[28px] border border-slate-200 bg-white/90 p-8 shadow-sm">
+            <p className="text-xs uppercase tracking-[0.4em] text-slate-500">Builder tips</p>
+            <ul className="mt-4 space-y-4 text-sm text-slate-600">
+              <li className="rounded-2xl border border-indigo-100 bg-indigo-50/70 p-4">Make coding prompts short but punchy. Provide a descriptive starter snippet.</li>
+              <li className="rounded-2xl border border-emerald-100 bg-emerald-50/70 p-4">For quizzes, keep answers unique and highlight a single correct option.</li>
+              <li className="rounded-2xl border border-rose-100 bg-rose-50/70 p-4">Bug fix tasks shine when you include a hint plus at least two test cases.</li>
+            </ul>
+          </div>
+        </div>
+
+        <div className="space-y-6">
+          {tasks.map((task, i) => {
+            const testCases =
+              task.type === "coding"
+                ? task.content?.coding?.testCases
+                : task.type === "bugfix"
+                ? task.content?.bugfix?.testCases
+                : [];
+
+            const typeColor =
+              task.type === "coding"
+                ? "bg-indigo-100 text-indigo-700"
+                : task.type === "quiz"
+                ? "bg-emerald-100 text-emerald-700"
+                : "bg-rose-100 text-rose-700";
+
+            return (
+              <div
+                key={i}
+                className="space-y-4 rounded-[28px] border border-slate-200 bg-white p-6 shadow-sm"
+              >
+                <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                  <div>
+                    <h3 className="text-2xl font-semibold text-slate-900">
+                      {task.title}
+                    </h3>
+                    <span
+                      className={`mt-1 inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold ${typeColor}`}
+                    >
+                      {task.type}
+                    </span>
+                  </div>
+
+                  <div className="flex flex-wrap gap-3 text-sm font-semibold">
+                    <button
+                      onClick={() => startEdit(task, i)}
+                      className="rounded-full border border-amber-200 px-4 py-2 text-amber-600"
+                    >
+                      Edit
+                    </button>
+                    <button
+                      onClick={() => deleteTask(i)}
+                      className="rounded-full border border-red-200 px-4 py-2 text-red-500 hover:bg-red-50"
+                    >
+                      Delete
+                    </button>
+                  </div>
                 </div>
-              )}
-            </div>
-          );
-        })}
 
+                {(task.type === "coding" || task.type === "bugfix") && (
+                  <div className="space-y-3 rounded-2xl border border-slate-100 bg-slate-50/80 p-4">
+                    <p className="text-xs uppercase tracking-[0.4em] text-slate-500">Test cases</p>
+                    <div className="grid gap-3 md:grid-cols-2">
+                      <input
+                        className="rounded-xl border border-slate-200 px-3 py-2 text-sm text-slate-700 placeholder:text-slate-400"
+                        placeholder="Input"
+                        value={testCaseDrafts[i]?.input || ""}
+                        onChange={(e) =>
+                          setTestCaseDrafts((prev) => ({
+                            ...prev,
+                            [i]: { ...prev[i], input: e.target.value }
+                          }))
+                        }
+                      />
+
+                      <input
+                        className="rounded-xl border border-slate-200 px-3 py-2 text-sm text-slate-700 placeholder:text-slate-400"
+                        placeholder="Output"
+                        value={testCaseDrafts[i]?.output || ""}
+                        onChange={(e) =>
+                          setTestCaseDrafts((prev) => ({
+                            ...prev,
+                            [i]: { ...prev[i], output: e.target.value }
+                          }))
+                        }
+                      />
+                    </div>
+
+                    <button
+                      onClick={() => addTestCase(i)}
+                      className="inline-flex items-center gap-2 rounded-xl bg-emerald-500 px-4 py-2 text-sm font-semibold text-white shadow hover:bg-emerald-600"
+                    >
+                      <ListChecks className="h-4 w-4" /> Add test case
+                    </button>
+
+                    {testCases?.length > 0 && (
+                      <div className="space-y-1 text-sm text-slate-600">
+                        {testCases.map((tc, idx) => (
+                          <p key={idx}>
+                            {tc.input} -> {tc.output}
+                          </p>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
       </div>
     </div>
   );

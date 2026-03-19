@@ -6,6 +6,12 @@ const AchievementSchema = new mongoose.Schema(
     description: { type: String },
     icon: { type: String, default: "🏆" },
 
+    slug: {
+      type: String,
+      unique: true,
+      sparse: true,
+    },
+
     type: {
       type: String,
       enum: ["MODULE_COMPLETE", "XP", "STREAK", "CUSTOM"],
@@ -19,10 +25,26 @@ const AchievementSchema = new mongoose.Schema(
 
     targetValue: Number, // XP / streak target
 
+    rewardXp: {
+      type: Number,
+      default: 0,
+    },
+
+    rarity: {
+      type: String,
+      enum: ["common", "rare", "epic", "legendary"],
+      default: "common",
+    },
+
+    theme: {
+      type: String,
+      default: "indigo",
+    },
+
     createdBy: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User", // trainer
-      required: true,
+      required: false,
     },
 
     isActive: { type: Boolean, default: true },
