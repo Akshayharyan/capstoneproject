@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, useLocation } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import BossIntro from "../../battle/BossIntro";
 import BattleArena from "../../battle/BattleArena";
 import { bossAbility } from "../../battle/BossAI";
+import CssDefenseArena from "../../battle/CssDefenseArena";
 
 const FALLBACK_CHALLENGE = {
   question: "What does async/await return?",
@@ -35,8 +36,12 @@ const randomChallengeFromPool = (pool = []) => {
 export default function BossBattleArena() {
 
   const navigate = useNavigate();
+  const location = useLocation();
   const { moduleId } = useParams();
   const { token, user } = useAuth();
+  const initialModuleTitle = location.state?.moduleTitle || "";
+  const [moduleTitle, setModuleTitle] = useState(initialModuleTitle);
+  const [moduleTitleResolved, setModuleTitleResolved] = useState(Boolean(initialModuleTitle));
   
   
 
@@ -89,6 +94,46 @@ export default function BossBattleArena() {
     setSelectedAnswer(null);
   }, [questions]);
 
+  const normalizedTitle = (moduleTitle || "").toLowerCase();
+  const isCssTowerDefense = moduleTitleResolved && normalizedTitle.includes("css");
+
+  useEffect(() => {
+    if ((moduleTitleResolved && moduleTitle) || !token) return;
+
+    let isMounted = true;
+
+    const fetchModuleTitle = async () => {
+      try {
+        const res = await fetch(
+          `http://localhost:5000/api/modules/${moduleId}/topics`,
+          {
+            headers: { Authorization: `Bearer ${token}` }
+          }
+        );
+
+        if (!res.ok) {
+          throw new Error("Failed to load module metadata");
+        }
+
+        const data = await res.json();
+        if (!isMounted) return;
+        setModuleTitle(data?.moduleTitle || "");
+      } catch (err) {
+        console.error("Failed to fetch module metadata", err);
+      } finally {
+        if (isMounted) {
+          setModuleTitleResolved(true);
+        }
+      }
+    };
+
+    fetchModuleTitle();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [moduleId, moduleTitle, moduleTitleResolved, token]);
+
   useEffect(() => {
     if (!token) {
       setQuestionLoading(false);
@@ -128,6 +173,12 @@ export default function BossBattleArena() {
 
   const [musicOn, setMusicOn] = useState(true);
   const audioRef = useRef(null);
+
+  useEffect(() => {
+    if (isCssTowerDefense) {
+      setMusicOn(false);
+    }
+  }, [isCssTowerDefense]);
 
   useEffect(() => {
 
@@ -225,6 +276,15 @@ export default function BossBattleArena() {
       }
     }
   }, [token, moduleId, certificate, certificateLoading]);
+
+  const handleTowerVictory = useCallback(() => {
+    if (victory) return;
+    ensureCertificate();
+    setBossDefeating(true);
+    setTimeout(() => {
+      setVictory(true);
+    }, 1200);
+  }, [ensureCertificate, victory]);
 
   useEffect(() => {
     if (!victory) return;
@@ -436,6 +496,25 @@ export default function BossBattleArena() {
     }
   };
 
+  if (!moduleTitleResolved && !victory && !defeat) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-[#020617] text-slate-200">
+        <div className="h-14 w-14 border-4 border-indigo-200 border-t-transparent rounded-full animate-spin mb-6" />
+        <p className="text-sm tracking-[0.3em] uppercase text-indigo-200/80">Calibrating boss arena...</p>
+      </div>
+    );
+  }
+
+  if (isCssTowerDefense && !victory && !defeat) {
+    return (
+      <CssDefenseArena
+        moduleTitle={moduleTitle || "CSS Module"}
+        onVictory={handleTowerVictory}
+        onExit={() => navigate(`/modules/${moduleId}/topics`)}
+      />
+    );
+  }
+
   /* ================= DEFEAT SCREEN ================= */
 
   if (defeat) {
@@ -477,7 +556,7 @@ export default function BossBattleArena() {
 
   if (victory) {
     const previewName = user?.name || "Valiant Employee";
-    const previewModule = certificate?.moduleTitle || boss.name;
+    const previewModule = certificate?.moduleTitle || moduleTitle || boss.name;
     const previewDate = certificate?.issuedAt || new Date().toISOString();
     const previewXp = certificate?.earnedXp ?? boss.maxHp;
     const previewId = certificate?.certificateId || "CERT-PENDING";

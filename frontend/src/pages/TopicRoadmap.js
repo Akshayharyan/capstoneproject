@@ -280,7 +280,7 @@ className="min-h-screen bg-gradient-to-b from-white via-indigo-50 to-purple-50 p
 
         <button
           disabled={!bossUnlocked}
-          onClick={() => navigate(`/employee/boss/${moduleId}`)}
+          onClick={() => navigate(`/employee/boss/${moduleId}`, { state: { moduleTitle } })}
           className={`px-6 py-3 rounded-xl font-bold shadow-lg
             ${
               bossUnlocked
