@@ -84,39 +84,42 @@ function Dashboard() {
   const calculateStreakFromActivity = (activityList) => {
     if (!Array.isArray(activityList) || activityList.length === 0) return 0;
 
-    // Extract dates safely
-    const dates = activityList
-      .map((a) => a.date || a.createdAt || a.updatedAt)
-      .filter(Boolean)
-      .map((d) => new Date(d))
-      .filter((d) => !isNaN(d.getTime()))
-      .sort((a, b) => b - a); // latest first
+    const MS_PER_DAY = 24 * 60 * 60 * 1000;
 
-    if (dates.length === 0) return 0;
-
-    // Normalize date to yyyy-mm-dd
-    const normalize = (dt) => {
-      const y = dt.getFullYear();
-      const m = String(dt.getMonth() + 1).padStart(2, "0");
-      const day = String(dt.getDate()).padStart(2, "0");
-      return `${y}-${m}-${day}`;
+    const normalizeDayValue = (input) => {
+      const date = new Date(input);
+      if (Number.isNaN(date.getTime())) return null;
+      date.setUTCHours(0, 0, 0, 0);
+      return date.getTime();
     };
 
-    const uniqueDays = [...new Set(dates.map(normalize))];
+    const activeDayValues = Array.from(
+      new Set(
+        activityList
+          .map((a) => a.date || a.createdAt || a.updatedAt)
+          .map((value) => normalizeDayValue(value))
+          .filter((value) => typeof value === "number")
+      )
+    ).sort((a, b) => b - a);
 
-    // streak counting
-    let streakCount = 1;
-    for (let i = 1; i < uniqueDays.length; i++) {
-      const prev = new Date(uniqueDays[i - 1]);
-      const curr = new Date(uniqueDays[i]);
+    if (activeDayValues.length === 0) return 0;
 
-      const diffDays = Math.round((prev - curr) / (1000 * 60 * 60 * 24));
+    const todayValue = normalizeDayValue(new Date());
+    if (typeof todayValue !== "number") return 0;
 
-      if (diffDays === 1) streakCount++;
-      else break;
+    const daysSinceLast = Math.round((todayValue - activeDayValues[0]) / MS_PER_DAY);
+    if (daysSinceLast > 1) return 0;
+
+    let streak = 1;
+
+    for (let i = 1; i < activeDayValues.length; i++) {
+      const diff = Math.round((activeDayValues[i - 1] - activeDayValues[i]) / MS_PER_DAY);
+
+      if (diff === 1) streak++;
+      else if (diff > 1) break;
     }
 
-    return streakCount;
+    return streak;
   };
 
   const learningStreak =

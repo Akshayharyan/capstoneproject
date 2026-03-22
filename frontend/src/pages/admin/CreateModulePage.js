@@ -1,167 +1,189 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { useAuth } from "../../context/AuthContext";
+import { Layers, Target, Users as UsersIcon } from "lucide-react";
 
 function CreateModulePage() {
   const { token } = useAuth();
 
   const [form, setForm] = useState({
     title: "",
-    description: ""
+    description: "",
   });
+  const [creating, setCreating] = useState(false);
 
   const [stats, setStats] = useState({
     modules: 0,
-    users: 0,
-    completion: 0
+    learners: 0,
+    completion: 0,
   });
 
-  // ============================
-  // FETCH REAL STATS (FIXED)
-  // ============================
   const fetchStats = useCallback(async () => {
+    if (!token) return;
     try {
-      // MODULE COUNT
-      const modRes = await fetch("http://localhost:5000/api/modules", {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      const modData = await modRes.json();
-      const moduleCount = modData.modules?.length || 0;
+      const [analyticsRes, monitoringRes] = await Promise.all([
+        fetch("http://localhost:5000/api/admin/analytics", {
+          headers: { Authorization: `Bearer ${token}` },
+        }),
+        fetch("http://localhost:5000/api/admin/employee-monitoring", {
+          headers: { Authorization: `Bearer ${token}` },
+        }),
+      ]);
 
-      // USERS COUNT (SAFE)
-      let usersCount = 0;
-      try {
-        const userRes = await fetch("http://localhost:5000/api/users", {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        const userData = await userRes.json();
-        usersCount = userData.users?.length || userData.length || 0;
-      } catch {
-        usersCount = 0;
+      const analyticsData = await analyticsRes.json();
+      const monitoringData = await monitoringRes.json();
+
+      if (!analyticsRes.ok) {
+        throw new Error(analyticsData.message || "Failed to load analytics");
       }
 
-      // COMPLETION (TEMP LOGIC)
-      const completionRate =
-        moduleCount > 0 ? 70 + Math.floor(Math.random() * 20) : 0;
+      if (!monitoringRes.ok) {
+        throw new Error(monitoringData.message || "Failed to load monitoring");
+      }
+
+      const employees = Array.isArray(monitoringData.employees)
+        ? monitoringData.employees
+        : [];
+      const avgCompletion =
+        employees.length === 0
+          ? 0
+          : Math.round(
+              employees.reduce(
+                (sum, emp) => sum + (emp.progressPercent || 0),
+                0
+              ) / employees.length
+            );
 
       setStats({
-        modules: moduleCount,
-        users: usersCount,
-        completion: completionRate
+        modules: analyticsData.totalModules ?? 0,
+        learners: analyticsData.totalEmployees ?? employees.length,
+        completion: avgCompletion,
       });
     } catch (err) {
       console.error("Stats fetch failed:", err);
     }
   }, [token]);
 
-  // ============================
-  // LOAD STATS ON PAGE LOAD
-  // ============================
   useEffect(() => {
     fetchStats();
   }, [fetchStats]);
 
-  // ============================
-  // CREATE MODULE
-  // ============================
   const handleCreate = async () => {
-    if (!form.title) return alert("Module title is required");
+    if (!form.title.trim()) {
+      alert("Module title is required");
+      return;
+    }
 
-    await fetch("http://localhost:5000/api/modules/create", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`
-      },
-      body: JSON.stringify(form)
-    });
+    setCreating(true);
+    try {
+      const res = await fetch("http://localhost:5000/api/modules/create", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(form),
+      });
 
-    alert("Module Created 🎉");
-    setForm({ title: "", description: "" });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || "Module creation failed");
 
-    fetchStats(); // refresh stats
+      alert("Module Created 🎉");
+      setForm({ title: "", description: "" });
+      fetchStats();
+    } catch (err) {
+      console.error("Create module error:", err);
+      alert(err.message || "Unable to create module");
+    } finally {
+      setCreating(false);
+    }
   };
 
   return (
-    <div className="flex flex-col items-center mt-16 px-4">
+    <div className="mx-auto flex max-w-6xl flex-col gap-8 lg:flex-row">
+      <div className="flex-1 rounded-3xl border border-slate-100 bg-white p-8 shadow-xl">
+        <p className="text-xs uppercase tracking-[0.35em] text-indigo-400">
+          Module builder
+        </p>
+        <h2 className="mt-2 text-4xl font-semibold text-slate-900">
+          Launch a new learning adventure
+        </h2>
+        <p className="mt-2 text-slate-500">
+          Define the headline and context for the module. Add quests and bosses from
+          the module detail view after creation.
+        </p>
 
-      {/* CREATE MODULE CARD */}
-      <div className="w-full max-w-lg bg-white rounded-2xl shadow-xl border border-gray-200">
-
-        <div className="px-8 pt-8">
-          <h2 className="text-4xl font-bold text-purple-600 mb-2">
-            Create New Module
-          </h2>
-          <p className="text-gray-500 mb-8">
-            Design engaging learning experiences for employees
-          </p>
-        </div>
-
-        <div className="px-8 pb-8 space-y-6">
-
+        <div className="mt-8 space-y-6">
           <div>
-            <label className="text-sm font-medium text-gray-600 block mb-2">
+            <label className="text-sm font-semibold text-slate-600">
               Module Title
             </label>
             <input
-              className="w-full p-4 rounded-xl border border-gray-300
-              focus:ring-2 focus:ring-purple-400 focus:border-purple-400 outline-none"
-              placeholder="e.g. Java Fundamentals"
+              className="mt-2 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-slate-900 focus:border-indigo-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-50"
+              placeholder="e.g. Async JavaScript Boss Battles"
               value={form.title}
-              onChange={(e) =>
-                setForm({ ...form, title: e.target.value })
-              }
+              onChange={(e) => setForm({ ...form, title: e.target.value })}
             />
           </div>
 
           <div>
-            <label className="text-sm font-medium text-gray-600 block mb-2">
+            <label className="text-sm font-semibold text-slate-600">
               Description
             </label>
             <textarea
-              className="w-full p-4 rounded-xl border border-gray-300 resize-none
-              focus:ring-2 focus:ring-purple-400 focus:border-purple-400 outline-none"
-              placeholder="Short module overview"
-              rows="4"
+              className="mt-2 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-slate-900 focus:border-indigo-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-50"
+              placeholder="What skills will learners unlock?"
+              rows="5"
               value={form.description}
-              onChange={(e) =>
-                setForm({ ...form, description: e.target.value })
-              }
+              onChange={(e) => setForm({ ...form, description: e.target.value })}
             />
           </div>
 
           <button
             onClick={handleCreate}
-            className="w-full py-4 rounded-xl font-semibold text-white text-lg
-            bg-gradient-to-r from-purple-500 to-pink-500 hover:opacity-95 transition shadow-md"
+            disabled={creating}
+            className="w-full rounded-2xl bg-gradient-to-r from-indigo-500 to-purple-500 py-4 text-lg font-semibold text-white shadow-lg shadow-indigo-200/80 transition hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-50"
           >
-            🚀 Create Module
+            {creating ? "Creating…" : "Create Module"}
           </button>
-
         </div>
       </div>
 
-      {/* STATS */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mt-10 max-w-lg w-full">
-
-        <StatCard icon="📚" value={stats.modules} label="Total Modules" />
-        <StatCard icon="⭐" value={stats.users} label="Active Learners" />
-        <StatCard icon="⚡" value={`${stats.completion}%`} label="Avg Completion" />
-
-      </div>
+      <aside className="flex w-full flex-col gap-4 rounded-3xl border border-slate-100 bg-gradient-to-b from-white to-slate-50 p-6 shadow-lg lg:w-80">
+        <h3 className="text-sm font-semibold uppercase tracking-[0.35em] text-slate-400">
+          Live insights
+        </h3>
+        <InsightCard
+          icon={<Layers className="h-5 w-5" />}
+          label="Published Modules"
+          value={stats.modules}
+          helper="Ready for assignment"
+        />
+        <InsightCard
+          icon={<UsersIcon className="h-5 w-5" />}
+          label="Learners"
+          value={stats.learners}
+          helper="Employees enrolled"
+        />
+        <InsightCard
+          icon={<Target className="h-5 w-5" />}
+          label="Average Completion"
+          value={`${stats.completion}%`}
+          helper="Based on monitoring feed"
+        />
+      </aside>
     </div>
   );
 }
 
-function StatCard({ icon, value, label }) {
+function InsightCard({ icon, label, value, helper }) {
   return (
-    <div className="bg-white rounded-xl shadow-md border border-gray-200 p-5 flex items-center gap-4">
-      <div className="w-10 h-10 rounded-lg bg-purple-100 flex items-center justify-center text-purple-600 text-lg">
-        {icon}
+    <div className="rounded-2xl border border-slate-100 bg-white p-4 shadow-sm">
+      <div className="flex items-center justify-between">
+        <p className="text-xs uppercase tracking-[0.4em] text-slate-400">{label}</p>
+        <span className="rounded-2xl bg-indigo-50 p-2 text-indigo-500">{icon}</span>
       </div>
-      <div>
-        <p className="text-2xl font-bold">{value}</p>
-        <p className="text-sm text-gray-500">{label}</p>
-      </div>
+      <p className="mt-3 text-3xl font-semibold text-slate-900">{value}</p>
+      <p className="text-sm text-slate-500">{helper}</p>
     </div>
   );
 }

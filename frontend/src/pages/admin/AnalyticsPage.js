@@ -12,7 +12,7 @@ import {
   Cell,
 } from "recharts";
 
-const COLORS = ["#7c3aed", "#22c55e", "#3b82f6", "#ef4444"];
+const COLORS = ["#6366f1", "#22c55e", "#0ea5e9", "#f97316"];
 
 function AnalyticsPage() {
   const { token } = useAuth();
@@ -20,6 +20,7 @@ function AnalyticsPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    if (!token) return;
     fetch("http://localhost:5000/api/admin/analytics", {
       headers: { Authorization: `Bearer ${token}` },
     })
@@ -27,11 +28,19 @@ function AnalyticsPage() {
       .then((data) => {
         setStats(data);
         setLoading(false);
+      })
+      .catch((err) => {
+        console.error("Analytics fetch failed:", err);
+        setLoading(false);
       });
   }, [token]);
 
-  if (loading) {
-    return <p className="text-lg">Loading analytics…</p>;
+  if (loading || !stats) {
+    return (
+      <div className="rounded-3xl border border-slate-100 bg-white p-8 text-sm text-slate-500 shadow-sm">
+        Loading analytics…
+      </div>
+    );
   }
 
   const roleData = [
@@ -46,50 +55,55 @@ function AnalyticsPage() {
   ];
 
   return (
-    <div>
-      <h1 className="text-3xl font-bold text-purple-700 mb-8">
-        📊 Platform Analytics
-      </h1>
+    <div className="space-y-8">
+      <section className="rounded-3xl border border-slate-100 bg-gradient-to-r from-white via-slate-50 to-indigo-50 p-6 shadow-sm">
+        <p className="text-xs uppercase tracking-[0.35em] text-slate-400">Analytics</p>
+        <div className="mt-3 flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
+          <div>
+            <h1 className="text-4xl font-bold text-slate-900">Platform Intelligence</h1>
+            <p className="mt-2 text-slate-500">
+              Live counts from your production database: users, modules, and assignments.
+            </p>
+          </div>
+          <div className="rounded-2xl border border-slate-200 bg-white px-6 py-4 text-right">
+            <p className="text-xs uppercase tracking-[0.4em] text-slate-400">Total Users</p>
+            <p className="text-3xl font-semibold text-slate-900">{stats.totalUsers}</p>
+            <p className="text-sm text-slate-500">Across all roles</p>
+          </div>
+        </div>
+      </section>
 
-      {/* STAT CARDS */}
-      <div className="grid grid-cols-4 gap-6 mb-10">
-        <StatCard title="Total Users" value={stats.totalUsers} />
-        <StatCard title="Trainers" value={stats.totalTrainers} />
-        <StatCard title="Employees" value={stats.totalEmployees} />
-        <StatCard title="Modules" value={stats.totalModules} />
+      <div className="grid gap-4 md:grid-cols-4">
+        <StatCard title="Admins" value={stats.totalAdmins} helper="Program owners" />
+        <StatCard title="Trainers" value={stats.totalTrainers} helper="Mentors active" />
+        <StatCard title="Employees" value={stats.totalEmployees} helper="Learners onboard" />
+        <StatCard title="Modules" value={stats.totalModules} helper="Published experiences" />
       </div>
 
-      {/* CHARTS */}
-      <div className="grid grid-cols-2 gap-8">
-        {/* BAR CHART */}
-        <div className="bg-white p-6 rounded-xl shadow">
-          <h2 className="text-lg font-bold mb-4 text-gray-700">
-            Modules vs Assignments
-          </h2>
-
-          <ResponsiveContainer width="100%" height={250}>
+      <div className="grid gap-8 lg:grid-cols-2">
+        <div className="rounded-3xl border border-slate-100 bg-white p-6 shadow-sm">
+          <h2 className="text-lg font-semibold text-slate-900">Modules vs Assignments</h2>
+          <p className="text-sm text-slate-500">How many programs are currently staffed.</p>
+          <ResponsiveContainer width="100%" height={280}>
             <BarChart data={moduleData}>
-              <XAxis dataKey="name" />
-              <YAxis />
-              <Tooltip />
-              <Bar dataKey="value" fill="#7c3aed" radius={[6, 6, 0, 0]} />
+              <XAxis dataKey="name" tick={{ fill: "#94a3b8" }} />
+              <YAxis tick={{ fill: "#94a3b8" }} />
+              <Tooltip cursor={{ fill: "rgba(99,102,241,0.08)" }} />
+              <Bar dataKey="value" fill="#6366f1" radius={[10, 10, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </div>
 
-        {/* PIE CHART */}
-        <div className="bg-white p-6 rounded-xl shadow">
-          <h2 className="text-lg font-bold mb-4 text-gray-700">
-            User Role Distribution
-          </h2>
-
-          <ResponsiveContainer width="100%" height={250}>
+        <div className="rounded-3xl border border-slate-100 bg-white p-6 shadow-sm">
+          <h2 className="text-lg font-semibold text-slate-900">User Role Distribution</h2>
+          <p className="text-sm text-slate-500">Visualize how talent is spread across roles.</p>
+          <ResponsiveContainer width="100%" height={280}>
             <PieChart>
               <Pie
                 data={roleData}
                 dataKey="value"
                 nameKey="name"
-                outerRadius={90}
+                outerRadius={100}
                 label
               >
                 {roleData.map((_, index) => (
@@ -105,10 +119,11 @@ function AnalyticsPage() {
   );
 }
 
-const StatCard = ({ title, value }) => (
-  <div className="bg-white border border-purple-200 p-6 rounded-xl shadow text-center">
-    <h2 className="text-sm font-semibold text-gray-500">{title}</h2>
-    <p className="text-3xl font-bold text-purple-700 mt-2">{value}</p>
+const StatCard = ({ title, value, helper }) => (
+  <div className="rounded-2xl border border-slate-100 bg-white p-5 text-left shadow-sm">
+    <p className="text-xs uppercase tracking-[0.4em] text-slate-400">{title}</p>
+    <p className="mt-3 text-3xl font-semibold text-slate-900">{value}</p>
+    <p className="text-sm text-slate-500">{helper}</p>
   </div>
 );
 

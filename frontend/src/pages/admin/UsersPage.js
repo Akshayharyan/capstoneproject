@@ -1,86 +1,131 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
+import { Users as UsersIcon, UserPlus, UserCheck, Search } from "lucide-react";
+import { useAuth } from "../../context/AuthContext";
 
 export default function UsersPage() {
+  const { token } = useAuth();
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
 
   useEffect(() => {
-    const fetchUsers = async () => {
-      const token = localStorage.getItem("token");
-      const res = await fetch("http://localhost:5000/api/admin/users", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      const data = await res.json();
-      setUsers(Array.isArray(data) ? data : data.users || []);
-      setLoading(false);
-    };
-    fetchUsers();
-  }, []);
+    let active = true;
 
-  if (loading) return <p className="text-lg">Loading users…</p>;
+    const fetchUsers = async () => {
+      if (!token) return;
+      setLoading(true);
+      try {
+        const res = await fetch("http://localhost:5000/api/admin/users", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const data = await res.json();
+        if (!active) return;
+        setUsers(Array.isArray(data) ? data : data.users || []);
+      } catch (err) {
+        console.error("Users fetch failed:", err);
+      } finally {
+        if (active) setLoading(false);
+      }
+    };
+
+    fetchUsers();
+
+    return () => {
+      active = false;
+    };
+  }, [token]);
 
   const filtered = users.filter(
-    u =>
+    (u) =>
       u.name.toLowerCase().includes(search.toLowerCase()) ||
       u.email.toLowerCase().includes(search.toLowerCase())
   );
 
-  const totalUsers = users.length;
-  const trainers = users.filter(u => u.role === "trainer").length;
-  const active = users.filter(u => u.status !== "inactive").length;
+  const totals = useMemo(() => {
+    const totalUsers = users.length;
+    const trainers = users.filter((u) => u.role === "trainer").length;
+    const admins = users.filter((u) => u.role === "admin").length;
+    const employees = totalUsers - trainers - admins;
+    return { totalUsers, trainers, admins, employees };
+  }, [users]);
+
+  if (loading) return <p className="text-lg">Loading users…</p>;
 
   return (
     <div className="space-y-8">
 
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+      <div className="flex flex-col gap-6 rounded-2xl border border-slate-100 bg-gradient-to-r from-white to-slate-50 p-6 shadow-sm md:flex-row md:items-center md:justify-between">
         <div>
-          <h1 className="text-4xl font-bold text-gray-900">User Management</h1>
-          <p className="text-gray-500">Manage employees and trainers</p>
+          <p className="text-xs uppercase tracking-[0.35em] text-slate-400">
+            Directory
+          </p>
+          <h1 className="mt-2 text-4xl font-bold text-slate-900">User Management</h1>
+          <p className="text-slate-500">Search, filter, and orchestrate permissions.</p>
         </div>
 
-        <div className="flex gap-3">
-          <input
-            placeholder="Search users..."
-            className="px-4 py-2 border rounded-xl focus:ring-2 focus:ring-purple-400 outline-none"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
-          <button className="bg-teal-500 hover:bg-teal-600 text-white px-5 py-2 rounded-xl shadow">
-            Add User
+        <div className="flex flex-col gap-3 sm:flex-row">
+          <div className="relative flex-1">
+            <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+            <input
+              placeholder="Search users..."
+              className="w-full rounded-2xl border border-slate-200 bg-white py-2 pl-11 pr-4 text-sm text-slate-700 focus:border-indigo-400 focus:outline-none focus:ring-2 focus:ring-indigo-100"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
+          </div>
+          <button className="inline-flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-indigo-500 to-purple-500 px-5 py-2 text-sm font-semibold text-white shadow-md shadow-indigo-200 transition hover:-translate-y-0.5">
+            <UserPlus className="h-4 w-4" /> Add User
           </button>
         </div>
       </div>
 
       {/* Stats */}
-      <div className="grid sm:grid-cols-3 gap-6">
-        <StatCard label="Total Users" value={totalUsers} color="teal" />
-        <StatCard label="Trainers" value={trainers} color="orange" />
-        <StatCard label="Active" value={active} color="green" />
+      <div className="grid gap-4 sm:grid-cols-3">
+        <StatCard
+          label="Total Users"
+          value={totals.totalUsers}
+          icon={<UsersIcon className="h-4 w-4" />}
+          subtitle={`${totals.admins} admins · ${totals.trainers} trainers`}
+        />
+        <StatCard
+          label="Dedicated Trainers"
+          value={totals.trainers}
+          icon={<UserCheck className="h-4 w-4" />}
+          subtitle={`${totals.employees} employees partnered`}
+        />
+        <StatCard
+          label="Administrators"
+          value={totals.admins}
+          icon={<UsersIcon className="h-4 w-4" />}
+          subtitle="Full access custodians"
+        />
       </div>
 
       {/* Table */}
-      <div className="bg-white rounded-2xl shadow-lg border overflow-hidden">
-
+      <div className="overflow-hidden rounded-3xl border border-slate-100 bg-white shadow-xl">
         <table className="w-full text-left">
-          <thead className="bg-gray-100 text-gray-600">
+          <thead className="bg-slate-50 text-slate-500">
             <tr>
-              <th className="px-6 py-4">User</th>
-              <th className="px-6 py-4">Role</th>
-              <th className="px-6 py-4">Email</th>
+              <th className="px-6 py-4 text-xs font-semibold uppercase tracking-widest">User</th>
+              <th className="px-6 py-4 text-xs font-semibold uppercase tracking-widest">Role</th>
+              <th className="px-6 py-4 text-xs font-semibold uppercase tracking-widest">Email</th>
             </tr>
           </thead>
 
           <tbody>
             {filtered.map((u) => (
-              <tr key={u._id} className="border-t hover:bg-gray-50 transition">
-
-                <td className="px-6 py-4 flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-purple-100 text-purple-700 flex items-center justify-center font-bold">
-                    {u.name?.[0]}
+              <tr key={u._id} className="border-t border-slate-100 bg-white/80 hover:bg-slate-50">
+                <td className="px-6 py-4">
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-indigo-100 text-sm font-bold text-indigo-600">
+                      {u.name?.[0]}
+                    </div>
+                    <div>
+                      <p className="font-semibold text-slate-900">{u.name}</p>
+                      <p className="text-sm text-slate-500">{u.email}</p>
+                    </div>
                   </div>
-                  <span className="font-medium">{u.name}</span>
                 </td>
 
                 <td className="px-6 py-4">
@@ -97,33 +142,26 @@ export default function UsersPage() {
                   </span>
                 </td>
 
-                <td className="px-6 py-4 text-gray-600">{u.email}</td>
-
+                <td className="px-6 py-4 text-slate-600">{u.email}</td>
               </tr>
             ))}
           </tbody>
         </table>
-
       </div>
     </div>
   );
 }
 
-function StatCard({ label, value, color }) {
-  const styles = {
-    teal: "bg-teal-100 text-teal-700",
-    orange: "bg-orange-100 text-orange-700",
-    green: "bg-green-100 text-green-700",
-  };
-
+function StatCard({ label, value, icon, subtitle }) {
   return (
-    <div className="bg-white rounded-xl shadow-md border p-5 flex justify-between items-center">
+    <div className="flex items-center justify-between rounded-2xl border border-slate-100 bg-white p-5 shadow-sm">
       <div>
-        <p className="text-sm text-gray-500">{label}</p>
-        <p className="text-3xl font-bold">{value}</p>
+        <p className="text-xs uppercase tracking-[0.35em] text-slate-400">{label}</p>
+        <p className="mt-2 text-3xl font-semibold text-slate-900">{value}</p>
+        <p className="text-sm text-slate-500">{subtitle}</p>
       </div>
-      <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${styles[color]}`}>
-        👤
+      <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-indigo-50 text-indigo-600">
+        {icon}
       </div>
     </div>
   );

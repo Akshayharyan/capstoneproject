@@ -7,22 +7,42 @@ const computeNextLevelXP = (level) => level * (level + 1) * 50;
 
 // 🔥 LeetCode-style learning streak
 const calculateLearningStreak = (activities) => {
-  if (!activities || activities.length === 0) return 0;
+  if (!Array.isArray(activities) || activities.length === 0) return 0;
 
-  const activeDays = new Set(
-    activities.map((a) => new Date(a.createdAt).toISOString().split("T")[0])
-  );
+  const normalizeDayValue = (input) => {
+    const date = new Date(input);
+    if (Number.isNaN(date.getTime())) return null;
+    date.setUTCHours(0, 0, 0, 0);
+    return date.getTime();
+  };
 
-  let streak = 0;
-  const today = new Date();
+  const MS_PER_DAY = 24 * 60 * 60 * 1000;
 
-  for (let i = 0; i < 365; i++) {
-    const day = new Date(today);
-    day.setDate(today.getDate() - i);
-    const dayStr = day.toISOString().split("T")[0];
+  const activeDayValues = Array.from(
+    new Set(
+      activities
+        .map((a) => normalizeDayValue(a.createdAt || a.updatedAt || a.date))
+        .filter((value) => typeof value === "number")
+    )
+  ).sort((a, b) => b - a);
 
-    if (activeDays.has(dayStr)) streak++;
-    else break;
+  if (activeDayValues.length === 0) return 0;
+
+  const todayValue = normalizeDayValue(new Date());
+  if (typeof todayValue !== "number") return 0;
+
+  const daysSinceLast = Math.round((todayValue - activeDayValues[0]) / MS_PER_DAY);
+  if (daysSinceLast > 1) return 0;
+
+  let streak = 1;
+
+  for (let i = 1; i < activeDayValues.length; i++) {
+    const diff = Math.round(
+      (activeDayValues[i - 1] - activeDayValues[i]) / MS_PER_DAY
+    );
+
+    if (diff === 1) streak++;
+    else if (diff > 1) break;
   }
 
   return streak;
