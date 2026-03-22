@@ -13,6 +13,20 @@ const formatDate = (date) =>
     day: "numeric"
   }).format(date);
 
+const formatShortDate = (date) =>
+  new Intl.DateTimeFormat("en", {
+    year: "numeric",
+    month: "short",
+    day: "2-digit"
+  }).format(date);
+
+const formatCompactDate = (date) =>
+  new Intl.DateTimeFormat("en-GB", {
+    year: "numeric",
+    month: "short",
+    day: "2-digit"
+  }).format(date);
+
 const buildCertificateId = () => `SQ-${uuidv4().split("-")[0].toUpperCase()}-${Date.now().toString().slice(-4)}`;
 
 const getTotalModuleXp = (moduleDoc) =>
@@ -141,7 +155,8 @@ async function streamCertificatePdf({ certificate, user, module }, res) {
   doc.moveTo(70, 90).lineTo(pageWidth - 70, 90).lineWidth(10).stroke("#0f172a");
   doc.moveTo(160, 90).lineTo(240, 90).lineWidth(6).stroke("#fbbf24");
   doc.moveTo(pageWidth - 160, 90).lineTo(pageWidth - 240, 90).lineWidth(6).stroke("#fbbf24");
-  doc.moveTo(70, pageHeight - 80).lineTo(pageWidth - 70, pageHeight - 80).lineWidth(10).stroke("#0f172a");
+  const footerAccentY = pageHeight - 52;
+  doc.moveTo(70, footerAccentY).lineTo(pageWidth - 70, footerAccentY).lineWidth(8).stroke("#0f172a");
 
   // Watermark
   doc.save();
@@ -216,7 +231,7 @@ async function streamCertificatePdf({ certificate, user, module }, res) {
   const statusY = 430;
   const statusBoxes = [
     { label: "Certificate", value: "Verified" },
-    { label: "Track", value: "Employee Training" },
+    { label: "Track", value: "Training" },
     { label: "Status", value: "Completed" }
   ];
   const cardWidth = 165;
@@ -249,11 +264,10 @@ async function streamCertificatePdf({ certificate, user, module }, res) {
   const infoPanelWidth = headerWidth - qrCardWidth - qrCardGap - 60;
   const infoPanelX = textStart + 30;
   const infoPanelY = statusY + 115;
-  const infoPanelHeight = 150;
+  const infoPanelHeight = 138;
   const qrCardX = infoPanelX + infoPanelWidth + qrCardGap;
   const qrCardY = infoPanelY;
   const qrCardHeight = infoPanelHeight;
-  const infoPanelBottom = infoPanelY + infoPanelHeight;
 
   const infoGradient = doc.linearGradient(infoPanelX, infoPanelY, infoPanelX, infoPanelY + infoPanelHeight);
   infoGradient.stop(0, "#ffffff").stop(1, "#eef2ff");
@@ -272,16 +286,16 @@ async function streamCertificatePdf({ certificate, user, module }, res) {
       .fillColor("#6b7280")
       .text(label.toUpperCase(), columnX, columnY);
     doc.font("Helvetica-Bold")
-      .fontSize(16.5)
+      .fontSize(14)
       .fillColor("#0f172a")
       .text(value, columnX, columnY + 16, {
-        width: columnWidth - 20,
+        width: columnWidth - 8,
         lineGap: 1
       });
   };
 
   drawColumn("XP Earned", `${certificate.earnedXp} XP`, 0);
-  drawColumn("Issued On", formatDate(certificate.issuedAt), 1);
+  drawColumn("Issued On", formatCompactDate(certificate.issuedAt), 1);
 
   doc.moveTo(infoPanelX + 32, columnY + 60)
     .lineTo(infoPanelX + infoPanelWidth - 32, columnY + 60)
@@ -299,19 +313,6 @@ async function streamCertificatePdf({ certificate, user, module }, res) {
       width: infoPanelWidth - 110
     });
 
-  doc.font("Helvetica")
-    .fontSize(9.5)
-    .fillColor("#6b7280")
-    .text("Authorized Training Team", infoPanelX + 40, columnY + 110, {
-      width: infoPanelWidth - 80
-    });
-  doc.font("Times-Bold")
-    .fontSize(13)
-    .fillColor("#0f172a")
-    .text("SkillQuest Academy", infoPanelX + 40, columnY + 126, {
-      width: infoPanelWidth - 80
-    });
-
   doc.roundedRect(qrCardX, qrCardY, qrCardWidth, qrCardHeight, 22)
     .fillAndStroke("#ffffff", "#cdd5fa");
   doc.font("Helvetica")
@@ -322,69 +323,6 @@ async function streamCertificatePdf({ certificate, user, module }, res) {
     .fontSize(9)
     .fillColor("#64748b")
     .text("Scan QR to confirm", qrCardX + 24, qrCardY + 32);
-
-  const signatureY = Math.max(pageHeight - 210, infoPanelBottom + 60);
-  doc.moveTo(inset + 80, signatureY)
-    .lineTo(inset + 320, signatureY)
-    .lineWidth(3)
-    .stroke("#fbbf24");
-
-  doc.font("Times-Bold")
-    .fontSize(16)
-    .fillColor("#0f172a")
-    .text("SkillQuest Academy", inset + 60, signatureY + 10, {
-      width: 300,
-      align: "center"
-    });
-  doc.font("Helvetica")
-    .fontSize(11)
-    .fillColor("#475569")
-    .text("Authorized Training Team", inset + 60, signatureY + 30, {
-      width: 300,
-      align: "center"
-    });
-
-  // Premium seal near signature
-  const sealCenterX = inset + 190;
-  const sealCenterY = signatureY - 35;
-  doc.save();
-  doc.circle(sealCenterX, sealCenterY, 38)
-    .lineWidth(5)
-    .stroke("#fbbf24");
-  doc.circle(sealCenterX, sealCenterY, 30)
-    .lineWidth(2)
-    .stroke("#fde68a");
-  const sealGradient = doc.linearGradient(sealCenterX - 26, sealCenterY - 26, sealCenterX + 26, sealCenterY + 26);
-  sealGradient.stop(0, "#fff7d0").stop(1, "#fcd34d");
-  doc.circle(sealCenterX, sealCenterY, 22).fill(sealGradient);
-  doc.font("Helvetica-Bold")
-    .fontSize(9)
-    .fillColor("#92400e")
-    .text("SKILL", sealCenterX - 18, sealCenterY - 10, { width: 36, align: "center" });
-  doc.font("Helvetica-Bold")
-    .fontSize(8)
-    .fillColor("#92400e")
-    .text("QUEST", sealCenterX - 18, sealCenterY + 1, { width: 36, align: "center" });
-  doc.font("Helvetica")
-    .fontSize(6)
-    .fillColor("#b45309")
-    .text("ACADEMY", sealCenterX - 20, sealCenterY + 12, { width: 40, align: "center" });
-  doc.restore();
-
-  const detailsX = pageWidth - inset - 200;
-  doc.font("Helvetica-Bold")
-    .fontSize(13)
-    .fillColor("#0f172a")
-    .text("Certificate Details", detailsX, signatureY - 10, { width: 180 });
-  doc.font("Helvetica")
-    .fontSize(11)
-    .fillColor("#475569")
-    .text(`Date: ${formatDate(certificate.issuedAt)}`, detailsX, signatureY + 10, {
-      width: 180
-    });
-  doc.text(`ID: ${certificate.certificateId}`, detailsX, signatureY + 30, {
-    width: 180
-  });
 
   try {
     const baseUrl = process.env.CLIENT_URL || "http://localhost:3000";
@@ -398,13 +336,35 @@ async function streamCertificatePdf({ certificate, user, module }, res) {
     doc.font("Helvetica")
       .fontSize(9)
       .fillColor("#475569")
-      .text("Scan to verify", qrCardX, qrY + qrSize + 14, {
+      .text("Scan to verify", qrCardX, qrCardY + qrCardHeight - 14, {
         width: qrCardWidth,
         align: "center"
       });
   } catch (qrErr) {
     console.error("QR generation failed", qrErr);
   }
+
+  const footerTextY = pageHeight - 105;
+  doc.moveTo(inset + 110, footerTextY - 8)
+    .lineTo(pageWidth - inset - 110, footerTextY - 8)
+    .lineWidth(2)
+    .stroke("#fbbf24");
+
+  doc.font("Times-Bold")
+    .fontSize(16)
+    .fillColor("#0f172a")
+    .text("SkillQuest Academy", inset, footerTextY, {
+      width: innerWidth,
+      align: "center"
+    });
+
+  doc.font("Helvetica")
+    .fontSize(10.5)
+    .fillColor("#475569")
+    .text(`Issued ${formatCompactDate(certificate.issuedAt)}  |  ID ${certificate.certificateId}`, inset, footerTextY + 20, {
+      width: innerWidth,
+      align: "center"
+    });
 
   doc.end();
 }
