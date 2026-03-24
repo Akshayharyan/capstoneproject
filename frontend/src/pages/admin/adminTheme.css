@@ -1,0 +1,376 @@
+.admin-shell {
+  --admin-glow-a: rgba(99, 102, 241, 0.2);
+  --admin-glow-b: rgba(56, 189, 248, 0.16);
+  --admin-glow-c: rgba(236, 72, 153, 0.14);
+  --admin-glow-active: rgba(99, 102, 241, 0.18);
+}
+
+/* ===== BACKGROUND ORBS ===== */
+.admin-soft-orb {
+  position: absolute;
+  border-radius: 9999px;
+  filter: blur(46px);
+  pointer-events: none;
+  z-index: 0;
+  animation: adminOrbFloat 14s ease-in-out infinite;
+}
+
+.admin-soft-orb.one {
+  width: 280px;
+  height: 280px;
+  top: -90px;
+  right: 10%;
+  background: radial-gradient(circle at 30% 30%, var(--admin-glow-a), transparent 70%);
+}
+
+.admin-soft-orb.two {
+  width: 260px;
+  height: 260px;
+  bottom: 8%;
+  left: 8%;
+  background: radial-gradient(circle at 40% 40%, var(--admin-glow-b), transparent 72%);
+  animation-delay: -4s;
+}
+
+.admin-soft-orb.three {
+  width: 220px;
+  height: 220px;
+  top: 34%;
+  right: 28%;
+  background: radial-gradient(circle at 50% 50%, var(--admin-glow-c), transparent 72%);
+  animation-delay: -8s;
+}
+
+/* ===== 3-COLUMN LAYOUT ===== */
+.admin-layout-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+}
+
+/* ===== SIDEBARS ===== */
+.admin-glow-container {
+  transition: all 300ms cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 
+    0 20px 45px rgba(99, 102, 241, 0.12),
+    0 1px 0 rgba(255, 255, 255, 0.8) inset;
+  background-image: linear-gradient(180deg, rgba(255, 255, 255, 0.95), rgba(255, 255, 255, 0.88));
+}
+
+.admin-glow-container:hover {
+  box-shadow: 
+    0 25px 55px rgba(99, 102, 241, 0.16),
+    0 1px 0 rgba(255, 255, 255, 0.9) inset;
+}
+
+.admin-sidebar-left,
+.admin-sidebar-right {
+  position: fixed !important;
+  border: 1px solid rgba(255, 255, 255, 0.9);
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.98) 0%, rgba(248, 250, 252, 0.95) 100%);
+}
+
+.admin-sidebar-left:hover,
+.admin-sidebar-right:hover {
+  border-color: rgba(99, 102, 241, 0.2);
+}
+
+/* ===== CENTER CONTENT ===== */
+.admin-content-main {
+  position: fixed;
+  top: 12px;
+  bottom: 12px;
+  left: 12px;
+  right: 12px;
+  z-index: 10;
+  background-color: transparent;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(148, 163, 184, 0.3) transparent;
+  -webkit-overflow-scrolling: touch;
+  border-radius: 24px;
+}
+
+@media (min-width: 1024px) {
+  .admin-content-main {
+    left: 312px;
+    right: 312px;
+  }
+}
+
+.admin-content-main::-webkit-scrollbar {
+  width: 6px;
+}
+
+.admin-content-main::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.admin-content-main::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.3);
+  border-radius: 3px;
+  transition: background 200ms ease;
+}
+
+.admin-content-main::-webkit-scrollbar-thumb:hover {
+  background: rgba(148, 163, 184, 0.5);
+}
+
+/* ===== CARDS & GLOWING EFFECTS ===== */
+.admin-glow-card {
+  position: relative;
+  transition: all 280ms cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 10px 28px rgba(99, 102, 241, 0.08), 0 1px 0 rgba(255, 255, 255, 0.7) inset;
+  background-image: linear-gradient(180deg, rgba(255, 255, 255, 0.88), rgba(255, 255, 255, 0.8));
+}
+
+.admin-glow-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 20px 45px rgba(99, 102, 241, 0.16), 0 1px 0 rgba(255, 255, 255, 0.8) inset;
+}
+
+/* ===== STAT BOXES (RIGHT SIDEBAR) ===== */
+.admin-stat-box {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid rgba(99, 102, 241, 0.1);
+  background-image: linear-gradient(135deg, rgba(255, 255, 255, 0.98) 0%, rgba(248, 250, 252, 0.95) 100%);
+}
+
+.admin-stat-box::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(99, 102, 241, 0.1), transparent);
+  animation: adminStatGlow 3s ease-in-out infinite;
+}
+
+.admin-stat-box:hover {
+  border-color: rgba(99, 102, 241, 0.2);
+  box-shadow: 0 12px 32px rgba(99, 102, 241, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.8);
+}
+
+.admin-stat-icon {
+  transition: all 300ms ease;
+  animation: adminStatIconFloat 3s ease-in-out infinite;
+}
+
+.admin-stat-box:hover .admin-stat-icon {
+  transform: scale(1.1) rotate(5deg);
+}
+
+/* ===== NAVIGATION ITEMS ===== */
+.admin-nav-item {
+  position: relative;
+  overflow: hidden;
+}
+
+.admin-nav-item::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent, rgba(99, 102, 241, 0.05), transparent);
+  transform: translateX(-100%);
+  transition: transform 600ms ease;
+}
+
+.admin-nav-item:hover::before {
+  transform: translateX(100%);
+}
+
+.admin-nav-active {
+  background: linear-gradient(90deg, rgba(99, 102, 241, 0.15), rgba(168, 85, 247, 0.12)) !important;
+  border-color: rgba(99, 102, 241, 0.4) !important;
+  box-shadow: 0 8px 20px rgba(99, 102, 241, 0.15) !important;
+}
+
+.admin-nav-active::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: linear-gradient(180deg, #6366f1, #a855f7);
+  border-radius: 0 3px 3px 0;
+  animation: adminNavGlow 2s ease-in-out infinite;
+}
+
+/* ===== BUTTONS ===== */
+.admin-btn-logout {
+  position: relative;
+  overflow: hidden;
+}
+
+.admin-btn-logout::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.3), transparent);
+  animation: adminBtnShine 3s ease-in-out infinite;
+}
+
+/* ===== ICON GLOW ===== */
+.admin-icon-glow {
+  position: relative;
+  animation: adminIconGlow 2s ease-in-out infinite;
+  box-shadow: 0 0 20px rgba(99, 102, 241, 0.3);
+}
+
+/* ===== SHIMMER ANIMATION ===== */
+.admin-shimmer {
+  position: relative;
+  overflow: hidden;
+}
+
+.admin-shimmer::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(110deg, transparent 25%, rgba(255, 255, 255, 0.35) 50%, transparent 75%);
+  transform: translateX(-120%);
+  animation: adminShimmer 3.8s linear infinite;
+  pointer-events: none;
+}
+
+/* ===== GLOW RING ===== */
+.admin-glow-ring {
+  animation: adminPulseRing 3.2s ease-in-out infinite;
+}
+
+/* ===== INFO BOX ===== */
+.admin-info-box,
+.admin-info-tip {
+  position: relative;
+  overflow: hidden;
+  transition: all 300ms ease;
+}
+
+.admin-info-box::before,
+.admin-info-tip::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+  transform: translateX(-100%);
+  animation: adminInfoGlow 4s ease-in-out infinite;
+}
+
+.admin-info-box:hover,
+.admin-info-tip:hover {
+  box-shadow: 0 8px 24px rgba(99, 102, 241, 0.1);
+}
+
+/* ===== KEYFRAME ANIMATIONS ===== */
+@keyframes adminOrbFloat {
+  0%,
+  100% {
+    transform: translateY(0px) scale(1);
+  }
+  50% {
+    transform: translateY(-14px) scale(1.04);
+  }
+}
+
+@keyframes adminPulseRing {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(99, 102, 241, 0.24);
+  }
+  50% {
+    box-shadow: 0 0 0 8px rgba(99, 102, 241, 0);
+  }
+}
+
+@keyframes adminShimmer {
+  0% {
+    transform: translateX(-120%);
+  }
+  100% {
+    transform: translateX(120%);
+  }
+}
+
+@keyframes adminNavGlow {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(99, 102, 241, 0.4);
+    opacity: 0.8;
+  }
+  50% {
+    box-shadow: 0 0 8px 4px rgba(99, 102, 241, 0.1);
+    opacity: 1;
+  }
+}
+
+@keyframes adminIconGlow {
+  0%,
+  100% {
+    box-shadow: 0 0 15px rgba(99, 102, 241, 0.3), inset 0 0 10px rgba(168, 85, 247, 0.1);
+    transform: scale(1);
+  }
+  50% {
+    box-shadow: 0 0 25px rgba(99, 102, 241, 0.5), inset 0 0 15px rgba(168, 85, 247, 0.2);
+    transform: scale(1.05);
+  }
+}
+
+@keyframes adminBtnShine {
+  0% {
+    left: -100%;
+  }
+  50% {
+    left: 100%;
+  }
+  100% {
+    left: 100%;
+  }
+}
+
+@keyframes adminStatGlow {
+  0% {
+    left: -100%;
+  }
+  50% {
+    left: 100%;
+  }
+  100% {
+    left: 100%;
+  }
+}
+
+@keyframes adminStatIconFloat {
+  0%,
+  100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-3px);
+  }
+}
+
+@keyframes adminInfoGlow {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 1024px) {
+  .admin-sidebar-left,
+  .admin-sidebar-right {
+    display: none;
+  }
+  
+  .admin-content-main {
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+  }
+}

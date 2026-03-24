@@ -31,6 +31,7 @@ import Leaderboard from "./pages/leaderboard";
 
 /* ================= ADMIN ================= */
 import AdminDashboard from "./pages/admin/AdminDashboard";
+import AdminHomePage from "./pages/admin/AdminHomePage";
 import CreateModulePage from "./pages/admin/CreateModulePage";
 import UsersPage from "./pages/admin/UsersPage";
 import AssignModulePage from "./pages/admin/AssignModulePage";
@@ -162,7 +163,7 @@ return (
           </ProtectedRoute>
         }
       >
-        <Route index element={<CreateModulePage />} />
+        <Route index element={<AdminHomePage />} />
         <Route path="create-module" element={<CreateModulePage />} />
         <Route path="users" element={<UsersPage />} />
         <Route path="assign" element={<AssignModulePage />} />

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { useAuth } from "../../context/AuthContext";
-import { Layers, Target, Users as UsersIcon } from "lucide-react";
+import { CheckCircle2, Layers, Target, Users as UsersIcon, WandSparkles } from "lucide-react";
 
 function CreateModulePage() {
   const { token } = useAuth();
@@ -99,20 +99,27 @@ function CreateModulePage() {
   };
 
   return (
-    <div className="mx-auto flex max-w-6xl flex-col gap-8 lg:flex-row">
-      <div className="flex-1 rounded-3xl border border-slate-100 bg-white p-8 shadow-xl">
-        <p className="text-xs uppercase tracking-[0.35em] text-indigo-400">
-          Module builder
-        </p>
-        <h2 className="mt-2 text-4xl font-semibold text-slate-900">
-          Launch a new learning adventure
-        </h2>
-        <p className="mt-2 text-slate-500">
-          Define the headline and context for the module. Add quests and bosses from
-          the module detail view after creation.
-        </p>
+    <div className="space-y-6">
+      <div className="admin-glow-card rounded-3xl border border-slate-100 bg-white p-8 shadow-xl">
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div>
+            <p className="text-xs uppercase tracking-[0.35em] text-indigo-400">
+              Module builder
+            </p>
+            <h2 className="mt-2 text-4xl font-semibold text-slate-900">
+              Launch a new learning adventure
+            </h2>
+            <p className="mt-2 max-w-3xl text-slate-500">
+              Define the headline and context for the module. Add quests and bosses from
+              the module detail view after creation.
+            </p>
+          </div>
+          <div className="admin-glow-ring inline-flex items-center gap-2 rounded-2xl border border-indigo-100 bg-indigo-50 px-4 py-2 text-sm font-semibold text-indigo-700">
+            <WandSparkles className="h-4 w-4" /> Ready to publish
+          </div>
+        </div>
 
-        <div className="mt-8 space-y-6">
+        <div className="mt-8 grid gap-6">
           <div>
             <label className="text-sm font-semibold text-slate-600">
               Module Title
@@ -132,10 +139,20 @@ function CreateModulePage() {
             <textarea
               className="mt-2 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-slate-900 focus:border-indigo-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-50"
               placeholder="What skills will learners unlock?"
-              rows="5"
+              rows="7"
               value={form.description}
               onChange={(e) => setForm({ ...form, description: e.target.value })}
             />
+          </div>
+
+          <div className="rounded-2xl border border-slate-100 bg-slate-50/80 p-4">
+            <p className="text-xs uppercase tracking-[0.35em] text-slate-400">Preflight checklist</p>
+            <div className="mt-3 grid gap-2 text-sm text-slate-600 sm:grid-cols-2">
+              <p className="inline-flex items-center gap-2"><CheckCircle2 className="h-4 w-4 text-emerald-500" /> Clear module title</p>
+              <p className="inline-flex items-center gap-2"><CheckCircle2 className="h-4 w-4 text-emerald-500" /> Outcome-based description</p>
+              <p className="inline-flex items-center gap-2"><CheckCircle2 className="h-4 w-4 text-emerald-500" /> Trainer assignment plan</p>
+              <p className="inline-flex items-center gap-2"><CheckCircle2 className="h-4 w-4 text-emerald-500" /> Boss challenge intent</p>
+            </div>
           </div>
 
           <button
@@ -148,7 +165,7 @@ function CreateModulePage() {
         </div>
       </div>
 
-      <aside className="flex w-full flex-col gap-4 rounded-3xl border border-slate-100 bg-gradient-to-b from-white to-slate-50 p-6 shadow-lg lg:w-80">
+      <aside className="admin-glow-card sticky top-4 flex h-fit flex-col gap-4 rounded-3xl border border-slate-100 bg-gradient-to-b from-white to-slate-50 p-6 shadow-lg">
         <h3 className="text-sm font-semibold uppercase tracking-[0.35em] text-slate-400">
           Live insights
         </h3>
@@ -170,6 +187,13 @@ function CreateModulePage() {
           value={`${stats.completion}%`}
           helper="Based on monitoring feed"
         />
+
+        <div className="rounded-2xl border border-indigo-100 bg-indigo-50 p-4">
+          <p className="text-xs uppercase tracking-[0.35em] text-indigo-500">Tip</p>
+          <p className="mt-2 text-sm text-slate-700">
+            After creation, open the module detail page to add topics, tasks, and boss rules.
+          </p>
+        </div>
       </aside>
     </div>
   );
@@ -177,7 +201,7 @@ function CreateModulePage() {
 
 function InsightCard({ icon, label, value, helper }) {
   return (
-    <div className="rounded-2xl border border-slate-100 bg-white p-4 shadow-sm">
+    <div className="admin-glow-card rounded-2xl border border-slate-100 bg-white p-4 shadow-sm">
       <div className="flex items-center justify-between">
         <p className="text-xs uppercase tracking-[0.4em] text-slate-400">{label}</p>
         <span className="rounded-2xl bg-indigo-50 p-2 text-indigo-500">{icon}</span>

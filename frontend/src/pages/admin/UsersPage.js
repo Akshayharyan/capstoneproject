@@ -35,11 +35,12 @@ export default function UsersPage() {
     };
   }, [token]);
 
-  const filtered = users.filter(
-    (u) =>
-      u.name.toLowerCase().includes(search.toLowerCase()) ||
-      u.email.toLowerCase().includes(search.toLowerCase())
-  );
+  const filtered = users.filter((u) => {
+    const name = (u.name || "").toLowerCase();
+    const email = (u.email || "").toLowerCase();
+    const query = search.toLowerCase();
+    return name.includes(query) || email.includes(query);
+  });
 
   const totals = useMemo(() => {
     const totalUsers = users.length;
@@ -49,13 +50,43 @@ export default function UsersPage() {
     return { totalUsers, trainers, admins, employees };
   }, [users]);
 
-  if (loading) return <p className="text-lg">Loading users…</p>;
+  const roleBreakdown = useMemo(() => {
+    const base = totals.totalUsers || 1;
+    return [
+      {
+        label: "Admins",
+        value: totals.admins,
+        width: `${Math.round((totals.admins / base) * 100)}%`,
+        color: "bg-rose-500",
+      },
+      {
+        label: "Trainers",
+        value: totals.trainers,
+        width: `${Math.round((totals.trainers / base) * 100)}%`,
+        color: "bg-amber-500",
+      },
+      {
+        label: "Employees",
+        value: totals.employees,
+        width: `${Math.round((totals.employees / base) * 100)}%`,
+        color: "bg-emerald-500",
+      },
+    ];
+  }, [totals]);
+
+  if (loading) {
+    return (
+      <div className="flex min-h-[200px] items-center justify-center rounded-3xl border border-slate-100 bg-white text-lg text-slate-500 shadow-sm">
+        Loading users...
+      </div>
+    );
+  }
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
 
       {/* Header */}
-      <div className="flex flex-col gap-6 rounded-2xl border border-slate-100 bg-gradient-to-r from-white to-slate-50 p-6 shadow-sm md:flex-row md:items-center md:justify-between">
+      <div className="admin-glow-card flex flex-col gap-6 rounded-2xl border border-slate-100 bg-gradient-to-r from-white to-slate-50 p-6 shadow-sm md:flex-row md:items-center md:justify-between">
         <div>
           <p className="text-xs uppercase tracking-[0.35em] text-slate-400">
             Directory
@@ -74,7 +105,7 @@ export default function UsersPage() {
               onChange={(e) => setSearch(e.target.value)}
             />
           </div>
-          <button className="inline-flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-indigo-500 to-purple-500 px-5 py-2 text-sm font-semibold text-white shadow-md shadow-indigo-200 transition hover:-translate-y-0.5">
+          <button className="admin-glow-ring inline-flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-indigo-500 to-purple-500 px-5 py-2 text-sm font-semibold text-white shadow-md shadow-indigo-200 transition hover:-translate-y-0.5">
             <UserPlus className="h-4 w-4" /> Add User
           </button>
         </div>
@@ -103,8 +134,9 @@ export default function UsersPage() {
       </div>
 
       {/* Table */}
-      <div className="overflow-hidden rounded-3xl border border-slate-100 bg-white shadow-xl">
-        <table className="w-full text-left">
+      <div className="admin-glow-card overflow-hidden rounded-3xl border border-slate-100 bg-white shadow-xl">
+        <div className="overflow-x-auto">
+        <table className="w-full min-w-[720px] text-left">
           <thead className="bg-slate-50 text-slate-500">
             <tr>
               <th className="px-6 py-4 text-xs font-semibold uppercase tracking-widest">User</th>
@@ -145,8 +177,16 @@ export default function UsersPage() {
                 <td className="px-6 py-4 text-slate-600">{u.email}</td>
               </tr>
             ))}
+            {filtered.length === 0 && (
+              <tr>
+                <td colSpan={3} className="px-6 py-10 text-center text-sm text-slate-500">
+                  No users match this search.
+                </td>
+              </tr>
+            )}
           </tbody>
         </table>
+        </div>
       </div>
     </div>
   );
@@ -154,7 +194,7 @@ export default function UsersPage() {
 
 function StatCard({ label, value, icon, subtitle }) {
   return (
-    <div className="flex items-center justify-between rounded-2xl border border-slate-100 bg-white p-5 shadow-sm">
+    <div className="admin-glow-card flex items-center justify-between rounded-2xl border border-slate-100 bg-white p-5 shadow-sm">
       <div>
         <p className="text-xs uppercase tracking-[0.35em] text-slate-400">{label}</p>
         <p className="mt-2 text-3xl font-semibold text-slate-900">{value}</p>

@@ -54,9 +54,14 @@ function AnalyticsPage() {
     { name: "Assignments", value: stats.totalAssignments },
   ];
 
+  const assignmentCoverage =
+    stats.totalModules === 0
+      ? 0
+      : Math.round((stats.totalAssignments / stats.totalModules) * 100);
+
   return (
-    <div className="space-y-8">
-      <section className="rounded-3xl border border-slate-100 bg-gradient-to-r from-white via-slate-50 to-indigo-50 p-6 shadow-sm">
+    <div className="space-y-6">
+      <section className="admin-glow-card rounded-3xl border border-slate-100 bg-gradient-to-r from-white via-slate-50 to-indigo-50 p-6 shadow-sm">
         <p className="text-xs uppercase tracking-[0.35em] text-slate-400">Analytics</p>
         <div className="mt-3 flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
           <div>
@@ -81,10 +86,10 @@ function AnalyticsPage() {
       </div>
 
       <div className="grid gap-8 lg:grid-cols-2">
-        <div className="rounded-3xl border border-slate-100 bg-white p-6 shadow-sm">
+        <div className="admin-glow-card rounded-3xl border border-slate-100 bg-white p-6 shadow-sm">
           <h2 className="text-lg font-semibold text-slate-900">Modules vs Assignments</h2>
           <p className="text-sm text-slate-500">How many programs are currently staffed.</p>
-          <ResponsiveContainer width="100%" height={280}>
+          <ResponsiveContainer width="100%" height={320}>
             <BarChart data={moduleData}>
               <XAxis dataKey="name" tick={{ fill: "#94a3b8" }} />
               <YAxis tick={{ fill: "#94a3b8" }} />
@@ -94,10 +99,10 @@ function AnalyticsPage() {
           </ResponsiveContainer>
         </div>
 
-        <div className="rounded-3xl border border-slate-100 bg-white p-6 shadow-sm">
+        <div className="admin-glow-card rounded-3xl border border-slate-100 bg-white p-6 shadow-sm">
           <h2 className="text-lg font-semibold text-slate-900">User Role Distribution</h2>
           <p className="text-sm text-slate-500">Visualize how talent is spread across roles.</p>
-          <ResponsiveContainer width="100%" height={280}>
+          <ResponsiveContainer width="100%" height={320}>
             <PieChart>
               <Pie
                 data={roleData}
@@ -120,7 +125,7 @@ function AnalyticsPage() {
 }
 
 const StatCard = ({ title, value, helper }) => (
-  <div className="rounded-2xl border border-slate-100 bg-white p-5 text-left shadow-sm">
+  <div className="admin-glow-card rounded-2xl border border-slate-100 bg-white p-5 text-left shadow-sm">
     <p className="text-xs uppercase tracking-[0.4em] text-slate-400">{title}</p>
     <p className="mt-3 text-3xl font-semibold text-slate-900">{value}</p>
     <p className="text-sm text-slate-500">{helper}</p>

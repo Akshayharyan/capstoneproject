@@ -67,6 +67,24 @@ const EmployeeMonitoringPage = () => {
     [avgProgress, totalXp, totalCompleted]
   );
 
+  const statusSummary = useMemo(() => {
+    const completed = employees.filter((e) => (e.progressPercent || 0) === 100).length;
+    const onTrack = employees.filter(
+      (e) => (e.progressPercent || 0) >= 60 && (e.progressPercent || 0) < 100
+    ).length;
+    const behind = employees.filter((e) => (e.progressPercent || 0) < 60).length;
+    return { completed, onTrack, behind };
+  }, [employees]);
+
+  const laggingLearners = useMemo(
+    () =>
+      [...employees]
+        .filter((e) => (e.progressPercent || 0) < 60)
+        .sort((a, b) => (a.progressPercent || 0) - (b.progressPercent || 0))
+        .slice(0, 6),
+    [employees]
+  );
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64 text-gray-500">
@@ -76,8 +94,8 @@ const EmployeeMonitoringPage = () => {
   }
 
   return (
-    <div className="space-y-8">
-      <section className="rounded-3xl border border-slate-100 bg-gradient-to-r from-white via-slate-50 to-indigo-50/60 p-6 shadow-sm">
+    <div className="space-y-6">
+      <section className="admin-glow-card rounded-3xl border border-slate-100 bg-gradient-to-r from-white via-slate-50 to-indigo-50/60 p-6 shadow-sm">
         <p className="text-xs uppercase tracking-[0.35em] text-slate-400">Pulse</p>
         <div className="mt-4 flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
           <div>
@@ -98,7 +116,7 @@ const EmployeeMonitoringPage = () => {
         {insights.map((insight) => (
           <div
             key={insight.label}
-            className="rounded-2xl border border-slate-100 bg-white p-5 shadow-sm"
+            className="admin-glow-card rounded-2xl border border-slate-100 bg-white p-5 shadow-sm"
           >
             <div className="flex items-center justify-between text-slate-500">
               <p className="text-xs uppercase tracking-[0.4em]">{insight.label}</p>
@@ -113,8 +131,9 @@ const EmployeeMonitoringPage = () => {
       </div>
 
       {/* TABLE */}
-      <div className="overflow-hidden rounded-3xl border border-slate-100 bg-white shadow-xl">
-        <table className="w-full text-left">
+      <div className="admin-glow-card overflow-hidden rounded-3xl border border-slate-100 bg-white shadow-xl">
+        <div className="overflow-x-auto">
+        <table className="w-full min-w-[860px] text-left">
           <thead className="bg-slate-50 border-b">
             <tr>
               <th className="px-6 py-4 text-xs font-semibold uppercase tracking-widest text-slate-500">Employee</th>
@@ -139,11 +158,11 @@ const EmployeeMonitoringPage = () => {
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-3">
                       <div className="flex h-10 w-10 items-center justify-center rounded-full bg-indigo-100 text-sm font-bold text-indigo-600">
-                        {e.name[0]}
+                        {e.name?.[0] || "?"}
                       </div>
                       <div>
-                        <p className="font-semibold text-slate-900">{e.name}</p>
-                        <p className="text-sm text-slate-500">{e.email}</p>
+                        <p className="font-semibold text-slate-900">{e.name || "Unknown"}</p>
+                        <p className="text-sm text-slate-500">{e.email || "No email"}</p>
                       </div>
                     </div>
                   </td>
@@ -184,9 +203,27 @@ const EmployeeMonitoringPage = () => {
             })}
           </tbody>
         </table>
+        </div>
       </div>
     </div>
   );
 };
+
+function StatusRow({ label, value, tone }) {
+  const tones = {
+    indigo: "bg-indigo-100 text-indigo-700",
+    emerald: "bg-emerald-100 text-emerald-700",
+    rose: "bg-rose-100 text-rose-700",
+  };
+
+  return (
+    <div className="flex items-center justify-between">
+      <span className="text-slate-600">{label}</span>
+      <span className={`rounded-full px-2 py-1 text-xs font-semibold ${tones[tone] || tones.indigo}`}>
+        {value}
+      </span>
+    </div>
+  );
+}
 
 export default EmployeeMonitoringPage;
