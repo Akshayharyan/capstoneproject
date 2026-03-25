@@ -27,6 +27,7 @@ import TopicChallengesPage from "./pages/employee/TopicChallengesPage";
 import Profile from "./pages/Profile";
 import AchievementPage from "./pages/AchievementPage";
 import BossBattleArena from "./pages/employee/BossBattleArena"; // ✅ NEW GAME ARENA
+import KnowledgeRunner from "./pages/employee/KnowledgeRunner"; // 🎮 KNOWLEDGE RUNNER GAME
 import Leaderboard from "./pages/leaderboard";
 
 /* ================= ADMIN ================= */
@@ -43,6 +44,7 @@ import TrainerModulesPage from "./pages/trainer/TrainerModulesPage";
 import TrainerEditTopicsPage from "./pages/trainer/TrainerEditTopicsPage";
 import TrainerTopicTasksPage from "./pages/trainer/TrainerTopicTasksPage";
 import TrainerBossPage from "./pages/trainer/TrainerBossPage";
+import TrainerGamePage from "./pages/trainer/TrainerGamePage"; // 🎮 Game Selection
 
 /* ================= LAYOUT ================= */
 const PublicEmployeeLayout = () => (
@@ -151,7 +153,18 @@ return (
           }
         />
 
+        {/* 🎮 KNOWLEDGE RUNNER GAME */}
       </Route>
+
+      {/* 🎮 KNOWLEDGE RUNNER GAME (FULLSCREEN, NO HEADER) */}
+      <Route
+        path="/employee/game/:moduleId"
+        element={
+          <ProtectedRoute allow={["employee"]}>
+            <KnowledgeRunner />
+          </ProtectedRoute>
+        }
+      />
 
       {/* ================= ADMIN ================= */}
 
@@ -205,6 +218,15 @@ return (
         element={
           <ProtectedRoute allow={["trainer"]}>
             <TrainerBossPage />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/trainer/modules/:moduleId/game"
+        element={
+          <ProtectedRoute allow={["trainer"]}>
+            <TrainerGamePage />
           </ProtectedRoute>
         }
       />

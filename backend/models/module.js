@@ -92,6 +92,18 @@ const ModuleSchema = new mongoose.Schema(
       default: null,
     },
 
+    gameType: {
+      type: String,
+      enum: ["boss-arena", "knowledge-runner"],
+      default: "boss-arena",
+    },
+
+    mcqBattleConfig: {
+      timeLimit: { type: Number, default: 300 }, // in seconds
+      scoringThreshold: { type: Number, default: 70 }, // % to win
+      questionsToUse: { type: Number, default: 10 }, // number of MCQs to select
+    },
+
     topics: [TopicSchema],
   },
   { timestamps: true }

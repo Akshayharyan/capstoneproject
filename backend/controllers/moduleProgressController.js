@@ -126,6 +126,7 @@ exports.getModuleTopicsWithStatus = async (req, res) => {
 
     res.json({
       moduleTitle: module.title,
+      gameType: module.gameType || "boss-arena",
       progressPercent,
       topics,
 

@@ -47,6 +47,12 @@ const trainerBossRoutes = require("./routes/trainerBossRoutes");
 console.log("trainerBossRoutes loaded:", typeof trainerBossRoutes);
 const bossBattleRoutes = require("./routes/bossRoutes");         // Employee battle side
 
+// 🎮 MCQ BATTLE ROUTES
+const mcqBattleRoutes = require("./routes/mcqBattleRoutes");
+
+// 🎮 KNOWLEDGE RUNNER GAME ROUTES
+const gameRoutes = require("./routes/gameRoutes");
+
 // ===============================
 // MIDDLEWARE
 // ===============================
@@ -98,6 +104,16 @@ app.use("/api/trainer/boss", trainerBossRoutes);
 
 // Employee Boss Battle
 app.use("/api/boss", bossBattleRoutes);
+
+// ===============================
+// 🎮 MCQ BATTLE SYSTEM
+// ===============================
+app.use("/api/mcq-battle", mcqBattleRoutes);
+
+// ===============================
+// 🎮 KNOWLEDGE RUNNER GAME SYSTEM
+// ===============================
+app.use("/api/game", gameRoutes);
 
 // Module progress (keep near end)
 app.use("/api", moduleProgressRoutes);

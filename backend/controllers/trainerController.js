@@ -4,14 +4,15 @@ const Achievement = require("../models/Achievement");
 /* ================= GET MODULES ================= */
 
 exports.getAssignedModules = async (req, res) => {
-  const modules = await Module.find().select("title description topics");
+  const modules = await Module.find().select("title description topics gameType");
 
   res.json(
     modules.map(m => ({
       moduleId: m._id,
       title: m.title,
       description: m.description,
-      topicsCount: m.topics.length
+      topicsCount: m.topics.length,
+      gameType: m.gameType || "boss-arena"
     }))
   );
 };

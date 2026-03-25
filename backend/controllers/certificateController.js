@@ -103,13 +103,26 @@ exports.getCertificateByCode = async (req, res) => {
 exports.downloadCertificate = async (req, res) => {
   try {
     const { certificateId } = req.params;
-    const certificate = await Certificate.findOne({ certificateId })
+    let certificate = await Certificate.findOne({ certificateId })
       .populate("userId", "name email")
       .populate("moduleId", "title")
       .lean();
 
+    // Fallback: allow download via Mongo _id (used by some game flows).
+    if (!certificate) {
+      certificate = await Certificate.findById(certificateId)
+        .populate("userId", "name email")
+        .populate("moduleId", "title")
+        .lean();
+    }
+
     if (!certificate) {
       return res.status(404).json({ success: false, message: "Certificate not found" });
+    }
+
+    const certificateUserId = String(certificate.userId?._id || certificate.userId);
+    if (certificateUserId !== String(req.user._id)) {
+      return res.status(403).json({ success: false, message: "Unauthorized" });
     }
 
     await streamCertificatePdf({

@@ -5,7 +5,7 @@ const Module = require("../models/module");
 // ===============================
 exports.createModule = async (req, res) => {
   try {
-    const { title, description, boss } = req.body;
+    const { title, description, boss, gameType, mcqBattleConfig } = req.body;
 
     if (!title || title.trim() === "")
       return res.status(400).json({ message: "Module title is required" });
@@ -14,6 +14,12 @@ exports.createModule = async (req, res) => {
       title,
       description: description || "",
       boss: boss || null,   // 🐉 NEW (safe)
+      gameType: gameType || "boss-arena", // 🎮 Game type selection
+      mcqBattleConfig: mcqBattleConfig || {
+        timeLimit: 300,
+        scoringThreshold: 70,
+        questionsToUse: 10,
+      },
       status: "active",
       topics: []
     });
@@ -41,7 +47,9 @@ exports.getSingleModule = async (req, res) => {
       title: module.title,
       description: module.description,
       status: module.status || "active",
-      boss: module.boss || null   // 🐉 NEW
+      boss: module.boss || null,   // 🐉 NEW
+      gameType: module.gameType || "boss-arena", // 🎮 Game type
+      mcqBattleConfig: module.mcqBattleConfig, // MCQ Battle settings
     });
   } catch (err) {
     console.error("Fetch single module error:", err);
@@ -55,7 +63,7 @@ exports.getSingleModule = async (req, res) => {
 // ===============================
 exports.updateModule = async (req, res) => {
   try {
-    const { title, description, status, boss } = req.body;
+    const { title, description, status, boss, gameType } = req.body;
 
     const module = await Module.findById(req.params.moduleId);
     if (!module)
@@ -67,6 +75,9 @@ exports.updateModule = async (req, res) => {
 
     // 🐉 NEW
     if (boss !== undefined) module.boss = boss;
+    
+    // 🎮 Game type selection
+    if (gameType) module.gameType = gameType;
 
     await module.save();
 

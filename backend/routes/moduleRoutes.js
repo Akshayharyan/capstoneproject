@@ -4,7 +4,7 @@ const router = express.Router();
 const protect = require("../middleware/authMiddleware");
 const verifyAdmin = require("../middleware/verifyAdmin");
 
-const { createModule } = require("../controllers/moduleController");
+const { createModule, updateModule, getSingleModule } = require("../controllers/moduleController");
 
 const {
   getModuleTopicsWithStatus,
@@ -62,6 +62,12 @@ router.get("/", protect, verifyAdmin, async (req, res) => {
 });
 
 /* ======================================================
+   📌 GET SINGLE MODULE (TRAINER & ADMIN)
+   👉 USED BY: TrainerGamePage (load module details)
+====================================================== */
+router.get("/:moduleId", protect, getSingleModule);
+
+/* ======================================================
    📌 GET TOPICS OF A MODULE (🔥 WITH PROGRESS & UNLOCK)
    👉 USED BY: TopicRoadmap (EMPLOYEE)
 ====================================================== */
@@ -99,6 +105,21 @@ router.get("/:moduleId/topics/:topicIndex", protect, async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 });
+
+/* ======================================================
+   📌 UPDATE MODULE (ADMIN & TRAINER)
+   👉 USED BY: TrainerGamePage (update gameType)
+====================================================== */
+router.put("/:moduleId", protect, (req, res, next) => {
+  // Allow admin or trainer
+  if (!req.user) {
+    return res.status(401).json({ message: "Not authorized" });
+  }
+  if (req.user.role !== "admin" && req.user.role !== "trainer") {
+    return res.status(403).json({ message: "Admin or Trainer access only" });
+  }
+  next();
+}, updateModule);
 
 /* ======================================================
    📌 DELETE MODULE (ADMIN ONLY)

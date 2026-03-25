@@ -151,11 +151,17 @@ const ModuleCard = ({
   achievementsLoading,
   onManageTopics,
   onConfigureBoss,
+  onSelectGame,
   onCreateAchievement,
 }) => {
   const topicsCount = module?.topicsCount || module?.topics?.length || 0;
   const moduleStatus = achievement ? "Badge ready" : "Needs badge";
   const statusClass = achievement ? "text-emerald-600" : "text-rose-500";
+  
+  // Game type display
+  const gameType = module?.gameType || "boss-arena";
+  const gameLabel = gameType === "knowledge-runner" ? "🎮 Knowledge Runner" : "⚔️ Boss Arena";
+  const gameColor = gameType === "knowledge-runner" ? "text-purple-600" : "text-red-600";
 
   return (
     <div className="relative overflow-hidden rounded-[28px] border border-slate-200 bg-white p-6 shadow-[0_25px_60px_rgba(15,23,42,0.08)]">
@@ -177,10 +183,14 @@ const ModuleCard = ({
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-3 text-sm">
+        <div className="grid grid-cols-3 gap-3 text-sm">
           <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
             <p className="text-[10px] uppercase tracking-[0.4em] text-slate-400">Status</p>
             <p className={`mt-1 text-lg font-semibold ${statusClass}`}>{moduleStatus}</p>
+          </div>
+          <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
+            <p className="text-[10px] uppercase tracking-[0.4em] text-slate-400">Game Type</p>
+            <p className={`mt-1 text-sm font-semibold ${gameColor}`}>{gameLabel}</p>
           </div>
           <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
             <p className="text-[10px] uppercase tracking-[0.4em] text-slate-400">Module ID</p>
@@ -208,6 +218,12 @@ const ModuleCard = ({
             className="flex-1 rounded-2xl border border-transparent bg-slate-900 px-4 py-3 text-sm font-semibold text-white shadow hover:-translate-y-0.5 transition"
           >
             Manage Topics
+          </button>
+          <button
+            onClick={onSelectGame}
+            className="flex-1 rounded-2xl border border-purple-300 bg-purple-50 px-4 py-3 text-sm font-semibold text-purple-700 hover:border-purple-500 transition"
+          >
+            Select Game
           </button>
           <button
             onClick={onConfigureBoss}
@@ -436,6 +452,7 @@ export default function TrainerModulesPage() {
                     achievementsLoading={achievementsLoading}
                     onManageTopics={() => navigate(`/trainer/modules/${module.moduleId}/edit`)}
                     onConfigureBoss={() => navigate(`/trainer/modules/${module.moduleId}/boss`)}
+                    onSelectGame={() => navigate(`/trainer/modules/${module.moduleId}/game`)}
                     onCreateAchievement={(payload) => createAchievement(module.moduleId, payload)}
                   />
                 );

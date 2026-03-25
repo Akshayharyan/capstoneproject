@@ -15,6 +15,7 @@ const nodeRefs = useRef([]);
 
 const [topics, setTopics] = useState([]);
 const [moduleTitle, setModuleTitle] = useState("");
+const [moduleGameType, setModuleGameType] = useState("boss-arena");
 const [progressPercent, setProgressPercent] = useState(0);
 const [paths, setPaths] = useState([]);
 const [loading, setLoading] = useState(true);
@@ -40,6 +41,7 @@ const fetchTopics = async () => {
 
     setTopics(data.topics || []);
     setModuleTitle(data.moduleTitle || "Learning Path");
+    setModuleGameType(data.gameType || "boss-arena");
     setProgressPercent(data.progressPercent || 0);
 
   } catch (err) {
@@ -59,6 +61,23 @@ fetchTopics();
 const bossUnlocked =
 topics.length > 0 &&
 topics.every((t) => t.status === "completed");
+
+const isCssModule = (moduleTitle || "").toLowerCase().includes("css");
+
+const handleFinalBattleClick = () => {
+  // Keep CSS module flow on the existing BossBattleArena path (uses CSS-specific game inside).
+  if (isCssModule) {
+    navigate(`/employee/boss/${moduleId}`, { state: { moduleTitle } });
+    return;
+  }
+
+  if (moduleGameType === "knowledge-runner") {
+    navigate(`/employee/game/${moduleId}`, { state: { moduleTitle } });
+    return;
+  }
+
+  navigate(`/employee/boss/${moduleId}`, { state: { moduleTitle } });
+};
 
 /* ================= CONNECTOR PATHS ================= */
 
@@ -280,7 +299,7 @@ className="min-h-screen bg-gradient-to-b from-white via-indigo-50 to-purple-50 p
 
         <button
           disabled={!bossUnlocked}
-          onClick={() => navigate(`/employee/boss/${moduleId}`, { state: { moduleTitle } })}
+          onClick={handleFinalBattleClick}
           className={`px-6 py-3 rounded-xl font-bold shadow-lg
             ${
               bossUnlocked
