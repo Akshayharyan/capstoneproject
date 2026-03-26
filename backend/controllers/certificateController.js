@@ -53,13 +53,22 @@ exports.generateCertificate = async (req, res) => {
 
     const earnedXp = getTotalModuleXp(module);
 
-    certificate = await Certificate.create({
-      userId,
-      moduleId,
-      moduleTitle: module.title,
-      certificateId: buildCertificateId(),
-      earnedXp
-    });
+    try {
+      certificate = await Certificate.create({
+        userId,
+        moduleId,
+        moduleTitle: module.title,
+        certificateId: buildCertificateId(),
+        earnedXp
+      });
+    } catch (dbErr) {
+      // Handle race condition: if another request already created this certificate
+      if (dbErr.code === 11000) {
+        certificate = await Certificate.findOne({ userId, moduleId });
+        return res.json({ success: true, certificate });
+      }
+      throw dbErr;
+    }
 
     res.json({ success: true, certificate });
   } catch (err) {

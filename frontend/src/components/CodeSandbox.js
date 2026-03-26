@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Editor from "@monaco-editor/react";
 
 export default function CodeSandbox({
@@ -12,6 +12,12 @@ export default function CodeSandbox({
 }) {
   const [code, setCode] = useState(starterCode);
   const [output, setOutput] = useState("");
+
+  // Reset code whenever starterCode prop changes (when moving to next problem)
+  useEffect(() => {
+    setCode(starterCode);
+    setOutput("");
+  }, [starterCode]);
 
   const handleRun = async () => {
     if (!onRun) return;

@@ -1,70 +1,43 @@
-const vm = require("vm");
+const graderSystem = require("../graders");
 
 exports.runJS = async (code, testCases) => {
   try {
-    console.log("====== JS RUNNER START ======");
+    console.log("====== JS RUNNER START (Using New Grader System) ======");
     console.log("User Code:\n", code);
     console.log("Test Cases:", testCases);
 
-    const outputs = [];
+    // Use the new multi-language grader system
+    const task = {
+      language: "js",
+      testCases: testCases,
+      options: { timeout: 5000 }
+    };
 
-    for (const tc of testCases) {
-      console.log("---- Running Test Case ----");
-      console.log("Input:", tc.input);
+    const result = await graderSystem.executeCode(code, task);
 
-      const wrappedScript = `
-        let __result;
-        let __consoleHistory = [];
-        const console = {
-          log: (...args) => {
-            const msg = args.map(arg =>
-              typeof arg === "string" ? arg : JSON.stringify(arg)
-            ).join(" ");
-            __consoleHistory.push(args.length === 1 ? args[0] : msg);
-            return msg;
-          },
-          error: (...args) => console.log(...args),
-          warn: (...args) => console.log(...args)
-        };
+    console.log("\n📊 TEST RESULTS:");
+    console.log("Total:", result.total);
+    console.log("Passed:", result.passed);
+    console.log("Success:", result.success);
+    console.log("\nDetailed Results:");
+    result.results.forEach((r, idx) => {
+      console.log(`  Test ${idx + 1}: Input=${r.input}, Expected=${r.expected}, Received=${r.received}, Status=${r.success ? '✅' : '❌'}`);
+    });
 
-        const input = ${JSON.stringify(tc.input)};
-        const INPUT = input;
+    console.log("====== JS RUNNER END ======\n");
 
-        ${code}
-
-        if (typeof solution === "function") {
-          __result = solution(input);
-        } else if (typeof module !== "undefined" && typeof module.exports === "function") {
-          __result = module.exports(input);
-        }
-
-        if (typeof __result === "undefined" && typeof result !== "undefined") {
-          __result = result;
-        }
-
-        if (typeof __result === "undefined" && __consoleHistory.length) {
-          __result = __consoleHistory[__consoleHistory.length - 1];
-        }
-
-        __result;
-      `;
-
-      console.log("Executing Script:\n", wrappedScript);
-
-      const result = vm.runInNewContext(wrappedScript, {}, { timeout: 1000 });
-
-      console.log("Raw Result:", result);
-
-      outputs.push(String(result));
-    }
-
-    console.log("All Outputs:", outputs);
-    console.log("====== JS RUNNER END ======");
-
-    return { output: outputs };
+    // Format output to match old API for backward compatibility
+    return {
+      output: result.results.map(r => r.received),
+      results: result.results,
+      passed: result.passed,
+      total: result.total,
+      success: result.success
+    };
 
   } catch (err) {
-    console.log("❌ VM ERROR:", err.message);
+    console.log("❌ JS RUNNER ERROR:", err.message);
+    console.log("Stack:", err.stack);
     return { error: err.message };
   }
 };

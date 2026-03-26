@@ -116,6 +116,14 @@ exports.getDashboard = async (req, res) => {
 
     const learningStreak = calculateLearningStreak(recentActivity);
 
+    console.log(`📊 Dashboard - User ${userId}:`);
+    console.log(`   Activities found: ${recentActivity.length}`);
+    console.log(`   Learning streak: ${learningStreak}`);
+    if (recentActivity.length > 0) {
+      console.log(`   First activity: ${recentActivity[0].createdAt}`);
+      console.log(`   Last activity: ${recentActivity[recentActivity.length - 1].createdAt}`);
+    }
+
     // ===============================
     // STATS
     // ===============================

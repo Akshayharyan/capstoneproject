@@ -279,12 +279,11 @@ export default function BossBattleArena() {
 
   const handleTowerVictory = useCallback(() => {
     if (victory) return;
-    ensureCertificate();
     setBossDefeating(true);
     setTimeout(() => {
       setVictory(true);
     }, 1200);
-  }, [ensureCertificate, victory]);
+  }, [victory]);
 
   useEffect(() => {
     if (!victory) return;

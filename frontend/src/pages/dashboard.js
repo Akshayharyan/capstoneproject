@@ -29,13 +29,19 @@ function Dashboard() {
       });
 
       const data = await res.json();
-      console.log("DASHBOARD API DATA:", data);
+      console.log("✅ DASHBOARD API DATA:", data);
+      console.log("📊 Stats:", data.stats);
+      console.log("📋 Recent Activity:", data.recentActivity);
+      console.log("🔥 Learning Streak from backend:", data.stats?.learningStreak);
 
-      if (!res.ok) throw new Error(data.message);
+      if (!res.ok) {
+        console.error("❌ Dashboard API error:", data.message);
+        throw new Error(data.message);
+      }
 
       setProfile(data);
     } catch (err) {
-      console.error("Dashboard fetch error:", err);
+      console.error("❌ Dashboard fetch error:", err);
     } finally {
       setLoading(false);
     }
@@ -126,6 +132,10 @@ function Dashboard() {
     typeof streakFromBackend === "number"
       ? streakFromBackend
       : calculateStreakFromActivity(recentActivity);
+
+  console.log("🔥 Final Learning Streak:", learningStreak);
+  console.log("🔥 Streak from backend:", streakFromBackend);
+  console.log("🔥 Recent activity count:", recentActivity?.length || 0);
 
   /* ================= MODULE PROGRESS FIX ================= */
   const getModuleProgress = (m) => {

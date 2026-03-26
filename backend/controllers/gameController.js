@@ -2,6 +2,7 @@ const GameSession = require("../models/GameSession");
 const Module = require("../models/module");
 const Certificate = require("../models/Certificate");
 const Progress = require("../models/progress");
+const Activity = require("../models/activity");
 const crypto = require("crypto");
 
 /* =========================================
@@ -201,22 +202,37 @@ exports.submitAnswer = async (req, res) => {
         (session.endedAt - session.startedAt) / 1000
       );
 
-      // Create certificate if won
-      if (session.won) {
-        const certificateCode = `CERT-${Date.now()}-${crypto
-          .randomBytes(4)
-          .toString("hex")
-          .toUpperCase()}`;
+      // Create certificate if won (prevent duplicates)
+      if (session.won && !session.certificateId) {
+        try {
+          const certificateCode = `CERT-${Date.now()}-${crypto
+            .randomBytes(4)
+            .toString("hex")
+            .toUpperCase()}`;
 
-        const certificate = await Certificate.create({
-          userId,
-          moduleId: session.moduleId,
-          certificateId: certificateCode,
-          moduleTitle: (await Module.findById(session.moduleId)).title,
-          earnedXp: session.score,
-        });
+          const certificate = await Certificate.create({
+            userId,
+            moduleId: session.moduleId,
+            certificateId: certificateCode,
+            moduleTitle: (await Module.findById(session.moduleId)).title,
+            earnedXp: session.score,
+          });
 
-        session.certificateId = certificate._id;
+          session.certificateId = certificate._id;
+        } catch (certErr) {
+          // Handle race condition: if another request already created certificate
+          if (certErr.code === 11000) {
+            const existingCert = await Certificate.findOne({
+              userId,
+              moduleId: session.moduleId,
+            });
+            if (existingCert) {
+              session.certificateId = existingCert._id;
+            }
+          } else {
+            console.error("Certificate creation error:", certErr);
+          }
+        }
 
         // Mark module as completed in progress
         let progress = await Progress.findOne({ userId });
@@ -228,7 +244,24 @@ exports.submitAnswer = async (req, res) => {
           progress.completedModules.push(session.moduleId);
           await progress.save();
         }
+
+        // Log activity for module completion
+        const moduleTitle = (await Module.findById(session.moduleId)).title;
+        await Activity.create({
+          userId,
+          type: "module_complete",
+          message: `Completed Module: ${moduleTitle}`,
+          icon: "trophy",
+        });
       }
+
+      // Always log daily game activity (helps with streak tracking)
+      await Activity.create({
+        userId,
+        type: "game_played",
+        message: `Played Knowledge Runner - ${session.won ? "Victory!" : "Defeat"}`,
+        icon: session.won ? "rocket" : "check",
+      });
 
       await session.save();
 
