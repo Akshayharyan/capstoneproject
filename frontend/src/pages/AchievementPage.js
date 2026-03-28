@@ -101,8 +101,8 @@ const AchievementPage = () => {
       : achievements.filter((achievement) => achievement.type === activeTab);
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-white via-indigo-50 to-sky-100 text-slate-900 px-4 py-16">
-      <div className="max-w-6xl mx-auto space-y-10">
+    <div className="min-h-screen bg-gradient-to-b from-white via-indigo-50 to-sky-100 text-slate-900 px-6 py-16">
+      <div className="w-full max-w-7xl mx-auto space-y-10">
         <header className="rounded-[32px] border border-slate-200/80 bg-gradient-to-br from-white via-sky-50 to-indigo-100 p-8 shadow-[0_35px_90px_rgba(78,97,255,0.18)]">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
             <div>
@@ -139,7 +139,29 @@ const AchievementPage = () => {
           ))}
         </div>
 
-        <section className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+        <section className="rounded-3xl border border-indigo-100 bg-gradient-to-r from-indigo-50 via-sky-50 to-blue-50 shadow-lg p-8">
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <p className="flex items-center gap-2 text-sm font-semibold uppercase tracking-[0.5em] text-indigo-600">
+                <span>📊</span> Overall Progress
+              </p>
+              <h2 className="mt-2 text-2xl font-black text-slate-900">Your Achievement Journey</h2>
+            </div>
+            <div className="text-right">
+              <p className="text-3xl font-black text-indigo-600">{unlockedCount}</p>
+              <p className="text-sm text-slate-600">of {achievements.length} unlocked</p>
+            </div>
+          </div>
+          <div className="w-full bg-slate-200 rounded-full h-4 mb-4">
+            <div
+              className="h-full rounded-full bg-gradient-to-r from-indigo-500 via-sky-500 to-blue-500 transition-all duration-700"
+              style={{ width: `${completionRate}%` }}
+            />
+          </div>
+          <p className="text-sm text-slate-600 text-right font-semibold">{completionRate}% Complete</p>
+        </section>
+
+        <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {loading && (
             <div className="col-span-full grid grid-cols-1 sm:grid-cols-2 gap-6">
               {Array.from({ length: 4 }).map((_, index) => (

@@ -8,6 +8,7 @@ import {
   User,
   LogOut,
   Zap,
+  Star,
 } from "lucide-react";
 
 function Sidebar() {
@@ -44,6 +45,11 @@ function Sidebar() {
       name: "Leaderboard",
       path: "/leaderboard",
       icon: <Trophy className="w-5 h-5" />,
+    },
+    {
+      name: "Achievements",
+      path: "/achievements",
+      icon: <Star className="w-5 h-5" />,
     },
     {
       name: "Profile",

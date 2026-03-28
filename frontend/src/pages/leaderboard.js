@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { Trophy, Users, Target, Medal, Search, Filter, Sparkles } from "lucide-react";
+import { Trophy, Users, Target, Medal, Search, Filter, Sparkles, Crown, Zap } from "lucide-react";
+import { motion } from "framer-motion";
 import { useAuth } from "../context/AuthContext";
 
 const accentFont = { fontFamily: "'Space Grotesk','Clash Display','Segoe UI',sans-serif" };
@@ -41,26 +42,47 @@ const formatRelativeTime = (value) => {
 };
 
 const StatTile = ({ icon, label, value, detail }) => (
-  <div className="rounded-2xl border border-slate-100 bg-white p-5 shadow-sm">
+  <motion.div
+    whileHover={{ scale: 1.05, y: -4 }}
+    className="rounded-2xl border border-slate-100 bg-gradient-to-br from-white to-slate-50 p-5 shadow-md hover:shadow-lg transition-shadow"
+  >
     <div className="flex items-center gap-3">
-      <div className="rounded-2xl bg-slate-50 p-3 text-indigo-600">{icon}</div>
+      <motion.div
+        animate={{ scale: [1, 1.1, 1] }}
+        transition={{ duration: 2, repeat: Infinity }}
+        className="rounded-2xl bg-indigo-100 p-3 text-indigo-600"
+      >
+        {icon}
+      </motion.div>
       <div>
         <p className="text-xs font-semibold uppercase tracking-[0.3em] text-slate-500">{label}</p>
         <p className="mt-1 text-2xl font-black text-slate-900" style={accentFont}>{value}</p>
         <p className="text-xs text-emerald-600 font-medium">{detail}</p>
       </div>
     </div>
-  </div>
+  </motion.div>
 );
 
-const PodiumCard = ({ player, tone }) => {
+const PodiumCard = ({ player, tone, rank }) => {
   const joinedLabel = player.joinedAt
     ? new Date(player.joinedAt).toLocaleDateString()
     : "—";
 
   return (
-    <div className={`relative rounded-3xl border border-white/70 bg-gradient-to-br ${tone} p-[1px] shadow-lg`}>
-    <div className="rounded-[calc(1.5rem-2px)] bg-white/80 backdrop-blur px-6 py-6 flex flex-col gap-4 h-full">
+    <motion.div
+      whileHover={{ y: -8, scale: 1.02 }}
+      className={`relative rounded-3xl border border-white/70 bg-gradient-to-br ${tone} p-[2px] shadow-xl hover:shadow-2xl transition-shadow`}
+    >
+      {rank === 0 && (
+        <motion.div
+          animate={{ rotate: [0, 10, -10, 0] }}
+          transition={{ duration: 2, repeat: Infinity }}
+          className="absolute -top-3 -right-3 z-10"
+        >
+          <Crown className="h-8 w-8 text-yellow-500 fill-yellow-400" />
+        </motion.div>
+      )}
+    <div className="rounded-[calc(1.5rem-2px)] bg-white/85 backdrop-blur px-6 py-6 flex flex-col gap-4 h-full">
       <div className="flex items-center justify-between text-xs font-semibold uppercase tracking-[0.3em] text-slate-500">
         <span>Rank #{player.rank}</span>
         <span>Lvl {player.level}</span>
@@ -95,7 +117,7 @@ const PodiumCard = ({ player, tone }) => {
         <span>Last active {formatRelativeTime(player.lastActive)}</span>
       </div>
     </div>
-  </div>
+    </motion.div>
   );
 };
 
@@ -105,7 +127,10 @@ const LeaderboardRow = ({ player, maxXP }) => {
   const progressWidth = Math.max(8, Math.round((xp / maxXP) * 100));
 
   return (
-    <div className="grid grid-cols-[auto,1fr,auto] items-center gap-6 rounded-2xl border border-slate-100 bg-white px-6 py-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
+    <motion.div
+      whileHover={{ x: 8, scale: 1.01 }}
+      className="grid grid-cols-[auto,1fr,auto] items-center gap-6 rounded-2xl border border-slate-100 bg-gradient-to-r from-white to-slate-50 px-6 py-5 shadow-sm hover:shadow-lg transition-shadow"
+    >
       <div className="text-2xl font-black text-slate-300" style={accentFont}>{String(rank).padStart(2, "0")}</div>
       <div className="flex items-center gap-4">
         <div className="relative">
@@ -138,7 +163,7 @@ const LeaderboardRow = ({ player, maxXP }) => {
         <p className="text-2xl font-bold text-slate-900" style={accentFont}>{xp.toLocaleString()}</p>
         <p className="text-xs text-slate-500">Last active {formatRelativeTime(player.lastActive)}</p>
       </div>
-    </div>
+    </motion.div>
   );
 };
 
@@ -176,6 +201,7 @@ const FilterPill = ({ active, label, onClick }) => (
 const Leaderboard = () => {
   const { token } = useAuth();
   const [players, setPlayers] = useState([]);
+  const [achievements, setAchievements] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
@@ -187,16 +213,26 @@ const Leaderboard = () => {
     const loadLeaderboard = async () => {
       try {
         setLoading(true);
-        const res = await fetch("http://localhost:5000/api/leaderboard", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
+        const [leaderRes, achievRes] = await Promise.all([
+          fetch("http://localhost:5000/api/leaderboard", {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }),
+          fetch("http://localhost:5000/api/achievements/me", {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }),
+        ]);
 
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.message || "Unable to load leaderboard");
+        const leaderData = await leaderRes.json();
+        const achievementData = await achievRes.json();
+
+        if (!leaderRes.ok) throw new Error(leaderData.message || "Unable to load leaderboard");
         if (!ignore) {
-          setPlayers(Array.isArray(data.leaderboard) ? data.leaderboard : []);
+          setPlayers(Array.isArray(leaderData.leaderboard) ? leaderData.leaderboard : []);
+          setAchievements(Array.isArray(achievementData) ? achievementData : []);
           setError("");
         }
       } catch (err) {
@@ -214,6 +250,7 @@ const Leaderboard = () => {
       loadLeaderboard();
     } else {
       setPlayers([]);
+      setAchievements([]);
       setLoading(false);
     }
 
@@ -261,6 +298,10 @@ const Leaderboard = () => {
     return { totalXP, averageXP, modulesCompleted, badgeCount };
   }, [players]);
 
+  const userBadgesEarned = useMemo(() => {
+    return achievements.filter((a) => a.unlocked).length || 0;
+  }, [achievements]);
+
   const maxXP = useMemo(() => {
     const source = filteredPlayers.length ? filteredPlayers : players;
     return source.reduce((max, player) => Math.max(max, player.xp || 0), 1);
@@ -277,7 +318,7 @@ const Leaderboard = () => {
         <div className="absolute -top-16 left-10 h-40 w-40 rounded-full bg-indigo-100 blur-[90px]" />
         <div className="absolute bottom-10 right-5 h-48 w-48 rounded-full bg-amber-100 blur-[110px]" />
       </div>
-      <main className="relative mx-auto max-w-6xl px-6 py-12">
+      <main className="relative w-full max-w-7xl mx-auto px-6 py-12">
         <section className="rounded-3xl border border-slate-100 bg-white shadow-xl p-8 relative overflow-hidden">
           <div className="absolute inset-y-0 right-0 w-1/2 opacity-40 pointer-events-none">
             <div className="h-full w-full bg-[radial-gradient(circle_at_top,_rgba(79,70,229,0.15),transparent_60%)]" />
@@ -323,7 +364,7 @@ const Leaderboard = () => {
               <StatTile icon={<Trophy className="h-5 w-5" />} label="Total XP" value={summary.totalXP.toLocaleString()} detail="All players" />
               <StatTile icon={<Target className="h-5 w-5" />} label="Average XP" value={summary.averageXP.toLocaleString()} detail="Per player" />
               <StatTile icon={<Users className="h-5 w-5" />} label="Modules" value={summary.modulesCompleted} detail="Completed" />
-              <StatTile icon={<Medal className="h-5 w-5" />} label="Badges" value={summary.badgeCount} detail="Unlocked" />
+              <StatTile icon={<Medal className="h-5 w-5" />} label="Your Badges" value={userBadgesEarned} detail="Achievements" />
             </div>
           </div>
           {error && <div className="mt-6"><ErrorState message={error} /></div>}
@@ -340,29 +381,83 @@ const Leaderboard = () => {
           ) : (
             <div className="mt-6 grid gap-6 md:grid-cols-3">
               {topThree.map((player, idx) => (
-                <PodiumCard key={player.id || player.rank} player={player} tone={podiumGradients[idx] || podiumGradients[0]} />
+                <PodiumCard key={player.id || player.rank} player={player} tone={podiumGradients[idx] || podiumGradients[0]} rank={idx} />
               ))}
             </div>
           )}
         </section>
 
+        <section className="mt-12 rounded-3xl border border-slate-100 bg-gradient-to-br from-white to-slate-50 shadow-lg p-8">
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <p className="flex items-center gap-2 text-sm font-semibold uppercase tracking-[0.5em] text-amber-600">
+                <Medal className="h-4 w-4" /> Your Progress
+              </p>
+              <h2 className="mt-2 text-2xl font-black text-slate-900" style={accentFont}>Badges Earned</h2>
+            </div>
+            <motion.div
+              whileHover={{ scale: 1.05 }}
+              className="rounded-full bg-gradient-to-r from-amber-500 to-orange-500 px-6 py-2 text-sm font-bold text-white shadow-lg cursor-pointer"
+              onClick={() => window.location.href = "/achievements"}
+            >
+              View All ({achievements.length})
+            </motion.div>
+          </div>
+          <p className="text-slate-600 mb-6">You've unlocked {userBadgesEarned} out of {achievements.length} total badges</p>
+          <div className="w-full bg-slate-200 rounded-full h-4 mb-4">
+            <motion.div
+              initial={{ width: 0 }}
+              animate={{ width: `${achievements.length ? (userBadgesEarned / achievements.length) * 100 : 0}%` }}
+              transition={{ duration: 0.8, ease: "easeOut" }}
+              className="h-full rounded-full bg-gradient-to-r from-amber-500 to-orange-500"
+            />
+          </div>
+          <p className="text-sm text-slate-500 text-right">{Math.round(achievements.length ? (userBadgesEarned / achievements.length) * 100 : 0)}% Complete</p>
+        </section>
+
         {leaderboardSet.length > 3 && (
-          <section className="mt-10 space-y-4">
-            <div className="flex items-center justify-between">
+          <section className="mt-12 space-y-4">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.3 }}
+              className="flex items-center justify-between"
+            >
               <div>
-                <p className="text-sm uppercase tracking-[0.5em] text-slate-500">Challengers</p>
+                <p className="text-sm uppercase tracking-[0.5em] text-slate-500 flex items-center gap-2"><Zap className="h-4 w-4" /> Challengers</p>
                 <h3 className="text-2xl font-black text-slate-900" style={accentFont}>Ranks 04 — {leaderboardSet.length.toString().padStart(2, "0")}</h3>
               </div>
               <button className="inline-flex items-center gap-2 rounded-full border border-slate-200 px-5 py-2 text-sm font-semibold text-slate-600 hover:border-slate-300">
                 <Filter className="h-4 w-4" /> Export Standings
               </button>
-            </div>
+            </motion.div>
 
-            <div className="space-y-4">
+            <motion.div
+              className="space-y-3"
+              initial="hidden"
+              animate="visible"
+              variants={{
+                hidden: { opacity: 0 },
+                visible: {
+                  opacity: 1,
+                  transition: {
+                    staggerChildren: 0.05,
+                  },
+                },
+              }}
+            >
               {challengers.map((player) => (
-                <LeaderboardRow key={player.id || player.rank} player={player} maxXP={maxXP} />
+                <motion.div
+                  key={player.id || player.rank}
+                  variants={{
+                    hidden: { opacity: 0, x: -20 },
+                    visible: { opacity: 1, x: 0 },
+                  }}
+                >
+                  <LeaderboardRow player={player} maxXP={maxXP} />
+                </motion.div>
               ))}
-            </div>
+            </motion.div>
           </section>
         )}
       </main>

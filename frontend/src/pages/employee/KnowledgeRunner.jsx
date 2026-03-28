@@ -96,7 +96,7 @@ export default function KnowledgeRunner() {
   useEffect(() => {
     const startGame = async () => {
       try {
-        const res = await fetch(`${API_URL}/game/start`, {
+        const res = await fetch(`${API_URL}/game/retry`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -358,7 +358,15 @@ export default function KnowledgeRunner() {
   }
 
   return (
-    <div className="relative min-h-screen overflow-hidden bg-[#040712]">
+    <div className="relative min-h-screen overflow-hidden bg-[#130f09]">
+      <div
+        className="pointer-events-none absolute inset-0 opacity-70"
+        style={{
+          backgroundImage:
+            "radial-gradient(circle at 16% 14%, rgba(245,158,11,0.2), transparent 34%), radial-gradient(circle at 84% 18%, rgba(220,38,38,0.16), transparent 40%), linear-gradient(180deg, rgba(36,23,9,0.55) 0%, rgba(20,12,6,0.25) 40%, rgba(17,10,5,0.75) 100%)",
+        }}
+      />
+
       <TowerHUD
         gameState={gameState}
         moduleName={moduleName}
@@ -366,19 +374,33 @@ export default function KnowledgeRunner() {
         onToggleSound={() => setSoundEnabled(!soundEnabled)}
       />
 
-      <div className="h-screen w-full px-3 pb-6 pt-24 md:px-6 md:pt-28">
-        <TowerScene
-          totalLevels={totalLevels}
-          climbedLevels={playerLevel}
-          stage={gameState.currentQuestionIndex + 1}
-          shake={shakeTower}
-          levelUpFx={showLevelUpFx}
-          hitFx={showHitFx}
-          gameStatus={gameStatus}
-        />
+      <div className="relative z-10 mx-auto h-[calc(100vh-6.5rem)] w-full max-w-7xl px-3 pb-44 pt-24 md:h-[calc(100vh-7rem)] md:px-6 md:pb-8 md:pt-28">
+        <div className="h-full w-full md:grid md:grid-cols-[minmax(0,1fr)_24rem] md:gap-6">
+          <div className="h-full min-h-0">
+            <TowerScene
+              totalLevels={totalLevels}
+              climbedLevels={playerLevel}
+              stage={gameState.currentQuestionIndex + 1}
+              shake={shakeTower}
+              levelUpFx={showLevelUpFx}
+              hitFx={showHitFx}
+              gameStatus={gameStatus}
+            />
+          </div>
+
+          <div className="hidden md:flex md:items-end md:justify-end md:pb-2">
+            <ChallengePanel
+              question={gameState.currentQuestion}
+              onAnswerSelect={handleSubmitAnswer}
+              selectedAnswer={selectedAnswer}
+              isSubmitted={answerSubmitted}
+              isCorrect={selectedAnswer === gameState.currentQuestion?.correctIndex}
+            />
+          </div>
+        </div>
       </div>
 
-      <div className="pointer-events-none fixed inset-x-0 bottom-0 z-40 flex justify-center px-3 pb-3 md:justify-end md:px-8 md:pb-6">
+      <div className="pointer-events-none fixed inset-x-0 bottom-0 z-40 mx-auto flex w-full max-w-7xl justify-center px-3 pb-3 md:hidden">
         <ChallengePanel
           question={gameState.currentQuestion}
           onAnswerSelect={handleSubmitAnswer}

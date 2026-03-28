@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useCallback } from "react";
 import { useAuth } from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
+import { motion } from "framer-motion";
 
 import Sidebar from "../components/Sidebar";
 import ActivityFeed from "../components/ActivityFeed";
@@ -12,6 +13,8 @@ import {
   Zap,
   ArrowRight,
   PlayCircle,
+  Target,
+  BookOpen,
 } from "lucide-react";
 
 function Dashboard() {
@@ -19,27 +22,37 @@ function Dashboard() {
   const navigate = useNavigate();
 
   const [profile, setProfile] = useState(null);
+  const [achievements, setAchievements] = useState([]);
   const [loading, setLoading] = useState(true);
 
   /* ================= FETCH DASHBOARD ================= */
   const fetchData = useCallback(async () => {
     try {
-      const res = await fetch("http://localhost:5000/api/dashboard/me", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const [dashRes, achievRes] = await Promise.all([
+        fetch("http://localhost:5000/api/dashboard/me", {
+          headers: { Authorization: `Bearer ${token}` },
+        }),
+        fetch("http://localhost:5000/api/achievements/me", {
+          headers: { Authorization: `Bearer ${token}` },
+        }),
+      ]);
 
-      const data = await res.json();
+      const data = await dashRes.json();
+      const achievementData = await achievRes.json();
+
       console.log("✅ DASHBOARD API DATA:", data);
       console.log("📊 Stats:", data.stats);
       console.log("📋 Recent Activity:", data.recentActivity);
+      console.log("🏆 ACHIEVEMENTS:", achievementData);
       console.log("🔥 Learning Streak from backend:", data.stats?.learningStreak);
 
-      if (!res.ok) {
+      if (!dashRes.ok) {
         console.error("❌ Dashboard API error:", data.message);
         throw new Error(data.message);
       }
 
       setProfile(data);
+      setAchievements(Array.isArray(achievementData) ? achievementData : []);
     } catch (err) {
       console.error("❌ Dashboard fetch error:", err);
     } finally {
@@ -71,13 +84,14 @@ function Dashboard() {
     user?.xp ??
     0;
 
-  // ✅ Badges earned (works even if backend sends badges array)
-  const badgesEarned =
-    stats.badgesEarned ??
-    stats.totalBadges ??
-    (Array.isArray(user?.badges) ? user.badges.length : null) ??
-    (Array.isArray(topBadges) ? topBadges.length : null) ??
-    0;
+  // ✅ Badges earned (NOW from real achievements API)
+  const badgesEarned = achievements.length > 0
+    ? achievements.filter((a) => a.unlocked).length
+    : (stats.badgesEarned ??
+       stats.totalBadges ??
+       (Array.isArray(user?.badges) ? user.badges.length : null) ??
+       (Array.isArray(topBadges) ? topBadges.length : null) ??
+       0);
 
   // ✅ Streak (works with multiple backend formats)
   const streakFromBackend =
@@ -180,10 +194,15 @@ function Dashboard() {
       <Sidebar />
 
       {/* MAIN */}
-      <main className="flex-1 ml-72 px-10 py-10">
+      <main className="flex-1 ml-72 px-10 py-10 space-y-8">
         {/* HERO */}
-        <div className="mb-10">
-          <div className="rounded-3xl border border-slate-200 bg-white shadow-sm p-8 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+          className="mb-2"
+        >
+          <div className="rounded-3xl border border-slate-200 bg-gradient-to-br from-white to-indigo-50 shadow-lg p-8 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6 hover:shadow-xl transition-shadow">
             <div>
               <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-indigo-100 text-indigo-700 font-semibold text-sm mb-4">
                 <Sparkles className="w-4 h-4" />
@@ -220,10 +239,15 @@ function Dashboard() {
               </button>
             </div>
           </div>
-        </div>
+        </motion.div>
 
         {/* STATS */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.6, delay: 0.1 }}
+          className="grid grid-cols-1 md:grid-cols-3 gap-6"
+        >
           <StatCard
             icon={<Zap className="w-5 h-5" />}
             label="Total XP"
@@ -236,6 +260,7 @@ function Dashboard() {
             label="Badges Earned"
             value={badgesEarned}
             gradient="from-yellow-500 to-orange-500"
+            onClick={() => navigate("/achievements")}
           />
 
           <div className="rounded-3xl border border-slate-200 bg-white shadow-sm p-6 hover:shadow-lg transition">
@@ -262,7 +287,7 @@ function Dashboard() {
               ))}
             </div>
           </div>
-        </div>
+        </motion.div>
 
         {/* CONTINUE LEARNING */}
         <section className="mb-12">
@@ -297,19 +322,39 @@ function Dashboard() {
             </div>
           )}
 
-          <div className="grid md:grid-cols-2 gap-6">
+          <motion.div
+            className="grid md:grid-cols-2 gap-6"
+            initial="hidden"
+            animate="visible"
+            variants={{
+              hidden: { opacity: 0 },
+              visible: {
+                opacity: 1,
+                transition: {
+                  staggerChildren: 0.1,
+                },
+              },
+            }}
+          >
             {modules.map((m, index) => {
+              const moduleVariants = {
+                hidden: { opacity: 0, y: 20 },
+                visible: { opacity: 1, y: 0, transition: { duration: 0.5 } },
+              };
               const moduleId = m.id || m._id;
               const progress = getModuleProgress(m);
               const completed = progress >= 100 || m.completed === true;
 
               return (
-                <div
+                <motion.div
                   key={moduleId || index}
-                  onClick={() => navigate(`/modules/${moduleId}/topics`)}
-                  className="group rounded-3xl border border-slate-200 bg-white shadow-sm p-6 cursor-pointer hover:shadow-xl hover:-translate-y-1 transition-all duration-300"
-                  style={{ animationDelay: `${index * 80}ms` }}
+                  variants={moduleVariants}
+                  className="group"
                 >
+                  <div
+                    onClick={() => navigate(`/modules/${moduleId}/topics`)}
+                    className="rounded-3xl border border-slate-200 bg-gradient-to-br from-white to-slate-50 shadow-md p-6 cursor-pointer hover:shadow-2xl hover:-translate-y-2 transition-all duration-300"
+                  >
                   <div className="flex items-start justify-between gap-4">
                     <div>
                       <h3 className="text-lg font-extrabold text-black">
@@ -361,9 +406,10 @@ function Dashboard() {
                     </span>
                   </div>
                 </div>
+                </motion.div>
               );
             })}
-          </div>
+          </motion.div>
         </section>
 
         {/* ACTIVITY */}
@@ -376,22 +422,28 @@ function Dashboard() {
 }
 
 /* ================= STAT CARD ================= */
-function StatCard({ icon, label, value, gradient }) {
+function StatCard({ icon, label, value, gradient, onClick }) {
   return (
-    <div className="rounded-3xl border border-slate-200 bg-white shadow-sm p-6 hover:shadow-lg hover:-translate-y-1 transition-all duration-300">
+    <motion.div
+      whileHover={{ y: -4 }}
+      onClick={onClick}
+      className={`rounded-3xl border border-slate-200 bg-gradient-to-br from-white to-slate-50 shadow-md p-6 hover:shadow-xl transition-all duration-300 ${onClick ? 'cursor-pointer' : ''}`}
+    >
       <div className="flex items-center gap-4">
-        <div
-          className={`w-12 h-12 rounded-2xl flex items-center justify-center text-white bg-gradient-to-r ${gradient} shadow-md`}
+        <motion.div
+          animate={{ scale: [1, 1.05, 1] }}
+          transition={{ duration: 2, repeat: Infinity }}
+          className={`w-12 h-12 rounded-2xl flex items-center justify-center text-white bg-gradient-to-r ${gradient} shadow-lg`}
         >
           {icon}
-        </div>
+        </motion.div>
 
         <div>
           <p className="text-sm text-slate-600 font-medium">{label}</p>
-          <p className="text-2xl font-extrabold text-black">{value}</p>
+          <p className="text-2xl font-extrabold text-slate-900">{typeof value === 'number' ? value.toLocaleString() : value}</p>
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 }
 

@@ -48,10 +48,14 @@ import TrainerGamePage from "./pages/trainer/TrainerGamePage"; // 🎮 Game Sele
 
 /* ================= LAYOUT ================= */
 const PublicEmployeeLayout = () => (
-<>
-<Header />
-<Outlet />
-</>
+  <>
+    <Header />
+    <Outlet />
+  </>
+);
+
+const DashboardLayout = () => (
+  <Outlet />
 );
 
 function App() {
@@ -70,15 +74,6 @@ return (
 
         <Route path="/features" element={<Features />} />
         <Route path="/about" element={<About />} />
-
-        <Route
-          path="/dashboard"
-          element={
-            <ProtectedRoute allow={["employee"]}>
-              <Dashboard />
-            </ProtectedRoute>
-          }
-        />
 
         <Route
           path="/profile"
@@ -156,7 +151,17 @@ return (
         {/* 🎮 KNOWLEDGE RUNNER GAME */}
       </Route>
 
-      {/* 🎮 KNOWLEDGE RUNNER GAME (FULLSCREEN, NO HEADER) */}
+      {/* DASHBOARD (NO HEADER/NAVBAR) */}
+      <Route element={<DashboardLayout />}>
+        <Route
+          path="/dashboard"
+          element={
+            <ProtectedRoute allow={["employee"]}>
+              <Dashboard />
+            </ProtectedRoute>
+          }
+        />
+      </Route>
       <Route
         path="/employee/game/:moduleId"
         element={
